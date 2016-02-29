@@ -26,9 +26,10 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			// "qingcloud_eip":     resourceQingcloudEip(),
+			"qingcloud_eip":           resourceQingcloudEip(),
 			"qingcloud_keypair":       resourceQingcloudKeypair(),
 			"qingcloud_securitygroup": resourceQingcloudSecuritygroup(),
+			"qingcloud_vxnet":         resourceQingcloudVxnet(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

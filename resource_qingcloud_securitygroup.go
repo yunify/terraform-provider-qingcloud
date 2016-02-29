@@ -2,7 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
-	"log"
+	// "log"
 
 	// "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -15,7 +15,7 @@ func resourceQingcloudSecuritygroup() *schema.Resource {
 		Create: resourceQingcloudSecuritygroupCreate,
 		Read:   resourceQingcloudSecuritygroupRead,
 		Update: resourceQingcloudSecuritygroupUpdate,
-		Delete: nil,
+		Delete: resourceQingcloudSecuritygroupDelete,
 		Schema: resourceQingcloudSecuritygroupSchema(),
 	}
 }
@@ -64,20 +64,44 @@ func resourceQingcloudSecuritygroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error retrieving Keypair: %s", err)
 	}
 	for _, sg := range resp.SecurityGroupSet {
-		log.Printf("Current Security Group is :%s", sg.SecurityGroupID)
 		if sg.SecurityGroupID == d.Id() {
-			log.Printf("Get security Group %#v", sg)
 			d.Set("name", sg.SecurityGroupName)
 			d.Set("description", sg.Description)
 			return nil
 		}
 	}
-	log.Printf("Unable to find security group %#v within: %#v", d.Id(), resp.SecurityGroupSet)
 	d.SetId("")
 	return nil
 }
 
 func resourceQingcloudSecuritygroupDelete(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).securitygroup
+	// 判断当前的防火墙是否有人在使用
+	describeParams := securitygroup.DescribeSecurityGroupsRequest{}
+	describeParams.SecurityGroupsN.Add(d.Id())
+	describeParams.Verbose.Set(1)
+
+	resp, err := clt.DescribeSecurityGroups(describeParams)
+	if err != nil {
+		return fmt.Errorf("Error retrieving Keypair: %s", err)
+	}
+	for _, sg := range resp.SecurityGroupSet {
+		if sg.SecurityGroupID == d.Id() {
+			if len(sg.Resources) > 0 {
+				// 要删除的防火墙已加载规则到主机，则需要先调用 ApplySecurityGroup 将其他防火墙的规则应用到对应主机，之后才能被删除。
+				// 要删除的防火墙已加载规则到路由器，则需要先调用 ModifyRouterAttributes 并 UpdateRouters 将其他防火墙的规则应用到对应路由器，之后才能被删除。
+				return fmt.Errorf("Current security group is in using", nil)
+			}
+		}
+	}
+
+	params := securitygroup.DeleteSecurityGroupsRequest{}
+	params.SecurityGroupsN.Add(d.Id())
+	_, err = clt.DeleteSecurityGroups(params)
+	if err != nil {
+		return fmt.Errorf("Error delete security group %s", err)
+	}
+	d.SetId("")
 	return nil
 }
 
@@ -96,7 +120,6 @@ func resourceQingcloudSecuritygroupUpdate(d *schema.ResourceData, meta interface
 		params.SecurityGroupName.Set(d.Get("name").(string))
 	}
 	params.SecurityGroup.Set(d.Id())
-	log.Println("--------------  s1")
 	_, err := clt.ModifySecurityGroupAttributes(params)
 	if err != nil {
 		return fmt.Errorf("Error modify security group %s", d.Id())

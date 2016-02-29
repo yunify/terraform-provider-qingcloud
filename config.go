@@ -5,6 +5,7 @@ import (
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/keypair"
 	"github.com/magicshui/qingcloud-go/securitygroup"
+	"github.com/magicshui/qingcloud-go/vxnet"
 )
 
 type Config struct {
@@ -17,6 +18,7 @@ type QingCloudClient struct {
 	eip           *eip.EIP
 	keypair       *keypair.KEYPAIR
 	securitygroup *securitygroup.SECURITYGROUP
+	vxnet         *vxnet.VXNET
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -27,5 +29,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		eip:           eip.NewClient(clt),
 		keypair:       keypair.NewClient(clt),
 		securitygroup: securitygroup.NewClient(clt),
+		vxnet:         vxnet.NewClient(clt),
 	}, nil
 }
