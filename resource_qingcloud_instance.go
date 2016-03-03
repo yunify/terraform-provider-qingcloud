@@ -37,6 +37,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error run instance :%s", err)
 	}
 	d.SetId(resp.Instances[0])
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -50,7 +53,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	resp, _ := clt.DescribeInstances(params)
 	for _, k := range resp.InstanceSet {
 		if d.Id() == k.InstanceID {
-			d.Set("id", k.InstanceID)
 			d.Set("name", k.InstanceName)
 			d.Set("image_id", k.Image.ImageID)
 			d.Set("instance_type", k.InstanceType)
@@ -62,6 +64,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 			}
 			d.Set("keypair_ids", instanceKeypairsId)
 			d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
+			d.SetId(k.InstanceID)
 			return nil
 		}
 	}
@@ -88,27 +91,23 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 
 func resourceQingcloudInstanceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		// 镜像类型
 		"image_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
 		},
-		// 主机类型
 		"instance_type": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		// cpu
-		// memory
-		// count
-		// - login_mode 这个不实用
-		//
-		// 主机类别
 		"instance_class": &schema.Schema{
 			Type:     schema.TypeString,
 			Default:  "0",
@@ -130,12 +129,6 @@ func resourceQingcloudInstanceSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		// need_newsid
-		// need_userdata
-		// userdata_type
-		// userdata_value
-		// userdata_path
-		// userdata_file
 		"vxnets": &schema.Schema{
 			Type:     schema.TypeSet,
 			Computed: true,
@@ -156,11 +149,6 @@ func resourceQingcloudInstanceSchema() map[string]*schema.Schema {
 					},
 				},
 			},
-		},
-
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
 		},
 	}
 

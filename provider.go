@@ -27,12 +27,16 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"qingcloud_eip":           resourceQingcloudEip(),
+			"qingcloud_eip_associate": resourceQingcloudEipAssociate(),
+
 			"qingcloud_keypair":       resourceQingcloudKeypair(),
 			"qingcloud_securitygroup": resourceQingcloudSecuritygroup(),
 			"qingcloud_vxnet":         resourceQingcloudVxnet(),
 			"qingcloud_router":        resourceQingcloudRouter(),
 			"qingcloud_instance":      resourceQingcloudInstance(),
-			"qingcloud_volume":        resourceQingcloudVolume(),
+
+			"qingcloud_volume":            resourceQingcloudVolume(),
+			"qingcloud_volume_attachment": resourceQingcloudVolumeAttachment(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

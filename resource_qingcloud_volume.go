@@ -17,6 +17,16 @@ func resourceQingcloudVolume() *schema.Resource {
 	}
 }
 
+func changeQingcloudVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).volume
+	modifyParams := volume.ModifyVolumeAttributesRequest{}
+	modifyParams.Volume.Set(d.Id())
+	modifyParams.Description.Set(d.Get("description").(string))
+	modifyParams.VolumeName.Set(d.Get("name").(string))
+	_, err := clt.ModifyVolumeAttributes(modifyParams)
+	return err
+}
+
 func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 
@@ -31,45 +41,25 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(resp.Volumes[0])
 
-	if d.Get("description") != nil {
-		modifyParams := volume.ModifyVolumeAttributesRequest{}
-		modifyParams.Volume.Set(d.Id())
-		modifyParams.Description.Set(d.Get("description").(string))
-		_, err = clt.ModifyVolumeAttributes(modifyParams)
-		if err != nil {
-			return fmt.Errorf("Error modify the volume attributes", err)
-		}
+	if err := changeQingcloudVolumeAttributes(d, meta); err != nil {
+		return err
 	}
-
-	return resourceQingcloudVolumeRead(d, meta)
+	_, err = VolumeTransitionStateRefresh(clt, d.Id())
+	return err
 }
 
 func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
-
-	_, err := VolumeTransitionStateRefresh(clt, d.Id())
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for volume (%s) to update: %s", d.Id(), err)
-	}
 
 	params := volume.DescribeVolumesRequest{}
 	params.VolumesN.Add(d.Id())
 	params.Verbose.Set(1)
 	resp, err := clt.DescribeVolumes(params)
 	if err != nil {
-		return fmt.Errorf("Error read volume %s", err)
+		return err
 	}
-
-	for _, v := range resp.VolumeSet {
-		if v.VolumeID == d.Id() {
-			d.Set("id", v.VolumeID)
-			d.Set("size", v.Size)
-			d.Set("instance_id", v.Instance.InstanceID)
-			d.Set("instance_name", v.Instance.InstanceName)
-			d.Set("status", v.Status)
-			return nil
-		}
+	if len(resp.VolumeSet) == 0 {
+		return nil
 	}
 	return nil
 }
@@ -81,7 +71,6 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
-	//
 	if d.HasChange("size") {
 		oldSize, newSize := d.GetChange("size")
 		if oldSize.(int) > newSize.(int) {
@@ -99,16 +88,11 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("description") || d.HasChange("name") {
-		params := volume.ModifyVolumeAttributesRequest{}
-		params.Volume.Set(d.Id())
-		params.VolumeName.Set(d.Get("name").(string))
-		params.Description.Set(d.Get("description").(string))
-
-		_, err := clt.ModifyVolumeAttributes(params)
-		if err != nil {
-			return fmt.Errorf("Error update the volume: %s", err)
+		if err := changeQingcloudVolumeAttributes(d, meta); err != nil {
+			return err
 		}
 	}
+
 	return resourceQingcloudVolumeRead(d, meta)
 }
 
@@ -132,8 +116,12 @@ func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resouceQingcloudVolumeSchema() map[string]*schema.Schema {
-
 	return map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+			ForceNew: true,
+		},
 		"size": &schema.Schema{
 			Type:     schema.TypeInt,
 			Required: true,
@@ -150,23 +138,6 @@ func resouceQingcloudVolumeSchema() map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  0,
-			ForceNew: true,
-		},
-		"instance_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"instance_name": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
 			ForceNew: true,
 		},
 	}
