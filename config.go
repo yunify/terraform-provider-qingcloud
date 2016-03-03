@@ -5,8 +5,10 @@ import (
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/instance"
 	"github.com/magicshui/qingcloud-go/keypair"
+	"github.com/magicshui/qingcloud-go/loadbalancer"
 	"github.com/magicshui/qingcloud-go/router"
 	"github.com/magicshui/qingcloud-go/securitygroup"
+	"github.com/magicshui/qingcloud-go/volume"
 	"github.com/magicshui/qingcloud-go/vxnet"
 )
 
@@ -23,6 +25,8 @@ type QingCloudClient struct {
 	vxnet         *vxnet.VXNET
 	router        *router.ROUTER
 	instance      *instance.INSTANCE
+	volume        *volume.VOLUME
+	loadbalancer  *loadbalancer.LOADBALANCER
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -36,5 +40,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		vxnet:         vxnet.NewClient(clt),
 		router:        router.NewClient(clt),
 		instance:      instance.NewClient(clt),
+		volume:        volume.NewClient(clt),
+		loadbalancer:  loadbalancer.NewClient(clt),
 	}, nil
 }

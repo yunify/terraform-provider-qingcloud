@@ -32,6 +32,7 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_vxnet":         resourceQingcloudVxnet(),
 			"qingcloud_router":        resourceQingcloudRouter(),
 			"qingcloud_instance":      resourceQingcloudInstance(),
+			"qingcloud_volume":        resourceQingcloudVolume(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
