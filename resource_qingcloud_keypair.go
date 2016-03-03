@@ -172,3 +172,20 @@ func resourceQingCloudKeypairSchema() map[string]*schema.Schema {
 		},
 	}
 }
+
+func deleteKeypairFromInstance(meta interface{}, keypairID string, instanceID ...string) error {
+	clt := meta.(*QingCloudClient).keypair
+	params := keypair.DetachKeyPairsRequest{}
+	params.InstancesN.Add(instanceID...)
+	params.KeypairsN.Add(keypairID)
+	_, err := clt.DetachKeyPairs(params)
+
+	for _, o := range instanceID {
+		_, err := InstanceTransitionStateRefresh(meta.(*QingCloudClient).instance, o)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}

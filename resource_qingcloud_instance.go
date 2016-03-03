@@ -20,27 +20,17 @@ func resourceQingcloudInstance() *schema.Resource {
 func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
 
-	name := d.Get("name").(string)
-
-	imageId := d.Get("image_id").(string)
-	instanceType := d.Get("instance_type").(string)
-	vxnetID := d.Get("vxnet_id").(string)
-	keypairIDs := d.Get("keypair_ids").(*schema.Set)
-	securityGroupID := d.Get("security_group_id").(string)
-	instanceClass := d.Get("instance_class").(string)
-
 	params := instance.RunInstancesRequest{}
-	params.InstanceName.Set(name)
-	params.ImageId.Set(imageId)
-	params.InstanceType.Set(instanceType)
+	params.InstanceName.Set(d.Get("name").(string))
+	params.ImageId.Set(d.Get("image_id").(string))
+	params.InstanceType.Set(d.Get("instance_type").(string))
 	params.LoginMode.Set("keypair")
-	params.VxnetsN.Add(vxnetID)
-	params.SecurityGroup.Set(securityGroupID)
-
-	for _, kp := range keypairIDs.List() {
+	params.VxnetsN.Add(d.Get("vxnet_id").(string))
+	params.SecurityGroup.Set(d.Get("security_group_id").(string))
+	for _, kp := range d.Get("keypair_ids").(*schema.Set).List() {
 		params.LoginKeypair.Set(kp.(string))
 	}
-	params.InstanceClass.Set(instanceClass)
+	params.InstanceClass.Set(d.Get("instance_class").(string))
 
 	resp, err := clt.RunInstances(params)
 	if err != nil {
@@ -71,7 +61,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 				instanceKeypairsId = append(instanceKeypairsId, kp)
 			}
 			d.Set("keypair_ids", instanceKeypairsId)
-
 			d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
 			return nil
 		}

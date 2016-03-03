@@ -23,25 +23,17 @@ func resourceQingcloudVxnet() *schema.Resource {
 func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
 
-	// TODO: 这个地方以后需要判断错误
-	vxnetName := d.Get("name").(string)
-	vxnetType := d.Get("type").(int)
-	vxnetRouter := d.Get("router_id").(string)
-	vxnetIPNetwork := d.Get("ip_network").(string)
-
 	params := vxnet.CreateVxnetsRequest{}
-	params.VxnetName.Set(vxnetName)
-	params.VxnetType.Set(vxnetType)
+	params.VxnetName.Set(d.Get("name").(string))
+	params.VxnetType.Set(d.Get("type").(int))
 
 	resp, err := clt.CreateVxnets(params)
 	if err != nil {
 		return fmt.Errorf("Error create security group", err)
 	}
 
-	description := d.Get("description").(string)
-	if description != "" {
+	if description := d.Get("description").(string); description != "" {
 		modifyAtrributes := vxnet.ModifyVxnetAttributesRequest{}
-
 		// 对于私有网络，一个定义文件只创建一个比较方便
 		modifyAtrributes.Vxnet.Set(resp.Vxnets[0])
 		modifyAtrributes.Description.Set(description)
@@ -52,10 +44,16 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	// waiting until state refresh
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router_id").(string)); err != nil {
+		return err
+	}
+
+	// join the router
 	joinRouterParams := router.JoinRouterRequest{}
 	joinRouterParams.Vxnet.Set(resp.Vxnets[0])
-	joinRouterParams.Router.Set(vxnetRouter)
-	joinRouterParams.IpNetwork.Set(vxnetIPNetwork)
+	joinRouterParams.Router.Set(d.Get("router_id").(string))
+	joinRouterParams.IpNetwork.Set(d.Get("ip_network").(string))
 
 	clt2 := meta.(*QingCloudClient).router
 	_, err = clt2.JoinRouter(joinRouterParams)

@@ -3,9 +3,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/magicshui/qingcloud-go/eip"
@@ -22,53 +20,26 @@ func resourceQingcloudEip() *schema.Resource {
 	}
 }
 
-// Waiting for no transition_status
-func EipTransitionStateRefresh(clt *eip.EIP, id string) *resource.StateChangeConf {
-	refreshFunc := func() (interface{}, string, error) {
-		params := eip.DescribeEipsRequest{}
-		params.EipsN.Add(id)
-		params.Verbose.Set(1)
-
-		resp, err := clt.DescribeEips(params)
-		if err != nil {
-			return nil, "", err
-		}
-		return resp.EipSet[0], resp.EipSet[0].TransitionStatus, nil
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"associating", "dissociating", "suspending", "resuming", "releasing"},
-		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      2 * time.Second,
-		MinTimeout: 1 * time.Second,
-	}
-	return stateConf
-}
-
 // resourceQingcloudEipCreate 创建一个 Eip
 func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 
+	// 创建
 	params := eip.AllocateEipsRequest{}
 	params.Bandwidth.Set(d.Get("bandwidth").(int))
 	params.BillingMode.Set(d.Get("billing_mode").(string))
 	params.EipName.Set(d.Get("name").(string))
 	params.NeedIcp.Set(d.Get("need_icp").(int))
-
 	resp, err := clt.AllocateEips(params)
 	if err != nil {
 		return fmt.Errorf("Error create eip ", err)
 	}
-
 	d.SetId(resp.Eips[0])
 
-	description := d.Get("description").(string)
-	if description != "" {
+	// 设置描述信息
+	if description := d.Get("description").(string); description != "" {
 		modifyAtrributes := eip.ModifyEipAttributesRequest{}
-
-		modifyAtrributes.Eip.Set(resp.Eips[0])
+		modifyAtrributes.Eip.Set(d.Id())
 		modifyAtrributes.Description.Set(description)
 		_, err := clt.ModifyEipAttributes(modifyAtrributes)
 		if err != nil {
@@ -76,6 +47,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	// 配置一下
 	return resourceQingcloudEipRead(d, meta)
 }
 
@@ -89,7 +61,7 @@ func getEipSourceMap(data eip.Eip) map[string]interface{} {
 
 func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-	_, err := EipTransitionStateRefresh(clt, d.Id()).WaitForState()
+	_, err := EipTransitionStateRefresh(clt, d.Id())
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for the transition %s", err)
@@ -123,39 +95,6 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId("")
 	return nil
-}
-
-func dissociateEipFromResource(meta interface{}, eipID, resourceType, resourceID string) error {
-	switch resourceType {
-	case "router":
-		log.Printf("[Debug] dissociate eip form resource %s", "router")
-		clt := meta.(*QingCloudClient).router
-		params := router.ModifyRouterAttributesRequest{}
-		params.Eip.Set("")
-		params.Router.Set(resourceID)
-		_, err := clt.ModifyRouterAttributes(params)
-		if err != nil {
-			return err
-		}
-		p2 := router.UpdateRoutersRequest{}
-		p2.RoutersN.Add(resourceID)
-		_, err = clt.UpdateRouters(p2)
-		if err != nil {
-			return err
-		}
-		_, err = RouterTransitionStateRefresh(clt, resourceID)
-		return err
-	default:
-		clt := meta.(*QingCloudClient).eip
-		params := eip.DissociateEipsRequest{}
-		params.EipsN.Add(eipID)
-		_, err := clt.DissociateEips(params)
-		if err != nil {
-			return err
-		}
-		_, err = InstanceTransitionStateRefresh(meta.(*QingCloudClient).instance, resourceID)
-		return err
-	}
 }
 
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
@@ -277,5 +216,38 @@ func resourceQingcloudEipSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+	}
+}
+
+func dissociateEipFromResource(meta interface{}, eipID, resourceType, resourceID string) error {
+	switch resourceType {
+	case "router":
+		log.Printf("[Debug] dissociate eip form resource %s", "router")
+		clt := meta.(*QingCloudClient).router
+		params := router.ModifyRouterAttributesRequest{}
+		params.Eip.Set("")
+		params.Router.Set(resourceID)
+		_, err := clt.ModifyRouterAttributes(params)
+		if err != nil {
+			return err
+		}
+		p2 := router.UpdateRoutersRequest{}
+		p2.RoutersN.Add(resourceID)
+		_, err = clt.UpdateRouters(p2)
+		if err != nil {
+			return err
+		}
+		_, err = RouterTransitionStateRefresh(clt, resourceID)
+		return err
+	default:
+		clt := meta.(*QingCloudClient).eip
+		params := eip.DissociateEipsRequest{}
+		params.EipsN.Add(eipID)
+		_, err := clt.DissociateEips(params)
+		if err != nil {
+			return err
+		}
+		_, err = InstanceTransitionStateRefresh(meta.(*QingCloudClient).instance, resourceID)
+		return err
 	}
 }

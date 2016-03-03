@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/router"
-	"log"
 )
 
 func resourceQingcloudRouter() *schema.Resource {
@@ -21,17 +20,11 @@ func resourceQingcloudRouter() *schema.Resource {
 func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 
-	// TODO: 这个地方以后需要判断错误
-	routerName := d.Get("name").(string)
-	routerType := d.Get("type").(int)
-	routerVPCNetwork := d.Get("vpc_network").(string)
-	routerSecurityGroupID := d.Get("security_group_id").(string)
-
 	params := router.CreateRoutersRequest{}
-	params.RouterName.Set(routerName)
-	params.RouterType.Set(routerType)
-	params.VpcNetwork.Set(routerVPCNetwork)
-	params.SecurityGroup.Set(routerSecurityGroupID)
+	params.RouterName.Set(d.Get("name").(string))
+	params.RouterType.Set(d.Get("type").(int))
+	params.VpcNetwork.Set(d.Get("vpc_network").(string))
+	params.SecurityGroup.Set(d.Get("security_group_id").(string))
 
 	resp, err := clt.CreateRouters(params)
 	if err != nil {
@@ -39,12 +32,11 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(resp.Routers[0])
 
-	// 等待路由器创建成功
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for router (%s) to start: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err)
 	}
+
 	// description := d.Get("description").(string)
 	// if description != "" {
 	// 	modifyAtrributes := Router.ModifyRouterAttributesRequest{}
@@ -72,7 +64,7 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("Error retrieving Routers: %s", err)
 	}
-	log.Printf("Fetch the router information: %s", resp)
+
 	for _, v := range resp.RouterSet {
 		if v.RouterID == d.Id() {
 			d.Set("name", v.RouterName)
@@ -82,12 +74,11 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("description", v.Description)
 
 			// 如下状态是稍等来获取的
-			d.Set("vxnets", v.Vxnets)
+			// d.Set("vxnets", v.Vxnets)
 			d.Set("private_ip", v.PrivateIP)
 			d.Set("is_applied", v.IsApplied)
 			d.Set("eip", v.Eip)
 			d.Set("status", v.Status)
-			d.Set("transition_status", v.TransitionStatus)
 			return nil
 		}
 	}
@@ -97,16 +88,32 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceQingcloudRouterDelete(d *schema.ResourceData, meta interface{}) error {
 
+	clt := meta.(*QingCloudClient).router
+	params := router.DeleteRoutersRequest{}
+	params.RoutersN.Add(d.Id())
+
+	_, err := clt.DeleteRouters(params)
+	if err != nil {
+		return err
+	}
+
+	// 等待状态变化
+	_, err = RouterTransitionStateRefresh(clt, d.Id())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).router
 
-	params := router.ModifyRouterAttributesRequest{}
 	if !d.HasChange("description") && !d.HasChange("name") {
 		return nil
 	}
+
+	clt := meta.(*QingCloudClient).router
+	params := router.ModifyRouterAttributesRequest{}
 	params.Router.Set(d.Id())
 
 	if d.HasChange("description") {
@@ -199,10 +206,6 @@ func resourceQingcloudRouterSchema(computed bool) map[string]*schema.Schema {
 		// },
 
 		"status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"transition_status": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
 		},
