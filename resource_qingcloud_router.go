@@ -2,11 +2,9 @@ package qingcloud
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/router"
 	"log"
-	"time"
 )
 
 func resourceQingcloudRouter() *schema.Resource {
@@ -16,20 +14,6 @@ func resourceQingcloudRouter() *schema.Resource {
 		Update: resourceQingcloudRouterUpdate,
 		Delete: nil,
 		Schema: resourceQingcloudRouterSchema(false),
-	}
-}
-
-func RouterStateRefreshFunc(clt *router.ROUTER, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		params := router.DescribeRoutersRequest{}
-		params.RoutersN.Add(id)
-		params.Verbose.Set(1)
-
-		resp, err := clt.DescribeRouters(params)
-		if err != nil {
-			return nil, "", err
-		}
-		return resp.RouterSet[0], resp.RouterSet[0].Status, nil
 	}
 }
 
@@ -54,16 +38,9 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error create Router ", err)
 	}
 	d.SetId(resp.Routers[0])
+
 	// 等待路由器创建成功
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"active"},
-		Refresh:    RouterStateRefreshFunc(clt, resp.Routers[0]),
-		Timeout:    10 * time.Minute,
-		Delay:      20 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
+	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for router (%s) to start: %s", d.Id(), err)

@@ -1,11 +1,8 @@
 package qingcloud
 
 import (
-	"fmt"
-	"time"
-
 	"errors"
-	"github.com/hashicorp/terraform/helper/resource"
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/volume"
 )
@@ -18,31 +15,6 @@ func resourceQingcloudVolume() *schema.Resource {
 		Delete: resourceQingcloudVolumeDelete,
 		Schema: resouceQingcloudVolumeSchema(),
 	}
-}
-
-// Waiting for no transition_status
-func VolumeTransitionStateRefresh(clt *volume.VOLUME, id string) *resource.StateChangeConf {
-	refreshFunc := func() (interface{}, string, error) {
-		params := volume.DescribeVolumesRequest{}
-		params.VolumesN.Add(id)
-		params.Verbose.Set(1)
-
-		resp, err := clt.DescribeVolumes(params)
-		if err != nil {
-			return nil, "", err
-		}
-		return resp.VolumeSet[0], resp.VolumeSet[0].TransitionStatus, nil
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
-		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      2 * time.Second,
-		MinTimeout: 1 * time.Second,
-	}
-	return stateConf
 }
 
 func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
@@ -75,7 +47,7 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 
-	_, err := VolumeTransitionStateRefresh(clt, d.Id()).WaitForState()
+	_, err := VolumeTransitionStateRefresh(clt, d.Id())
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for volume (%s) to update: %s", d.Id(), err)
@@ -151,7 +123,7 @@ func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) err
 			"Error deleting volume: %s", err)
 	}
 
-	_, err = VolumeTransitionStateRefresh(clt, d.Id()).WaitForState()
+	_, err = VolumeTransitionStateRefresh(clt, d.Id())
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for volume (%s) to update: %s", d.Id(), err)
