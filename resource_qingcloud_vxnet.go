@@ -6,6 +6,7 @@ import (
 
 	// "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/magicshui/qingcloud-go/router"
 	"github.com/magicshui/qingcloud-go/vxnet"
 )
 
@@ -25,6 +26,8 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	// TODO: 这个地方以后需要判断错误
 	vxnetName := d.Get("name").(string)
 	vxnetType := d.Get("type").(int)
+	vxnetRouter := d.Get("router_id").(string)
+	vxnetIPNetwork := d.Get("ip_network").(string)
 
 	params := vxnet.CreateVxnetsRequest{}
 	params.VxnetName.Set(vxnetName)
@@ -49,7 +52,18 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	joinRouterParams := router.JoinRouterRequest{}
+	joinRouterParams.Vxnet.Set(resp.Vxnets[0])
+	joinRouterParams.Router.Set(vxnetRouter)
+	joinRouterParams.IpNetwork.Set(vxnetIPNetwork)
+
+	clt2 := meta.(*QingCloudClient).router
+	_, err = clt2.JoinRouter(joinRouterParams)
+	if err != nil {
+		return fmt.Errorf("Error modify vxnet description: %s", err)
+	}
 	d.SetId(resp.Vxnets[0])
+
 	return nil
 }
 
@@ -69,6 +83,8 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		if sg.VxnetID == d.Id() {
 			d.Set("name", sg.VxnetName)
 			d.Set("description", sg.Description)
+			d.Set("router_id", sg.Router.RouterID)
+			d.Set("ip_network", sg.Router.IPNetwork)
 			return nil
 		}
 	}
@@ -133,18 +149,23 @@ func resourceQingcloudVxnetSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"type": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
-			ForceNew: true,
 			// TODO: only two types
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			ForceNew: true,
+		},
+		"router_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"ip_network": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 
 		"id": &schema.Schema{

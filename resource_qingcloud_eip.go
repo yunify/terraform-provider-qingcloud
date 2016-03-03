@@ -141,29 +141,24 @@ func resourceQingcloudEipSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"bandwidth": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
-			ForceNew: true,
 			// TODO: only two types
 		},
 		"billing_mode": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			ForceNew: true,
 			Default:  "traffic",
 		},
 		"need_icp": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
-			ForceNew: true,
 			Default:  0,
 		},
 

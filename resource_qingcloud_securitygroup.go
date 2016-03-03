@@ -132,12 +132,10 @@ func resourceQingcloudSecuritygroupSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			ForceNew: true,
 		},
 
 		"id": &schema.Schema{

@@ -156,16 +156,13 @@ func resourceQingCloudKeypairSchema() map[string]*schema.Schema {
 		"keypair_name": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			ForceNew: true,
 		},
 		"public_key": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
-			ForceNew: true,
 			Optional: true,
 		},
 		"id": &schema.Schema{
