@@ -27,3 +27,4 @@ _testmain.go
 /test-tf
 /provider-qingcloud/provider-qingcloud
 api.md
+/test-*

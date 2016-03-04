@@ -45,8 +45,7 @@ func resourceQingcloudLoadbalancerRead(d *schema.ResourceData, meta interface{})
 		return errors.New("no load balancer")
 	}
 	lb := resp.LoadbalancerSet[0]
-	d.Set("eip", lb.Eips[0].EipId)
-	d.Set("private_ip", lb.Eips[0].EipAddr)
+	d.Set("private_ip", lb.Vxnet.PrivateIP)
 	return nil
 }
 

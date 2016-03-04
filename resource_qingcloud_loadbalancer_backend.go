@@ -2,7 +2,7 @@ package qingcloud
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
-	// "github.com/magicshui/qingcloud-go/loadbalancer"
+	"github.com/magicshui/qingcloud-go/loadbalancer"
 )
 
 func resourceQingcloudLoadbalancerBackend() *schema.Resource {
@@ -11,14 +11,65 @@ func resourceQingcloudLoadbalancerBackend() *schema.Resource {
 		Read:   resourceQingcloudLoadbalancerBackendRead,
 		Update: resourceQingcloudLoadbalancerBackendUpdate,
 		Delete: resourceQingcloudLoadbalancerBackendDelete,
-		Schema: resourceQingcloudLoadbalancerBackendSchema(),
+		Schema: map[string]*schema.Schema{
+			"listener": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"resource_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"policy": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"port": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"weight": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+		},
 	}
 }
 
 func resourceQingcloudLoadbalancerBackendCreate(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	params := loadbalancer.AddLoadBalancerBackendsRequest{}
+	params.BackendsNLoadbalancerBackendName.Add(d.Get("name").(string))
+	params.LoadbalancerListener.Set(d.Get("listener").(string))
+	params.BackendsNResourceId.Add(d.Get("resource_id").(string))
+	params.BackendsNLoadbalancerPolicyId.Add(d.Get("policy").(string))
+	params.BackendsNPort.Add(int64(d.Get("port").(int)))
+	params.BackendsNWeight.Add(int64(d.Get("weight").(int)))
+	resp, err := clt.AddLoadBalancerBackends(params)
+	if err != nil {
+		return err
+	}
+	d.SetId(resp.LoadbalancerBackends[0])
 	return nil
 }
 func resourceQingcloudLoadbalancerBackendRead(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	params := loadbalancer.DescribeLoadBalancerBackendsRequest{}
+	params.LoadbalancerBackendsN.Add(d.Id())
+	resp, err := clt.DescribeLoadBalancerBackends(params)
+	if err != nil {
+		return err
+	}
+	lb := resp.LoadbalancerBackendSet[0]
+	d.Set("name", lb.LoadbalancerBackendName)
+	d.Set("listener", lb.LoadbalancerListenerID)
+	d.Set("resource_id", lb.ResourceID)
+	d.Set("port", lb.Port)
+	d.Set("weight", lb.Weight)
 	return nil
 }
 
@@ -27,33 +78,14 @@ func resourceQingcloudLoadbalancerBackendUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceQingcloudLoadbalancerBackendDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-func resourceQingcloudLoadbalancerBackendSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"listener": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"resource_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"policy": &schema.Schema{
-			Type:     schema.TypeInt,
-			Required: true,
-		},
-		"port": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-		},
-		"weight": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-		},
+	clt := meta.(*QingCloudClient).loadbalancer
+
+	params := loadbalancer.DeleteLoadBalancerBackendsRequest{}
+	params.LoadbalancerBackendsN.Add(d.Id())
+	_, err := clt.DeleteLoadBalancerBackends(params)
+	if err != nil {
+		return err
 	}
+	d.SetId("")
+	return nil
 }

@@ -41,7 +41,11 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_volume":            resourceQingcloudVolume(),
 			"qingcloud_volume_attachment": resourceQingcloudVolumeAttachment(),
 
-			"qingcloud_loadbalancer": resourceQingcloudLoadbalancer(),
+			"qingcloud_loadbalancer":             resourceQingcloudLoadbalancer(),
+			"qingcloud_loadbalancer_listener":    resourceQingcloudLoadbalancerListener(),
+			"qingcloud_loadbalancer_backend":     resourceQingcloudLoadbalancerBackend(),
+			"qingcloud_loadbalancer_policy":      resourceQingcloudLoadbalancerPloicy(),
+			"qingcloud_loadbalancer_policy_rule": resourceQingcloudLoadbalancerPloicyRule(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
