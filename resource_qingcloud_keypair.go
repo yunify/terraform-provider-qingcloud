@@ -15,62 +15,65 @@ func resourceQingcloudKeypair() *schema.Resource {
 		Read:   resourceQingcloudKeypairRead,
 		Update: resourceQingcloudKeypairUpdate,
 		Delete: resourceQingcluodKeypairDelete,
-		Schema: resourceQingCloudKeypairSchema(),
+		Schema: map[string]*schema.Schema{
+			"keypair_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"public_key": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"instance_ids": &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
 	}
 }
 
 func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
-
 	params := keypair.CreateKeyPairRequest{}
 	params.KeypairName.Set(d.Get("keypair_name").(string))
 	params.PublicKey.Set(d.Get("public_key").(string))
-
 	result, err := clt.CreateKeyPair(params)
 	if err != nil {
 		return fmt.Errorf("Error create Keypair: %s", err)
 	}
-
-	if description := d.Get("description").(string); description != "" {
-		modifyAtrributes := keypair.ModifyKeyPairAttributesRequest{}
-		modifyAtrributes.Keypair.Set(result.KeypairId)
-		modifyAtrributes.Description.Set(description)
-		_, err := clt.ModifyKeyPairAttributes(modifyAtrributes)
-		if err != nil {
-			return fmt.Errorf("Error modify keypair description: %s", err)
-		}
-	}
-
 	d.SetId(result.KeypairId)
-	return nil
+	return modifyKeypairAttributes(d, meta, false)
 }
 
 func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
-
-	// 设置请求参数
 	params := keypair.DescribeKeyPairsRequest{}
 	params.KeypairsN.Add(d.Id())
 	params.Verbose.Set(1)
 	params.Limit.Set(10000)
-
 	resp, err := clt.DescribeKeyPairs(params)
 	if err != nil {
 		return fmt.Errorf("Error retrieving Keypair: %s", err)
 	}
-	for _, kp := range resp.KeypairSet {
-		if kp.KeypairID == d.Id() {
-			d.Set("keypair_name", kp.KeypairName)
+	kp := resp.KeypairSet[0]
 
-			var instanceIDs = make([]string, 0)
-			for _, o := range kp.InstanceIds {
-				instanceIDs = append(instanceIDs, o)
-			}
-			d.Set("instance_ids", instanceIDs)
-			return nil
-		}
+	d.Set("keypair_name", kp.KeypairName)
+	var instanceIDs = make([]string, 0)
+	for _, o := range kp.InstanceIds {
+		instanceIDs = append(instanceIDs, o)
 	}
-	d.SetId("")
+	d.Set("instance_ids", instanceIDs)
+	// TODO: p
 	return nil
 }
 
@@ -92,73 +95,5 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).keypair
-
-	if !d.HasChange("description") && !d.HasChange("keypair_name") {
-		return nil
-	}
-	params := keypair.ModifyKeyPairAttributesRequest{}
-	params.Keypair.Set(d.Id())
-
-	if d.HasChange("description") {
-		params.Description.Set(d.Get("description").(string))
-	}
-	if d.HasChange("keypair_name") {
-		params.KeypairName.Set(d.Get("keypair_name").(string))
-	}
-
-	_, err := clt.ModifyKeyPairAttributes(params)
-	if err != nil {
-		return fmt.Errorf("Error modify keypair description: %s", err)
-	}
-	return nil
-}
-
-func resourceQingCloudKeypairSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"keypair_name": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"public_key": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"instance_ids": &schema.Schema{
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
-}
-
-func deleteKeypairFromInstance(meta interface{}, keypairID string, instanceID ...interface{}) error {
-	clt := meta.(*QingCloudClient).keypair
-	params := keypair.DetachKeyPairsRequest{}
-	var instances = make([]string, 0)
-	for _, o := range instanceID {
-		instances = append(instances, o.(string))
-	}
-
-	params.InstancesN.Add(instances...)
-	params.KeypairsN.Add(keypairID)
-	_, err := clt.DetachKeyPairs(params)
-
-	for _, o := range instances {
-		_, err := InstanceTransitionStateRefresh(meta.(*QingCloudClient).instance, o)
-		if err != nil {
-			return err
-		}
-	}
-
-	return err
+	return modifyKeypairAttributes(d, meta, false)
 }

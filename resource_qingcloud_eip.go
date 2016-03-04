@@ -13,14 +13,62 @@ func resourceQingcloudEip() *schema.Resource {
 		Read:   resourceQingcloudEipRead,
 		Update: resourceQingcloudEipUpdate,
 		Delete: resourceQingcloudEipDelete,
-		Schema: resourceQingcloudEipSchema(),
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "公网 IP 的名称",
+			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"bandwidth": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				// TODO: only two types
+			},
+			"billing_mode": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "traffic",
+			},
+			"need_icp": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+
+			"addr": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"status": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"transition_status": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			// 目前正在使用这个 IP 的资源
+			"resource": &schema.Schema{
+				Type:         schema.TypeMap,
+				Computed:     true,
+				ComputedWhen: []string{"id"},
+			},
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
 	}
 }
 
 func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
-	// 创建
 	params := eip.AllocateEipsRequest{}
 	params.Bandwidth.Set(d.Get("bandwidth").(int))
 	params.BillingMode.Set(d.Get("billing_mode").(string))
@@ -33,14 +81,8 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(resp.Eips[0])
 
 	// 设置描述信息
-	if description := d.Get("description").(string); description != "" {
-		modifyAtrributes := eip.ModifyEipAttributesRequest{}
-		modifyAtrributes.Eip.Set(d.Id())
-		modifyAtrributes.Description.Set(description)
-		_, err := clt.ModifyEipAttributes(modifyAtrributes)
-		if err != nil {
-			return fmt.Errorf("Error modify eip description: %s", err)
-		}
+	if err := modifyEipAttributes(d, meta, true); err != nil {
+		return err
 	}
 
 	// 配置一下
@@ -64,24 +106,24 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error retrieving eips: %s", err)
 	}
-	for _, sg := range resp.EipSet {
-		if sg.EipID == d.Id() {
-			d.Set("name", sg.EipName)
-			d.Set("billing_mode", sg.BillingMode)
-			d.Set("bandwidth", sg.Bandwidth)
-			d.Set("need_icp", sg.NeedIcp)
-			d.Set("description", sg.Description)
-			// 如下状态是稍等来获取的
-			d.Set("addr", sg.EipAddr)
-			d.Set("status", sg.Status)
-			d.Set("transition_status", sg.TransitionStatus)
-			if err := d.Set("resource", getEipSourceMap(sg)); err != nil {
-				return fmt.Errorf("Error set eip resource %v", err)
-			}
-			return nil
-		}
+	if len(resp.EipSet) == 0 {
+		return fmt.Errorf("Not found", nil)
 	}
-	d.SetId(d.Id())
+
+	sg := resp.EipSet[0]
+
+	d.Set("name", sg.EipName)
+	d.Set("billing_mode", sg.BillingMode)
+	d.Set("bandwidth", sg.Bandwidth)
+	d.Set("need_icp", sg.NeedIcp)
+	d.Set("description", sg.Description)
+	// 如下状态是稍等来获取的
+	d.Set("addr", sg.EipAddr)
+	d.Set("status", sg.Status)
+	d.Set("transition_status", sg.TransitionStatus)
+	if err := d.Set("resource", getEipSourceMap(sg)); err != nil {
+		return fmt.Errorf("Error set eip resource %v", err)
+	}
 	return nil
 }
 
@@ -114,6 +156,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 			return err
 		}
 	}
+
 	if d.HasChange("billing_mode") {
 		params := eip.ChangeEipsBillingModeRequest{}
 		params.EipsN.Add(d.Id())
@@ -123,74 +166,10 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 			return err
 		}
 	}
-	if d.HasChange("name") || d.HasChange("description") {
-		params := eip.ModifyEipAttributesRequest{}
-		if d.HasChange("description") {
-			params.Description.Set(d.Get("description").(string))
-		}
-		if d.HasChange("name") {
-			params.EipName.Set(d.Get("name").(string))
-		}
-		params.Eip.Set(d.Id())
-		_, err := clt.ModifyEipAttributes(params)
-		if err != nil {
-			return fmt.Errorf("Error modify eip %s", d.Id())
-		}
+
+	if err := modifyEipAttributes(d, meta, false); err != nil {
+		return err
 	}
 
 	return resourceQingcloudEipRead(d, meta)
-}
-
-func resourceQingcloudEipSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "公网 IP 的名称",
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"bandwidth": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-			// TODO: only two types
-		},
-		"billing_mode": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "traffic",
-		},
-		"need_icp": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
-		},
-
-		"addr": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-
-		"status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"transition_status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		// 目前正在使用这个 IP 的资源
-		"resource": &schema.Schema{
-			Type:         schema.TypeMap,
-			Computed:     true,
-			ComputedWhen: []string{"id"},
-		},
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
 }

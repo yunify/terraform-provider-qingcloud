@@ -39,7 +39,7 @@ func resourceQingcloudLoadbalancerPloicyRuleCreate(d *schema.ResourceData, meta 
 	params.LoadbalancerPolicy.Set(d.Get("policy").(string))
 	params.RulesNLoadbalancerPolicyRuleName.Add(d.Get("name").(string))
 	params.RulesNRuleType.Add(d.Get("type").(string))
-	params.PolicyRulesNVal.Add(d.Get("val").(string))
+	params.RulesNVal.Add(d.Get("val").(string))
 	resp, err := clt.AddLoadBalancerPolicyRules(params)
 	if err != nil {
 		return err

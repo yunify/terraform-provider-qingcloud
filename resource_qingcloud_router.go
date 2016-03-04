@@ -12,7 +12,48 @@ func resourceQingcloudRouter() *schema.Resource {
 		Read:   resourceQingcloudRouterRead,
 		Update: resourceQingcloudRouterUpdate,
 		Delete: nil,
-		Schema: resourceQingcloudRouterSchema(false),
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"type": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"vpc_network": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"security_group_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"private_ip": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_applied": &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"status": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
 	}
 }
 
@@ -37,17 +78,9 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err)
 	}
 
-	// description := d.Get("description").(string)
-	// if description != "" {
-	// 	modifyAtrributes := Router.ModifyRouterAttributesRequest{}
-
-	// 	modifyAtrributes.Router.Set(resp.Routers[0])
-	// 	modifyAtrributes.Description.Set(description)
-	// 	_, err := clt.ModifyRouterAttributes(modifyAtrributes)
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error modify Router description: %s", err)
-	// 	}
-	// }
+	if err := modifyRouterAttributes(d, meta, false); err != nil {
+		return err
+	}
 
 	return resourceQingcloudRouterRead(d, meta)
 }
@@ -125,64 +158,5 @@ func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	params := router.ModifyRouterAttributesRequest{}
-	params.Router.Set(d.Id())
-
-	if d.HasChange("description") {
-		params.Description.Set(d.Get("description").(string))
-	}
-	if d.HasChange("name") {
-		params.RouterName.Set(d.Get("name").(string))
-	}
-
-	_, err := clt.ModifyRouterAttributes(params)
-	if err != nil {
-		return fmt.Errorf("Error update router: %s", err)
-	}
-	return nil
-}
-
-func resourceQingcloudRouterSchema(computed bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-
-		"type": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-		},
-		"vpc_network": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"security_group_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"private_ip": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"is_applied": &schema.Schema{
-			Type:     schema.TypeInt,
-			Computed: true,
-		},
-
-		"status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
+	return modifyRouterAttributes(d, meta, false)
 }

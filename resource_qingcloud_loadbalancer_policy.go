@@ -3,13 +3,14 @@ package qingcloud
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/loadbalancer"
+	"log"
 )
 
 func resourceQingcloudLoadbalancerPloicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudLoadbalancerPloicyCreate,
 		Read:   resourceQingcloudLoadbalancerPloicyRead,
-		Update: nil,
+		Update: resourceQingcloudLoadbalancerPloicyUpdate,
 		Delete: resourceQingcloudLoadbalancerPloicyDelete,
 		Schema: map[string]*schema.Schema{
 			"operator": &schema.Schema{
@@ -28,6 +29,7 @@ func resourceQingcloudLoadbalancerPloicyCreate(d *schema.ResourceData, meta inte
 	if err != nil {
 		return err
 	}
+	log.Printf("Finish loadbalancer policy %s", resp.LoadbalancerPolicyId)
 	d.SetId(resp.LoadbalancerPolicyId)
 	return nil
 }

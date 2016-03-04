@@ -12,7 +12,33 @@ func resourceQingcloudLoadbalancer() *schema.Resource {
 		Read:   resourceQingcloudLoadbalancerRead,
 		Update: resourceQingcloudLoadbalancerUpdate,
 		Delete: nil,
-		Schema: resouceQingcloudLoadbalancerSchema(),
+		Schema: map[string]*schema.Schema{
+			"eip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"vxnet": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"private_ip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"type": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"security_group": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 	}
 }
 
@@ -31,7 +57,10 @@ func resourceQingcloudLoadbalancerCreate(d *schema.ResourceData, meta interface{
 	}
 	d.SetId(resp.LoadbalancerId)
 	_, err = LoadbalancerTransitionStateRefresh(clt, d.Id())
-	return err
+	if err != nil {
+		return err
+	}
+	return resourceQingcloudLoadbalancerRead(d, meta)
 }
 func resourceQingcloudLoadbalancerRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
@@ -63,32 +92,4 @@ func resourceQingcloudLoadbalancerDelete(d *schema.ResourceData, meta interface{
 	}
 	_, err = LoadbalancerTransitionStateRefresh(clt, d.Id())
 	return err
-}
-func resouceQingcloudLoadbalancerSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"eip": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"vxnet": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"private_ip": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"type": &schema.Schema{
-			Type:     schema.TypeInt,
-			Required: true,
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"security_group": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-	}
 }

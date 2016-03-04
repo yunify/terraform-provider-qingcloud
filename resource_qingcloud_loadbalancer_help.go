@@ -17,3 +17,11 @@ func updateLoadBalancer(meta interface{}, id string) error {
 	_, err = LoadbalancerTransitionStateRefresh(clt, id)
 	return err
 }
+
+func applyLoadBalancerPolicy(meta interface{}, id string) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	params := loadbalancer.ApplyLoadBalancerPolicyRequest{}
+	params.LoadbalancerPolicy.Set(id)
+	_, err := clt.ApplyLoadBalancerPolicy(params)
+	return err
+}

@@ -2,7 +2,6 @@ package qingcloud
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/router"
 )
@@ -13,26 +12,27 @@ func resourceQingcloudEipAssociate() *schema.Resource {
 		Read:   resourceQingcloudEipAssociateRead,
 		Update: resourceQingcloudEipAssociateUpdate,
 		Delete: resourceQingcloudEipAssociateDelete,
-		Schema: resourceQingcloudEipAssociateSchema(),
+		Schema: map[string]*schema.Schema{
+			"eip": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"resource_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"resource_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 	}
-}
-func applyRouterUpdates(meta interface{}, routerID string) error {
-	clt := meta.(*QingCloudClient).router
-	params := router.UpdateRoutersRequest{}
-	params.RoutersN.Add(routerID)
-	if _, err := clt.UpdateRouters(params); err != nil {
-		return err
-	}
-	if _, err := RouterTransitionStateRefresh(clt, routerID); err != nil {
-		return err
-	}
-	return nil
 }
 
 func resourceQingcloudEipAssociateCreate(d *schema.ResourceData, meta interface{}) error {
 	eipID := d.Get("eip").(string)
-
 	d.SetId(eipID)
+
 	resourceType := d.Get("resource_type").(string)
 	resourceID := d.Get("resource_id").(string)
 	switch resourceType {
@@ -104,22 +104,4 @@ func resourceQingcloudEipAssociateDelete(d *schema.ResourceData, meta interface{
 	}
 	d.SetId("")
 	return nil
-}
-
-func resourceQingcloudEipAssociateSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"eip": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"resource_type": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"resource_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-	}
-
 }

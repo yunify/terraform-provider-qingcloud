@@ -13,7 +13,62 @@ func resourceQingcloudInstance() *schema.Resource {
 		Read:   resourceQingcloudInstanceRead,
 		Update: resourceQingcloudInstanceUpdate,
 		Delete: resourceQingcloudInstanceDelete,
-		Schema: resourceQingcloudInstanceSchema(),
+		Schema: map[string]*schema.Schema{
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"image_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"instance_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"instance_class": &schema.Schema{
+				Type:     schema.TypeString,
+				Default:  "0",
+				Optional: true,
+				ForceNew: true,
+			},
+			"vxnet_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"keypair_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+				Computed: true,
+			},
+			"security_group_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"vxnet_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_ip": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"eip_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"eip_addr": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
 	}
 }
 
@@ -40,7 +95,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	return nil
+	return resourceQingcloudInstanceRead(d, meta)
 }
 
 func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -49,29 +104,29 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	params := instance.DescribeInstanceRequest{}
 	params.InstancesN.Add(d.Id())
 	params.Verbose.Set(1)
-
 	resp, err := clt.DescribeInstances(params)
 	if err != nil {
 		return fmt.Errorf("Descirbe Instance :%s", err)
 	}
-	k := resp.InstanceSet[0]
-	d.Set("name", k.InstanceName)
-	d.Set("image_id", k.Image.ImageID)
-	d.Set("instance_type", k.InstanceType)
 
-	instanceKeypairsId := make([]string, 0, len(k.KeypairIds))
-	for _, kp := range k.KeypairIds {
-		instanceKeypairsId = append(instanceKeypairsId, kp)
-	}
-	d.Set("keypair_ids", instanceKeypairsId)
-	d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
+	// TODO: if this is nil
+	k := resp.InstanceSet[0]
+	// TODO: not setting the default value
+	d.Set("instance_type", k.InstanceType)
 	if len(k.Vxnets) >= 1 {
 		d.Set("vxnet_name", k.Vxnets[0].VxnetName)
 		d.Set("vxnet_id", k.Vxnets[0].VxnetID)
 		d.Set("private_ip", k.Vxnets[0].PrivateIP)
 	}
-	d.Set("eip_id", k.Eip.EipID)
 	d.Set("eip_addr", k.Eip.EipAddr)
+
+	// d.Set("eip_id", k.Eip.EipID)
+	// instanceKeypairsId := make([]string, 0, len(k.KeypairIds))
+	// for _, kp := range k.KeypairIds {
+	// 	instanceKeypairsId = append(instanceKeypairsId, kp)
+	// }
+	// d.Set("keypair_ids", instanceKeypairsId)
+	// d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
 	return nil
 }
 
@@ -91,64 +146,4 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error run instance :%s", err)
 	}
 	return nil
-}
-
-func resourceQingcloudInstanceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"image_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"instance_type": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"instance_class": &schema.Schema{
-			Type:     schema.TypeString,
-			Default:  "0",
-			Optional: true,
-			ForceNew: true,
-		},
-		"vxnet_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"keypair_ids": &schema.Schema{
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-			Computed: true,
-		},
-		"security_group_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"vxnet_name": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"private_ip": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"eip_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"eip_addr": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-	}
-
 }

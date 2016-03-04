@@ -11,13 +11,46 @@ func resourceQingcloudRouterStatic() *schema.Resource {
 		Read:   resourceQingcloudRouterStaticRead,
 		Update: resourceQingcloudRouterStaticUpdate,
 		Delete: resourceQingcloudRouterStaticDelete,
-		Schema: resouceQingcloudRouterStaticSchema(),
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"router": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"type": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
+			},
+			"val1": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"val2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"val3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"val4": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"val5": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 	}
 }
 
 func resourceQingcloudRouterStaticCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-
 	// 确保没有在更新
 	if _, err := RouterTransitionStateRefresh(clt, d.Get("router").(string)); err != nil {
 		return err
@@ -42,11 +75,6 @@ func resourceQingcloudRouterStaticCreate(d *schema.ResourceData, meta interface{
 }
 func resourceQingcloudRouterStaticRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-
-	if _, err := RouterTransitionStateRefresh(clt, d.Get("router").(string)); err != nil {
-		return err
-	}
-
 	params := router.DescribeRouterStaticsRequest{}
 	params.RouterStaticsN.Add(d.Id())
 	resp, err := clt.DescribeRouterStatics(params)
@@ -65,11 +93,9 @@ func resourceQingcloudRouterStaticRead(d *schema.ResourceData, meta interface{})
 }
 func resourceQingcloudRouterStaticUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-
 	if _, err := RouterTransitionStateRefresh(clt, d.Get("router").(string)); err != nil {
 		return err
 	}
-
 	params := router.ModifyRouterStaticAttributesRequest{}
 	params.RouterStatic.Set(d.Id())
 	params.RouterStaticName.Set(d.Get("name").(string))
@@ -86,11 +112,9 @@ func resourceQingcloudRouterStaticUpdate(d *schema.ResourceData, meta interface{
 }
 func resourceQingcloudRouterStaticDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-
 	if _, err := RouterTransitionStateRefresh(clt, d.Get("router").(string)); err != nil {
 		return err
 	}
-
 	params := router.DeleteRouterStaticsRequest{}
 	params.RouterStaticsN.Add(d.Id())
 	_, err := clt.DeleteRouterStatics(params)
@@ -102,41 +126,4 @@ func resourceQingcloudRouterStaticDelete(d *schema.ResourceData, meta interface{
 	}
 	d.SetId("")
 	return nil
-}
-func resouceQingcloudRouterStaticSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"router": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"type": &schema.Schema{
-			Type:     schema.TypeInt,
-			Required: true,
-			ForceNew: true,
-		},
-		"val1": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"val2": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"val3": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"val4": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"val5": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-	}
 }

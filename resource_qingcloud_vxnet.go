@@ -16,7 +16,35 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Read:   resourceQingcloudVxnetRead,
 		Update: resourceQingcloudVxnetUpdate,
 		Delete: resourceQingcloudVxnetDelete,
-		Schema: resourceQingcloudVxnetSchema(),
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"type": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				// TODO: only two types
+			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"router_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ip_network": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
 	}
 }
 
@@ -26,34 +54,20 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	params := vxnet.CreateVxnetsRequest{}
 	params.VxnetName.Set(d.Get("name").(string))
 	params.VxnetType.Set(d.Get("type").(int))
-
 	resp, err := clt.CreateVxnets(params)
 	if err != nil {
 		return fmt.Errorf("Error create security group", err)
 	}
 
-	// waiting until state refresh
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router_id").(string)); err != nil {
+	d.SetId(resp.Vxnets[0])
+	if err := modifyVxnetAttributes(d, meta, false); err != nil {
 		return err
-	}
-
-	if description := d.Get("description").(string); description != "" {
-		modifyAtrributes := vxnet.ModifyVxnetAttributesRequest{}
-		// 对于私有网络，一个定义文件只创建一个比较方便
-		modifyAtrributes.Vxnet.Set(resp.Vxnets[0])
-		modifyAtrributes.Description.Set(description)
-		_, err := clt.ModifyVxnetAttributes(modifyAtrributes)
-		if err != nil {
-			// 这里可以不用返回错误
-			return fmt.Errorf("Error modify vxnet description: %s", err)
-		}
 	}
 
 	// waiting until state refresh
 	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router_id").(string)); err != nil {
 		return err
 	}
-
 	// join the router
 	joinRouterParams := router.JoinRouterRequest{}
 	joinRouterParams.Vxnet.Set(resp.Vxnets[0])
@@ -65,7 +79,6 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error modify vxnet description: %s", err)
 	}
-	d.SetId(resp.Vxnets[0])
 
 	return nil
 }
@@ -101,7 +114,6 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	describeParams := vxnet.DescribeVxnetsRequest{}
 	describeParams.VxnetsN.Add(d.Id())
 	describeParams.Verbose.Set(1)
-
 	resp, err := clt.DescribeVxnets(describeParams)
 	if err != nil {
 		return fmt.Errorf("Error retrieving vxnet: %s", err)
@@ -126,55 +138,5 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).vxnet
-
-	if !d.HasChange("name") && !d.HasChange("description") {
-		return nil
-	}
-
-	params := vxnet.ModifyVxnetAttributesRequest{}
-	if d.HasChange("description") {
-		params.Description.Set(d.Get("description").(string))
-	}
-	if d.HasChange("name") {
-		params.VxnetName.Set(d.Get("name").(string))
-	}
-	params.Vxnet.Set(d.Id())
-	_, err := clt.ModifyVxnetAttributes(params)
-	if err != nil {
-		return fmt.Errorf("Error modify vxnet %s", d.Id())
-	}
-	return nil
-}
-
-func resourceQingcloudVxnetSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"type": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-			// TODO: only two types
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"router_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"ip_network": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
+	return modifyVxnetAttributes(d, meta, false)
 }
