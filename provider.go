@@ -32,11 +32,16 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_keypair":       resourceQingcloudKeypair(),
 			"qingcloud_securitygroup": resourceQingcloudSecuritygroup(),
 			"qingcloud_vxnet":         resourceQingcloudVxnet(),
+
 			"qingcloud_router":        resourceQingcloudRouter(),
-			"qingcloud_instance":      resourceQingcloudInstance(),
+			"qingcloud_router_static": resourceQingcloudRouterStatic(),
+
+			"qingcloud_instance": resourceQingcloudInstance(),
 
 			"qingcloud_volume":            resourceQingcloudVolume(),
 			"qingcloud_volume_attachment": resourceQingcloudVolumeAttachment(),
+
+			"qingcloud_loadbalancer": resourceQingcloudLoadbalancer(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

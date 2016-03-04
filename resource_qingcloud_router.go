@@ -55,6 +55,9 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 
+	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	// 设置请求参数
 	params := router.DescribeRoutersRequest{}
 	params.RoutersN.Add(d.Id())
@@ -89,6 +92,11 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 func resourceQingcloudRouterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	clt := meta.(*QingCloudClient).router
+
+	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
+
 	params := router.DeleteRoutersRequest{}
 	params.RoutersN.Add(d.Id())
 
@@ -107,12 +115,16 @@ func resourceQingcloudRouterDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).router
 
 	if !d.HasChange("description") && !d.HasChange("name") {
 		return nil
 	}
 
-	clt := meta.(*QingCloudClient).router
+	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
+
 	params := router.ModifyRouterAttributesRequest{}
 	params.Router.Set(d.Id())
 
@@ -162,48 +174,6 @@ func resourceQingcloudRouterSchema(computed bool) map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-
-		// "vxnets": &schema.Schema{
-		// 	Type:     schema.TypeList,
-		// 	Computed: true,
-		// 	ForceNew: true,
-		// 	Elem: []*schema.Schema{
-		// 		"nic_id": &schema.Schema{
-		// 			Type:     schema.TypeString,
-		// 			Required: !computed,
-		// 			Computed: computed,
-		// 		},
-		// 		"vxnet_id": &schema.Schema{
-		// 			Type:     schema.TypeString,
-		// 			Required: !computed,
-		// 			Computed: computed,
-		// 		},
-		// 	},
-		// },
-
-		// "eip": &schema.Schema{
-		// 	Type:     schema.TypeList,
-		// 	Computed: true,
-		// 	ForceNew: true,
-		// 	Elem: []*schema.Schema{
-		// 		"name": &schema.Schema{
-		// 			Type:     schema.TypeString,
-		// 			Required: !computed,
-		// 			Computed: computed,
-		// 		},
-		// 		"ip": &schema.Schema{
-		// 			Type:     schema.TypeString,
-		// 			Required: !computed,
-		// 			Computed: computed,
-		// 		},
-		// 		"addr": &schema.Schema{
-		// 			Type:     schema.TypeString,
-		// 			Required: !computed,
-		// 			Computed: computed,
-		// 		},
-		// 	},
-		// 	Set: schema.HashString,
-		// },
 
 		"status": &schema.Schema{
 			Type:     schema.TypeString,

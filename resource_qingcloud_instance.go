@@ -50,24 +50,28 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	params.InstancesN.Add(d.Id())
 	params.Verbose.Set(1)
 
-	resp, _ := clt.DescribeInstances(params)
-	for _, k := range resp.InstanceSet {
-		if d.Id() == k.InstanceID {
-			d.Set("name", k.InstanceName)
-			d.Set("image_id", k.Image.ImageID)
-			d.Set("instance_type", k.InstanceType)
-			d.Set("vxnet_id", k.Vxnets[0].VxnetID)
-			// keypair ids
-			instanceKeypairsId := make([]string, 0, len(k.KeypairIds))
-			for _, kp := range k.KeypairIds {
-				instanceKeypairsId = append(instanceKeypairsId, kp)
-			}
-			d.Set("keypair_ids", instanceKeypairsId)
-			d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
-			d.SetId(k.InstanceID)
-			return nil
-		}
+	resp, err := clt.DescribeInstances(params)
+	if err != nil {
+		return fmt.Errorf("Descirbe Instance :%s", err)
 	}
+	k := resp.InstanceSet[0]
+	d.Set("name", k.InstanceName)
+	d.Set("image_id", k.Image.ImageID)
+	d.Set("instance_type", k.InstanceType)
+
+	instanceKeypairsId := make([]string, 0, len(k.KeypairIds))
+	for _, kp := range k.KeypairIds {
+		instanceKeypairsId = append(instanceKeypairsId, kp)
+	}
+	d.Set("keypair_ids", instanceKeypairsId)
+	d.Set("security_group_id", k.SecurityGroup.SecurityGroupID)
+	if len(k.Vxnets) >= 1 {
+		d.Set("vxnet_name", k.Vxnets[0].VxnetName)
+		d.Set("vxnet_id", k.Vxnets[0].VxnetID)
+		d.Set("private_ip", k.Vxnets[0].PrivateIP)
+	}
+	d.Set("eip_id", k.Eip.EipID)
+	d.Set("eip_addr", k.Eip.EipAddr)
 	return nil
 }
 
@@ -129,26 +133,21 @@ func resourceQingcloudInstanceSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"vxnets": &schema.Schema{
-			Type:     schema.TypeSet,
+		"vxnet_name": &schema.Schema{
+			Type:     schema.TypeString,
 			Computed: true,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"vxnet_name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"vxnet_type": &schema.Schema{
-						Type:     schema.TypeInt,
-						Optional: true,
-					},
-					"private_ip": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
+		},
+		"private_ip": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"eip_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"eip_addr": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 	}
 

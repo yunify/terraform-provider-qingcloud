@@ -32,6 +32,11 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error create security group", err)
 	}
 
+	// waiting until state refresh
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router_id").(string)); err != nil {
+		return err
+	}
+
 	if description := d.Get("description").(string); description != "" {
 		modifyAtrributes := vxnet.ModifyVxnetAttributesRequest{}
 		// 对于私有网络，一个定义文件只创建一个比较方便
