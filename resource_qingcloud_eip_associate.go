@@ -14,12 +14,14 @@ func resourceQingcloudEipAssociate() *schema.Resource {
 		Delete: resourceQingcloudEipAssociateDelete,
 		Schema: map[string]*schema.Schema{
 			"eip": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "公网IP",
 			},
 			"resource_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "资源类型，目前支持 router 和 instance",
 			},
 			"resource_id": &schema.Schema{
 				Type:     schema.TypeString,

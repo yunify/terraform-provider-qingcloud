@@ -13,28 +13,35 @@ func resourceQingcloudSecuritygroupRule() *schema.Resource {
 		Delete: resourceQingcloudSecuritygroupRuleDelete,
 		Schema: map[string]*schema.Schema{
 			"securitygroup": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "防火墙 ID",
 			},
 			"protocol": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "协议",
+				ValidateFunc: withinArrayString("tcp", "udp", "icmp", "gre", "esp", "ah", "ipip"),
 			},
 			"priority": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: withinArrayIntRange(0, 100),
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"action": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: withinArrayString("accept", "drops"),
 			},
 			"direction": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "方向，0 表示下行，1 表示上行。默认为 0。",
+				ValidateFunc: withinArrayInt(0, 1),
 			},
 			"val1": &schema.Schema{
 				Type:     schema.TypeString,

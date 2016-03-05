@@ -15,26 +15,32 @@ func resourceQingcloudLoadbalancerBackend() *schema.Resource {
 			"listener": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "要添加后端服务的监听器ID	",
 			},
 			"resource_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "后端服务资源ID",
 			},
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "后端服务名称",
 			},
 			"policy": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "转发策略ID",
 			},
 			"port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "后端服务端口",
 			},
 			"weight": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "后端服务权重",
 			},
 		},
 	}

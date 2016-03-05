@@ -13,21 +13,26 @@ func resourceQingcloudLoadbalancerPloicyRule() *schema.Resource {
 		Delete: resourceQingcloudLoadbalancerPloicyRuleDelete,
 		Schema: map[string]*schema.Schema{
 			"policy": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "要添加规则的转发策略ID",
 			},
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "规则名称",
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "规则匹配类型：按域名”domain” 还是按URL “url”	",
+				ValidateFunc: withinArrayString("domain", "url"),
 			},
 			"val": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "匹配规则，支持正则表达式",
 			},
 		},
 	}

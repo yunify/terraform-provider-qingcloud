@@ -14,29 +14,35 @@ func resourceQingcloudLoadbalancer() *schema.Resource {
 		Delete: nil,
 		Schema: map[string]*schema.Schema{
 			"eip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "公网IP的ID",
 			},
 			"vxnet": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "要假如的私有网络ID",
 			},
 			"private_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "要使用的私网IP",
 			},
 			"type": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: withinArrayInt(0, 1, 2, 3),
+				Description:  "负载均衡类型",
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"security_group": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "负载均衡器加载的防火墙ID，若未提供，则默认加载缺省防火墙",
 			},
 		},
 	}

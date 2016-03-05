@@ -14,8 +14,10 @@ func resourceQingcloudLoadbalancerPloicy() *schema.Resource {
 		Delete: resourceQingcloudLoadbalancerPloicyDelete,
 		Schema: map[string]*schema.Schema{
 			"operator": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "转发策略规则间的逻辑关系：”and” 是『与』，”or” 是『或』，默认是 “or”",
+				ValidateFunc: withinArrayString("and", "or"),
 			},
 		},
 	}

@@ -24,7 +24,8 @@ func resourceQingcloudVxnet() *schema.Resource {
 			"type": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
-				// TODO: only two types
+				Description: "私有网络类型，1 - 受管私有网络，0 - 自管私有网络。	",
+				ValidateFunc: withinArrayInt(0, 1),
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,

@@ -13,7 +13,37 @@ func resourceQingcloudVolume() *schema.Resource {
 		Read:   resourceQingcloudVolumeRead,
 		Update: resourceQingcloudVolumeUpdate,
 		Delete: resourceQingcloudVolumeDelete,
-		Schema: resouceQingcloudVolumeSchema(),
+		Schema: map[string]*schema.Schema{
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+				ForceNew: true,
+			},
+			"size": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+				Description: "硬盘容量，目前可创建最小 10G，最大 500G 的硬盘， 在此范围内的容量值必须是 10 的倍数	",
+			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"type": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+				ForceNew: true,
+				Description: `性能型是 0
+					超高性能型是 3 (只能与超高性能主机挂载，目前只支持北京2区)，
+					容量型因技术升级过程中，在各区的 type 值略有不同:
+					  北京1区，亚太1区：容量型是 1
+					  北京2区，广东1区：容量型是 2`,
+			},
+		},
 	}
 }
 
@@ -113,32 +143,4 @@ func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) err
 			"Error waiting for volume (%s) to update: %s", d.Id(), err)
 	}
 	return nil
-}
-
-func resouceQingcloudVolumeSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-			ForceNew: true,
-		},
-		"size": &schema.Schema{
-			Type:     schema.TypeInt,
-			Required: true,
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"type": &schema.Schema{
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  0,
-			ForceNew: true,
-		},
-	}
 }

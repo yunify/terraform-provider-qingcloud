@@ -14,7 +14,18 @@ func resourceQingcloudSecuritygroup() *schema.Resource {
 		Read:   resourceQingcloudSecuritygroupRead,
 		Update: resourceQingcloudSecuritygroupUpdate,
 		Delete: resourceQingcloudSecuritygroupDelete,
-		Schema: resourceQingcloudSecuritygroupSchema(),
+		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "防火墙名称",
+			},
+			"description": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "防火墙介绍",
+			},
+		},
 	}
 }
 
@@ -123,23 +134,4 @@ func resourceQingcloudSecuritygroupUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error modify security group %s", d.Id())
 	}
 	return nil
-}
-
-func resourceQingcloudSecuritygroupSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
 }

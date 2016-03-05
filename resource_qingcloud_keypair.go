@@ -17,12 +17,18 @@ func resourceQingcloudKeypair() *schema.Resource {
 		Delete: resourceQingcluodKeypairDelete,
 		Schema: map[string]*schema.Schema{
 			"keypair_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "密钥名称",
 			},
 			"public_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"mode": &schema.Schema{
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: withinArrayString("system", "user"),
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,

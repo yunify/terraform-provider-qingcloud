@@ -24,19 +24,23 @@ func resourceQingcloudEip() *schema.Resource {
 				Required: true,
 			},
 			"bandwidth": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				// TODO: only two types
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "公网IP带宽上限，单位为Mbps",
 			},
 			"billing_mode": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "traffic",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "traffic",
+				Description:  "公网IP计费模式：bandwidth 按带宽计费，traffic 按流量计费，默认是 bandwidth",
+				ValidateFunc: withinArrayString("traffic", "bandwidth"),
 			},
 			"need_icp": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				Description:  "是否需要备案，1为需要，0为不需要，默认是0",
+				ValidateFunc: withinArrayInt(0, 1),
 			},
 
 			"addr": &schema.Schema{

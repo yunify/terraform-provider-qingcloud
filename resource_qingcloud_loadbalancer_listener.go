@@ -22,8 +22,9 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 				Required: true,
 			},
 			"protocol": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: withinArrayString("tcp", "http", "https"),
 			},
 			"certificate": &schema.Schema{
 				Type:     schema.TypeString,
@@ -34,8 +35,10 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 				Required: true,
 			},
 			"mode": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: withinArrayString("roundrobin", "leastconn", "source"),
+				Description:  "监听器负载均衡方式：支持 roundrobin (轮询)， leastconn (最小连接)和 source (源地址) 三种。",
 			},
 			"session_sticky": &schema.Schema{
 				Type:     schema.TypeString,
@@ -44,18 +47,34 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 			"forwardfor": &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
+				Description: `转发请求时需要附加的 HTTP Header。此值是由当前支持的3个附加头字段以“按位与”的方式得到的十进制数：
+						1. X-Forwarded-For: bit 位是1 (二进制的1)，表示是否将真实的客户端IP传递给后端。 附加选项“获取客户端IP”关闭时，后端 server 得到的 client IP 是负载均衡器本身的 IP 地址。 在开启本功能之后，后端服务器可以通过请求中的 X-Forwarded-For 字段来获取真实的用户IP。
+						2. QC-LBID: bit 位是2 (二进制的10)，表示 Header 中是否包含 LoadBalancer 的 ID
+						3. QC-LBIP: bit 位是3 (二进制的100)，表示 Header 中是否包含 LoadBalancer 的公网IP
+						
+						例如 Header 中包含 X-Forwarded-For 和 QC-LBIP 的话，forwarfor 的值则为:
+						“X-Forwarded-For | QC-LBIP”，二进制结果为101，最后转换成十进制得到5。`,
 			},
 			"health_check_method": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"health_check_option": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "10|5|2|5",
+				Description: "inter | timeout | fall | rise",
 			},
 			"listener_option": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				Description: `附加选项。此值是由当前支持的2个附加选项以“按位与”的方式得到的十进制数：
+							1. 取消URL校验: bit 位是1 (二进制的1)，表示是否可以让负载均衡器接受不符合编码规范的 URL，例如包含未编码中文字符的URL等
+							2. 获取客户端IP: bit 位是2 (二进制的10)，表示是否将客户端的IP直接传递给后端。 开启本功能后，负载均衡器对与后端是完全透明的。
+							后端主机TCP连接得到的源地址是客户端的IP， 而不是负载均衡器的IP。注意：仅支持受管网络中的后端。使用基础网络后端时，此功能无效。
+							3. 数据压缩: bit 位是4 (二进制的100)， 表示是否使用gzip算法压缩文本数据，以减少网络流量。
+							4. 禁用不安全的加密方式: bit 位是8 (二进制的1000), 禁用存在安全隐患的加密方式， 可能会不兼容低版本的客户端。
+							`,
 			},
 		},
 	}

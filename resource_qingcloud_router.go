@@ -14,21 +14,26 @@ func resourceQingcloudRouter() *schema.Resource {
 		Delete: nil,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "路由器名称",
 			},
-
 			"type": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: withinArrayInt(0, 1, 2),
+				Description: "路由器类型: 0 - 中型，1 - 小型，2 - 大型，默认为 1	",
 			},
 			"vpc_network": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: withinArrayString("192.168.0.0/16", "172.16.0.0/16"),
+				Description:  "VPC 网络地址范围，目前支持 192.168.0.0/16 或 172.16.0.0/16 。 注：此参数只在北京3区需要且是必填参数。",
 			},
 			"security_group_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "需要加载到路由器上的防火墙ID",
 			},
 
 			"description": &schema.Schema{
@@ -41,16 +46,6 @@ func resourceQingcloudRouter() *schema.Resource {
 			},
 			"is_applied": &schema.Schema{
 				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"status": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
@@ -114,7 +109,6 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("private_ip", v.PrivateIP)
 			d.Set("is_applied", v.IsApplied)
 			d.Set("eip", v.Eip)
-			d.Set("status", v.Status)
 			return nil
 		}
 	}
