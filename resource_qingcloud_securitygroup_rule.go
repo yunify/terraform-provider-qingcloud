@@ -68,7 +68,7 @@ func resourceQingcloudSecuritygroupRuleCreate(d *schema.ResourceData, meta inter
 	params.SecurityGroup.Set(d.Get("securitygroup").(string))
 	params.RulesNProtocol.Add(d.Get("protocol").(string))
 	params.RulesNPriority.Add(int64(d.Get("priority").(int)))
-	params.RuleNSecurityGroupRuleName.Add(d.Get("name").(string))
+	params.RulesNSecurityGroupRuleName.Add(d.Get("name").(string))
 	params.RulesNAction.Add(d.Get("action").(string))
 	params.RulesNDirection.Add(int64(d.Get("direction").(int)))
 	params.RulesNVal1.Add(d.Get("val1").(string))
@@ -84,7 +84,7 @@ func resourceQingcloudSecuritygroupRuleCreate(d *schema.ResourceData, meta inter
 func resourceQingcloudSecuritygroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	params := securitygroup.DescribeSecurityGroupRulesRequest{}
-	params.SecurityGroupRuleN.Add(d.Id())
+	params.SecurityGroupRulesN.Add(d.Id())
 	resp, err := clt.DescribeSecurityGroupRules(params)
 	if err != nil {
 		return err
