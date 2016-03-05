@@ -67,6 +67,8 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error create Router ", err)
 	}
 	d.SetId(resp.Routers[0])
+	qingcloudMutexKV.Lock(resp.Routers[0])
+	defer qingcloudMutexKV.Unlock(resp.Routers[0])
 
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if err != nil {
