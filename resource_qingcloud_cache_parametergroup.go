@@ -7,10 +7,10 @@ import (
 
 func resourceQingcloudCacheParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: nil,
-		Read:   nil,
-		Update: nil,
-		Delete: nil,
+		Create: resourceQingcloudCacheParameterGroupCreate,
+		Read:   resourceQingcloudCacheParameterGroupRead,
+		Update: resourceQingcloudCacheParameterGroupUpdate,
+		Delete: resourceQingcloudCacheParameterGroupDelete,
 		Schema: map[string]*schema.Schema{},
 	}
 }

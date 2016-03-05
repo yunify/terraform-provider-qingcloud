@@ -7,10 +7,10 @@ import (
 
 func resourceQingcloudCache() *schema.Resource {
 	return &schema.Resource{
-		Create: nil,
-		Read:   nil,
-		Update: nil,
-		Delete: nil,
+		Create: resourceQingcloudCacheCreate,
+		Read:   resourceQingcloudCacheRead,
+		Update: resourceQingcloudCacheUpdate,
+		Delete: resourceQingcloudCacheDelete,
 		Schema: map[string]*schema.Schema{
 			"vxnet": &schema.Schema{
 				Type:        schema.TypeString,
