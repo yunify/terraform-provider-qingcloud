@@ -14,14 +14,14 @@ func resourceQingcloudSecuritygroupRule() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"securitygroup": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"protocol": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"priority": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"name": &schema.Schema{
