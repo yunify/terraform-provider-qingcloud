@@ -31,6 +31,8 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			// 当第一次创建一个私有网络以后，会首先加入到默认的router中
+			// 所以当重新假如到一个网络中，需要更新一下router
 			"router": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -58,48 +60,38 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	if err := modifyVxnetAttributes(d, meta, false); err != nil {
 		return err
 	}
-
-	// waiting until state refresh
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router").(string)); err != nil {
+	routerID := d.Get("router").(string)
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
 		return err
 	}
+
 	// join the router
+	clt2 := meta.(*QingCloudClient).router
 	joinRouterParams := router.JoinRouterRequest{}
 	joinRouterParams.Vxnet.Set(resp.Vxnets[0])
-	joinRouterParams.Router.Set(d.Get("router").(string))
+	joinRouterParams.Router.Set(routerID)
 	joinRouterParams.IpNetwork.Set(d.Get("ip_network").(string))
-
-	clt2 := meta.(*QingCloudClient).router
 	_, err = clt2.JoinRouter(joinRouterParams)
 	if err != nil {
 		return fmt.Errorf("Error modify vxnet description: %s", err)
 	}
-
-	return nil
+	return resourceQingcloudVxnetRead(d, meta)
 }
 
 func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
-
-	// 设置请求参数
 	params := vxnet.DescribeVxnetsRequest{}
 	params.VxnetsN.Add(d.Id())
 	params.Verbose.Set(1)
-
 	resp, err := clt.DescribeVxnets(params)
 	if err != nil {
 		return fmt.Errorf("Error retrieving vxnets: %s", err)
 	}
-	for _, sg := range resp.VxnetSet {
-		if sg.VxnetID == d.Id() {
-			d.Set("name", sg.VxnetName)
-			d.Set("description", sg.Description)
-			d.Set("router", sg.Router.RouterID)
-			d.Set("ip_network", sg.Router.IPNetwork)
-			return nil
-		}
-	}
-	d.SetId("")
+	sg := resp.VxnetSet[0]
+	d.Set("name", sg.VxnetName)
+	d.Set("description", sg.Description)
+	d.Set("router", sg.Router.RouterID)
+	d.Set("ip_network", sg.Router.IPNetwork)
 	return nil
 }
 
