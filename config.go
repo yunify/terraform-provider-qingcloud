@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"github.com/magicshui/qingcloud-go"
+	"github.com/magicshui/qingcloud-go/cache"
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/instance"
 	"github.com/magicshui/qingcloud-go/keypair"
@@ -27,6 +28,7 @@ type QingCloudClient struct {
 	instance      *instance.INSTANCE
 	volume        *volume.VOLUME
 	loadbalancer  *loadbalancer.LOADBALANCER
+	cahce         *cache.CACHE
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -42,5 +44,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		instance:      instance.NewClient(clt),
 		volume:        volume.NewClient(clt),
 		loadbalancer:  loadbalancer.NewClient(clt),
+		cahce:         cache.NewClient(clt),
 	}, nil
 }

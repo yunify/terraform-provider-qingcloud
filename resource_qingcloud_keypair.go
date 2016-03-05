@@ -2,10 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
-
-	// "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/magicshui/qingcloud-go/keypair"
 )
 
