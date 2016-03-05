@@ -11,7 +11,7 @@ func resourceQingcloudCacheParameterGroup() *schema.Resource {
 		Read:   resourceQingcloudCacheParameterGroupRead,
 		Update: resourceQingcloudCacheParameterGroupUpdate,
 		Delete: resourceQingcloudCacheParameterGroupDelete,
-		Schema: map[string]*schema.Schema{},
+		Schema: nil, // map[string]*schema.Schema{}
 	}
 }
 

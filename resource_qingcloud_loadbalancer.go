@@ -13,6 +13,10 @@ func resourceQingcloudLoadbalancer() *schema.Resource {
 		Update: resourceQingcloudLoadbalancerUpdate,
 		Delete: nil,
 		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"eip": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -21,7 +25,7 @@ func resourceQingcloudLoadbalancer() *schema.Resource {
 			"vxnet": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "要假如的私有网络ID",
+				Description: "私有网络ID",
 			},
 			"private_ip": &schema.Schema{
 				Type:        schema.TypeString,
@@ -35,11 +39,8 @@ func resourceQingcloudLoadbalancer() *schema.Resource {
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
 				Description:  "负载均衡类型",
 			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"security_group": &schema.Schema{
+
+			"securitygroup": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "负载均衡器加载的防火墙ID，若未提供，则默认加载缺省防火墙",
@@ -56,7 +57,7 @@ func resourceQingcloudLoadbalancerCreate(d *schema.ResourceData, meta interface{
 	params.PrivateIp.Set(d.Get("private_ip").(string))
 	params.LoadbalancerType.Set(d.Get("type").(int))
 	params.LoadbalancerName.Set(d.Get("name").(string))
-	params.SecurityGroup.Set(d.Get("security_group").(string))
+	params.SecurityGroup.Set(d.Get("securitygroup").(string))
 	resp, err := clt.CreateLoadBalancer(params)
 	if err != nil {
 		return err

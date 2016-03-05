@@ -17,6 +17,10 @@ func resourceQingcloudSecuritygroupRule() *schema.Resource {
 				Required:    true,
 				Description: "防火墙 ID",
 			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"protocol": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
@@ -27,10 +31,6 @@ func resourceQingcloudSecuritygroupRule() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayIntRange(0, 100),
-			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"action": &schema.Schema{
 				Type:         schema.TypeString,
@@ -46,14 +46,17 @@ func resourceQingcloudSecuritygroupRule() *schema.Resource {
 			"val1": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "如果协议为 tcp 或 udp，此值表示起始端口。 如果协议为 icmp，此值表示 ICMP 类型。 其他协议无需此值。	",
 			},
 			"val2": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "如果协议为 tcp 或 udp，此值表示结束端口。 如果协议为 icmp，此值表示 ICMP 代码。 其他协议无需此值。	",
 			},
 			"val3": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "目标 IP，如果填写，则这条防火墙规则只对此IP（或IP段）有效。	",
 			},
 		},
 	}

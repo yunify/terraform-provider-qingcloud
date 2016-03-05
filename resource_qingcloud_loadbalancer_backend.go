@@ -12,20 +12,20 @@ func resourceQingcloudLoadbalancerBackend() *schema.Resource {
 		Update: resourceQingcloudLoadbalancerBackendUpdate,
 		Delete: resourceQingcloudLoadbalancerBackendDelete,
 		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "后端服务名称",
+			},
 			"listener": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "要添加后端服务的监听器ID	",
 			},
-			"resource_id": &schema.Schema{
+			"resource": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "后端服务资源ID",
-			},
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "后端服务名称",
 			},
 			"policy": &schema.Schema{
 				Type:        schema.TypeString,
@@ -51,7 +51,7 @@ func resourceQingcloudLoadbalancerBackendCreate(d *schema.ResourceData, meta int
 	params := loadbalancer.AddLoadBalancerBackendsRequest{}
 	params.BackendsNLoadbalancerBackendName.Add(d.Get("name").(string))
 	params.LoadbalancerListener.Set(d.Get("listener").(string))
-	params.BackendsNResourceId.Add(d.Get("resource_id").(string))
+	params.BackendsNResourceId.Add(d.Get("resource").(string))
 	params.BackendsNLoadbalancerPolicyId.Add(d.Get("policy").(string))
 	params.BackendsNPort.Add(int64(d.Get("port").(int)))
 	params.BackendsNWeight.Add(int64(d.Get("weight").(int)))
@@ -73,7 +73,7 @@ func resourceQingcloudLoadbalancerBackendRead(d *schema.ResourceData, meta inter
 	lb := resp.LoadbalancerBackendSet[0]
 	d.Set("name", lb.LoadbalancerBackendName)
 	d.Set("listener", lb.LoadbalancerListenerID)
-	d.Set("resource_id", lb.ResourceID)
+	d.Set("resource", lb.ResourceID)
 	d.Set("port", lb.Port)
 	d.Set("weight", lb.Weight)
 	return nil

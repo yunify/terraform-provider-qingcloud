@@ -30,7 +30,7 @@ func resourceQingcloudRouter() *schema.Resource {
 				ValidateFunc: withinArrayString("192.168.0.0/16", "172.16.0.0/16"),
 				Description:  "VPC 网络地址范围，目前支持 192.168.0.0/16 或 172.16.0.0/16 。 注：此参数只在北京3区需要且是必填参数。",
 			},
-			"security_group_id": &schema.Schema{
+			"securitygroup": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "需要加载到路由器上的防火墙ID",
@@ -60,7 +60,7 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 	params.RouterName.Set(d.Get("name").(string))
 	params.RouterType.Set(d.Get("type").(int))
 	params.VpcNetwork.Set(d.Get("vpc_network").(string))
-	params.SecurityGroup.Set(d.Get("security_group_id").(string))
+	params.SecurityGroup.Set(d.Get("securitygroup").(string))
 
 	resp, err := clt.CreateRouters(params)
 	if err != nil {
@@ -103,7 +103,7 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("name", v.RouterName)
 			d.Set("type", v.RouterType)
 			d.Set("vpc_network", v.Vxnets)
-			d.Set("security_group_id", v.SecurityGroupID)
+			d.Set("securitygroup", v.SecurityGroupID)
 			d.Set("description", v.Description)
 
 			// 如下状态是稍等来获取的

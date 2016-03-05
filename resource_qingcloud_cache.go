@@ -41,11 +41,13 @@ func resourceQingcloudCache() *schema.Resource {
 				Type: schema.TypeInt,
 				Description: "自动备份时间(UTC 的 Hour 部分)，有效值0-23，任何大于23的整型值均表示关闭自动备份，默认值 99	",
 				ValidateFunc: withinArrayIntRange(0, 23),
+				Optional:     true,
 			},
 			"cache_class": &schema.Schema{
 				Type: schema.TypeInt,
 				Description: "性能型和高性能型缓存服务，性能型：0，高性能型：1	",
 				ValidateFunc: withinArrayInt(0, 1),
+				Required:     true,
 			},
 			// "private_ips": &schema.Schema{
 			// 	Type: schema.TypeSet,

@@ -31,19 +31,13 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"router_id": &schema.Schema{
+			"router": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"ip_network": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 		},
 	}
@@ -66,13 +60,13 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	// waiting until state refresh
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router_id").(string)); err != nil {
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("router").(string)); err != nil {
 		return err
 	}
 	// join the router
 	joinRouterParams := router.JoinRouterRequest{}
 	joinRouterParams.Vxnet.Set(resp.Vxnets[0])
-	joinRouterParams.Router.Set(d.Get("router_id").(string))
+	joinRouterParams.Router.Set(d.Get("router").(string))
 	joinRouterParams.IpNetwork.Set(d.Get("ip_network").(string))
 
 	clt2 := meta.(*QingCloudClient).router
@@ -100,7 +94,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		if sg.VxnetID == d.Id() {
 			d.Set("name", sg.VxnetName)
 			d.Set("description", sg.Description)
-			d.Set("router_id", sg.Router.RouterID)
+			d.Set("router", sg.Router.RouterID)
 			d.Set("ip_network", sg.Router.IPNetwork)
 			return nil
 		}

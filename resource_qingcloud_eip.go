@@ -42,7 +42,8 @@ func resourceQingcloudEip() *schema.Resource {
 				Description:  "是否需要备案，1为需要，0为不需要，默认是0",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
-
+			// -------------------------------------------
+			// ----------    如下是自动计算的     -----------
 			"addr": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,

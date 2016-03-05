@@ -14,10 +14,6 @@ func resourceQingcloudInstance() *schema.Resource {
 		Update: resourceQingcloudInstanceUpdate,
 		Delete: resourceQingcloudInstanceDelete,
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,

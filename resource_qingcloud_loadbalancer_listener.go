@@ -12,6 +12,10 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 		Update: resourceQingcloudLoadbalancerListenerUpdate,
 		Delete: resourceQingcloudLoadbalancerListenerDelete,
 		Schema: map[string]*schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"loadbalancer": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -29,10 +33,6 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 			"certificate": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"mode": &schema.Schema{
 				Type:         schema.TypeString,

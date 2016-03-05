@@ -46,6 +46,7 @@ func resourceQingcloudMongo() *schema.Resource {
 				Type: schema.TypeInt,
 				Description: "自动备份时间(UTC 的 Hour 部分)，有效值0-23，任何大于23的整型值均表示关闭自动备份，默认值 99	",
 				ValidateFunc: withinArrayIntRange(0, 23),
+				Optional:     true,
 			},
 
 			// "private_ips": &schema.Schema{
