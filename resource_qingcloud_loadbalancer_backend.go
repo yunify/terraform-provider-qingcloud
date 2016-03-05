@@ -25,7 +25,7 @@ func resourceQingcloudLoadbalancerBackend() *schema.Resource {
 				Optional: true,
 			},
 			"policy": &schema.Schema{
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"port": &schema.Schema{

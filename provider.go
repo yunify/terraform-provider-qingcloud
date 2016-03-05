@@ -29,9 +29,11 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_eip":           resourceQingcloudEip(),
 			"qingcloud_eip_associate": resourceQingcloudEipAssociate(),
 
-			"qingcloud_keypair":       resourceQingcloudKeypair(),
-			"qingcloud_securitygroup": resourceQingcloudSecuritygroup(),
-			"qingcloud_vxnet":         resourceQingcloudVxnet(),
+			"qingcloud_keypair": resourceQingcloudKeypair(),
+
+			"qingcloud_securitygroup":      resourceQingcloudSecuritygroup(),
+			"qingcloud_securitygroup_rule": resourceQingcloudSecuritygroupRule(),
+			"qingcloud_vxnet":              resourceQingcloudVxnet(),
 
 			"qingcloud_router":        resourceQingcloudRouter(),
 			"qingcloud_router_static": resourceQingcloudRouterStatic(),

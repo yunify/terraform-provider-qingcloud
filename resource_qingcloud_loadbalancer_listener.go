@@ -22,12 +22,12 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 				Required: true,
 			},
 			"protocol": &schema.Schema{
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"certificate": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -39,7 +39,7 @@ func resourceQingcloudLoadbalancerListener() *schema.Resource {
 			},
 			"session_sticky": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"forwardfor": &schema.Schema{
 				Type:     schema.TypeInt,
