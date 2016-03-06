@@ -31,8 +31,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			// 当第一次创建一个私有网络以后，会首先加入到默认的router中
-			// 所以当重新假如到一个网络中，需要更新一下router
+			// 当第一次创建一个私有网络以后，会首先加入到自己定制的router中，不是 vpc
 			"router": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,7 +89,9 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	sg := resp.VxnetSet[0]
 	d.Set("name", sg.VxnetName)
 	d.Set("description", sg.Description)
-	d.Set("router", sg.Router.RouterID)
+
+	// TODO: 青云目前不支持
+	// d.Set("router", sg.Router.RouterID)
 	d.Set("ip_network", sg.Router.IPNetwork)
 	return nil
 }
