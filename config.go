@@ -1,7 +1,7 @@
 package qingcloud
 
 import (
-	"github.com/magicshui/qingcloud-go"
+	a "github.com/magicshui/qingcloud-go"
 	"github.com/magicshui/qingcloud-go/cache"
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/instance"
