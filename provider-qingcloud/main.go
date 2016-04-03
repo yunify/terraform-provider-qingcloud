@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/CuriosityChina/terraform-qingcloud"
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/magicshui/terraform-qingcloud"
 )
 
 func main() {
