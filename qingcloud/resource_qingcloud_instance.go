@@ -2,9 +2,11 @@ package qingcloud
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/magicshui/qingcloud-go/instance"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func resourceQingcloudInstance() *schema.Resource {
@@ -70,7 +72,15 @@ func resourceQingcloudInstance() *schema.Resource {
 
 func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
-
+	input, err := buildQingcloudRunInstanceInput(d, meta)
+	if err != nil {
+		return err
+	}
+	output, err := clt.RunInstances(input)
+	if err != nil {
+		return err
+	}
+	
 	params := instance.RunInstancesRequest{}
 	params.InstanceName.Set(d.Get("name").(string))
 	params.ImageId.Set(d.Get("image_id").(string))
@@ -142,4 +152,8 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error run instance :%s", err)
 	}
 	return nil
+}
+
+func buildQingcloudRunInstanceInput(d *schema.ResourceData, meta interface{}) (*qc.RunInstancesInput, error) {
+	return nil, nil
 }

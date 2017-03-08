@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/CuriosityChina/terraform-qingcloud"
+	"github.com/CuriosityChina/terraform-qingcloud/qingcloud"
 	"github.com/hashicorp/terraform/plugin"
 )
 

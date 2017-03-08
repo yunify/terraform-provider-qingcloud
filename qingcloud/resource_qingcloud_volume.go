@@ -1,8 +1,8 @@
 package qingcloud
 
 import (
-	"errors"
 	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/volume"
 )
@@ -105,7 +105,7 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 		oldSize, newSize := d.GetChange("size")
 		if oldSize.(int) > newSize.(int) {
 			d.Set("size", oldSize.(int))
-			return fmt.Errorf("Error you can only increase the size", errors.New("INCREASE SIZE ONLY"))
+			return fmt.Errorf("Error you can only increase the size")
 		}
 		params := volume.ResizeVolumesRequest{}
 		params.VolumesN.Add(d.Id())

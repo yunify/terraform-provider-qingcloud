@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/magicshui/qingcloud-go/keypair"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func deleteKeypairFromInstance(meta interface{}, keypairID string, instanceID ...interface{}) error {
@@ -27,30 +28,33 @@ func deleteKeypairFromInstance(meta interface{}, keypairID string, instanceID ..
 			return err
 		}
 	}
-
 	return err
 }
 
 func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).keypair
-	params := keypair.ModifyKeyPairAttributesRequest{}
-	params.Keypair.Set(d.Id())
+	input := new(qc.ModifyKeyPairAttributesInput)
+	input.KeyPair = qc.String(d.Id())
 
 	if create {
 		if description := d.Get("description").(string); description != "" {
+			input.Description = qc.String(d.Get("description").(string))
 			params.Description.Set(description)
 		}
 	} else {
 		if d.HasChange("description") {
-			params.Description.Set(d.Get("description").(string))
+			input.Description = qc.String(d.Get("description").(string))
 		}
 		if d.HasChange("keypair_name") {
-			params.KeypairName.Set(d.Get("keypair_name").(string))
+			input.KeyPairName = qc.String(d.Get("keypair_name").(string))
 		}
 	}
-	_, err := clt.ModifyKeyPairAttributes(params)
+	output, err := clt.ModifyKeyPairAttributes(input)
 	if err != nil {
-		return fmt.Errorf("Error modify keypair description: %s", err)
+		return fmt.Errorf("Error modify keypair attributes: %s", err)
+	}
+	if output.RetCode != 0 {
+		return fmt.Errorf("Error modify keypair attributes: %s", output.Message)
 	}
 	return nil
 }

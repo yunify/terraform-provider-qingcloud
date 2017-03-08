@@ -26,8 +26,8 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"qingcloud_eip":           resourceQingcloudEip(),
-			"qingcloud_eip_associate": resourceQingcloudEipAssociate(),
+			"qingcloud_eip": resourceQingcloudEip(),
+			// "qingcloud_eip_associate": resourceQingcloudEipAssociate(),
 
 			"qingcloud_keypair": resourceQingcloudKeypair(),
 
@@ -42,9 +42,9 @@ func Provider() terraform.ResourceProvider {
 
 			"qingcloud_instance": resourceQingcloudInstance(),
 
-			"qingcloud_cache": resourceQingcloudCache(),
+			// "qingcloud_cache": resourceQingcloudCache(),
 
-			"qingcloud_mongo": resourceQingcloudMongo(),
+			// "qingcloud_mongo": resourceQingcloudMongo(),
 
 			// "resource_qingcloud_cache_parametergroup": resourceQingcloudCacheParameterGroup(),
 
@@ -76,8 +76,8 @@ var descriptions map[string]string
 
 func init() {
 	descriptions = map[string]string{
-		"id":     "青云的 ID ",
-		"secret": "青云的密钥",
-		"zone":   "青云的 zone ",
+		"id":     "qingcloud access key ID ",
+		"secret": "qingcloud access key secret",
+		"zone":   "qingcloud reigon zone",
 	}
 }

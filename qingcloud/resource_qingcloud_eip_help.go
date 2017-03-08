@@ -2,14 +2,17 @@ package qingcloud
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/magicshui/qingcloud-go/eip"
 	"github.com/magicshui/qingcloud-go/router"
-	"log"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).eip
+
 	modifyAtrributes := eip.ModifyEipAttributesRequest{}
 	if create {
 		if description := d.Get("description").(string); description == "" {
@@ -20,13 +23,16 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 			return nil
 		}
 	}
-
-	modifyAtrributes.Eip.Set(d.Id())
-	modifyAtrributes.Description.Set(d.Get("description").(string))
-	modifyAtrributes.EipName.Set(d.Get("name").(string))
-	_, err := clt.ModifyEipAttributes(modifyAtrributes)
+	input := new(qc.ModifyEIPAttributesInput)
+	input.Description = qc.String(d.Get("description").(string))
+	input.EIPName = qc.String(d.Get("name").(string))
+	input.EIP = qc.String(d.Id())
+	output, err := clt.ModifyEIPAttributes(input)
 	if err != nil {
-		return fmt.Errorf("Error modify eip description: %s", err)
+		return fmt.Errorf("Error modify eip attributes: %s", err)
+	}
+	if *output.RetCode == 0 {
+		return fmt.Errorf("Error modify eip attributes: %s", output.Message)
 	}
 	return nil
 }
@@ -64,10 +70,10 @@ func dissociateEipFromResource(meta interface{}, eipID, resourceType, resourceID
 	}
 }
 
-func getEipSourceMap(data eip.Eip) map[string]interface{} {
+func getEIPResourceMap(data *qc.EIP) map[string]interface{} {
 	var a = make(map[string]interface{}, 3)
-	a["id"] = data.Resource.ResourceID
-	a["name"] = data.Resource.ResourceName
-	a["type"] = data.Resource.ResourceType
+	a["resource_id"] = data.Resource.ResourceID
+	a["resource_name"] = data.Resource.ResourceName
+	a["resource_type"] = data.Resource.ResourceType
 	return a
 }

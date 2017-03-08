@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/magicshui/qingcloud-go/eip"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func resourceQingcloudEip() *schema.Resource {
@@ -21,7 +21,7 @@ func resourceQingcloudEip() *schema.Resource {
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Required: false,
 			},
 			"bandwidth": &schema.Schema{
 				Type:        schema.TypeInt,
@@ -63,70 +63,66 @@ func resourceQingcloudEip() *schema.Resource {
 				Computed:     true,
 				ComputedWhen: []string{"id"},
 			},
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
 
 func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-	params := eip.AllocateEipsRequest{}
-	params.Bandwidth.Set(d.Get("bandwidth").(int))
-	params.BillingMode.Set(d.Get("billing_mode").(string))
-	params.EipName.Set(d.Get("name").(string))
-	params.NeedIcp.Set(d.Get("need_icp").(int))
-	resp, err := clt.AllocateEips(params)
-	if err != nil {
-		return fmt.Errorf("Error create eip ", err)
-	}
-	d.SetId(resp.Eips[0])
 
-	// 设置描述信息
+	input := new(qc.AllocateEIPsInput)
+	input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
+	input.BillingMode = qc.String(d.Get("billing_mode").(string))
+	input.EIPName = qc.String(d.Get("name").(string))
+	input.NeedICP = qc.Int(d.Get("need_icp").(int))
+	input.Count = qc.Int(1)
+	err := input.Validate()
+	if err != nil {
+		return fmt.Errorf("Error create eip input validate: %s", err)
+	}
+	output, err := clt.AllocateEIPs(input)
+	if err != nil {
+		return fmt.Errorf("Error create eip: %s", err)
+	}
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error create eip: %s", *output.Message)
+	}
+	d.SetId(qc.StringValue(output.EIPs[0]))
+	// set eip description
 	if err := modifyEipAttributes(d, meta, true); err != nil {
 		return err
 	}
-
-	// 配置一下
 	return resourceQingcloudEipRead(d, meta)
 }
 
 func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-	_, err := EipTransitionStateRefresh(clt, d.Id())
+
+	input := new(qc.DescribeEIPsInput)
+	input.EIPs = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	err := input.Validate()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for the transition %s", err)
+		return fmt.Errorf("Error describe eip input validate: %s", err)
 	}
-
-	// 设置请求参数
-	params := eip.DescribeEipsRequest{}
-	params.EipsN.Add(d.Id())
-	params.Verbose.Set(1)
-
-	resp, err := clt.DescribeEips(params)
+	output, err := clt.DescribeEIPs(input)
 	if err != nil {
-		return fmt.Errorf("Error retrieving eips: %s", err)
+		return fmt.Errorf("Error describe eip: %s", err)
 	}
-	if len(resp.EipSet) == 0 {
-		return fmt.Errorf("Not found", nil)
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe eip: %s", output.Message)
 	}
-
-	sg := resp.EipSet[0]
-
-	d.Set("name", sg.EipName)
-	d.Set("billing_mode", sg.BillingMode)
-	d.Set("bandwidth", sg.Bandwidth)
-	d.Set("need_icp", sg.NeedIcp)
-	d.Set("description", sg.Description)
+	ip := output.EIPSet[0]
+	d.Set("name", ip.EIPName)
+	d.Set("billing_mode", ip.BillingMode)
+	d.Set("bandwidth", ip.Bandwidth)
+	d.Set("need_icp", ip.NeedICP)
+	d.Set("description", ip.Description)
 	// 如下状态是稍等来获取的
-	d.Set("addr", sg.EipAddr)
-	d.Set("status", sg.Status)
-	d.Set("transition_status", sg.TransitionStatus)
-	if err := d.Set("resource", getEipSourceMap(sg)); err != nil {
+	d.Set("addr", ip.EIPAddr)
+	d.Set("status", ip.Status)
+	d.Set("transition_status", ip.TransitionStatus)
+	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
 	return nil
@@ -135,11 +131,18 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 
-	params := eip.ReleaseEipsRequest{}
-	params.EipsN.Add(d.Id())
-	_, err := clt.ReleaseEips(params)
+	input := new(qc.ReleaseEIPsInput)
+	input.EIPs = []*string{qc.String(d.Id())}
+	err := input.Validate()
 	if err != nil {
-		return fmt.Errorf("Error delete eip %s", err)
+		return fmt.Errorf("Error release eip input validate: %s", err)
+	}
+	output, err := clt.ReleaseEIPs(input)
+	if err != nil {
+		return fmt.Errorf("Error release eip: %s", err)
+	}
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe eip: %s", output.Message)
 	}
 	d.SetId("")
 	return nil
@@ -151,30 +154,40 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 	if !d.HasChange("name") && !d.HasChange("description") && !d.HasChange("bandwidth") && !d.HasChange("billing_mode") {
 		return nil
 	}
-
 	if d.HasChange("bandwidth") {
-		params := eip.ChangeEipsBandwidthRequest{}
-		params.EipsN.Add(d.Id())
-		params.Bandwidth.Set(d.Get("bandwidth").(int))
-		_, err := clt.ChangeEipsBandwidth(params)
+		input := new(qc.ChangeEIPsBandwidthInput)
+		input.EIPs = []*string{qc.String(d.Id())}
+		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
+		err := input.Validate()
 		if err != nil {
-			return err
+			return fmt.Errorf("Error Change EIP bandwidth input validate: %s", err)
+		}
+		output, err := clt.ChangeEIPsBandwidth(input)
+		if err != nil {
+			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
+		}
+		if *output.RetCode != 0 {
+			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
 		}
 	}
-
 	if d.HasChange("billing_mode") {
-		params := eip.ChangeEipsBillingModeRequest{}
-		params.EipsN.Add(d.Id())
-		params.BillingMode.Set(d.Get("billing_mode").(string))
-		_, err := clt.ChangeEipsBillingMode(params)
+		input := new(qc.ChangeEIPsBillingModeInput)
+		input.EIPs = []*string{qc.String(d.Id())}
+		input.BillingMode = qc.String(d.Get("billing_mode").(string))
+		err := input.Validate()
 		if err != nil {
-			return err
+			return fmt.Errorf("Error Change EIPs billing_mode input validate: %s", err)
+		}
+		output, err := clt.ChangeEIPsBillingMode(input)
+		if err != nil {
+			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
+		}
+		if *output.RetCode != 0 {
+			return fmt.Errorf("Errorf Change EIP billing_mode %s", output.Message)
 		}
 	}
-
 	if err := modifyEipAttributes(d, meta, false); err != nil {
 		return err
 	}
-
 	return resourceQingcloudEipRead(d, meta)
 }

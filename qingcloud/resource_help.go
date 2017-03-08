@@ -15,7 +15,7 @@ func withinArrayString(limits ...string) func(v interface{}, k string) (ws []str
 		if limitsMap[value] {
 			return
 		}
-		errors = append(errors, fmt.Errorf("%q (%q) doesn't match  %q", k, value))
+		errors = append(errors, fmt.Errorf("%q (%q) doesn't match", k, value))
 		return
 	}
 }
@@ -31,7 +31,7 @@ func withinArrayInt(limits ...int) func(v interface{}, k string) (ws []string, e
 		if limitsMap[value] {
 			return
 		}
-		errors = append(errors, fmt.Errorf("%q (%q) doesn't match ", k, value))
+		errors = append(errors, fmt.Errorf("%q (%q) doesn't match", k, value))
 		return
 	}
 }

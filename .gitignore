@@ -25,6 +25,8 @@ _testmain.go
 
 
 /test-tf
-/provider-qingcloud/provider-qingcloud
+terraform-provider-qingcloud
+terraform-qingcloud
 api.md
 /test-*
+*.tfstate
