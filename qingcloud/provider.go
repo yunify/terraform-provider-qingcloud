@@ -28,34 +28,25 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"qingcloud_eip": resourceQingcloudEip(),
 			// "qingcloud_eip_associate": resourceQingcloudEipAssociate(),
-
-			"qingcloud_keypair": resourceQingcloudKeypair(),
-
-			"qingcloud_securitygroup":      resourceQingcloudSecuritygroup(),
-			"qingcloud_securitygroup_rule": resourceQingcloudSecuritygroupRule(),
-
-			"qingcloud_vxnet": resourceQingcloudVxnet(),
-
-			"qingcloud_router":              resourceQingcloudRouter(),
-			"qingcloud_router_static":       resourceQingcloudRouterStatic(),
-			"qingcloud_router_static_entry": resourceQingcloudRouterStaticEntry(),
-
+			"qingcloud_keypair":       resourceQingcloudKeypair(),
+			"qingcloud_securitygroup": resourceQingcloudSecurityGroup(),
+			// "qingcloud_securitygroup_rule": resourceQingcloudSecurityGroupRule(),
+			"qingcloud_vxnet":  resourceQingcloudVxnet(),
+			"qingcloud_router": resourceQingcloudRouter(),
+			// "qingcloud_router_static":      resourceQingcloudRouterStatic(),
+			// "qingcloud_router_static_entry": resourceQingcloudRouterStaticEntry(),
 			"qingcloud_instance": resourceQingcloudInstance(),
 
 			// "qingcloud_cache": resourceQingcloudCache(),
-
 			// "qingcloud_mongo": resourceQingcloudMongo(),
-
 			// "resource_qingcloud_cache_parametergroup": resourceQingcloudCacheParameterGroup(),
-
-			"qingcloud_volume":            resourceQingcloudVolume(),
-			"qingcloud_volume_attachment": resourceQingcloudVolumeAttachment(),
-
-			"qingcloud_loadbalancer":             resourceQingcloudLoadbalancer(),
-			"qingcloud_loadbalancer_listener":    resourceQingcloudLoadbalancerListener(),
-			"qingcloud_loadbalancer_backend":     resourceQingcloudLoadbalancerBackend(),
-			"qingcloud_loadbalancer_policy":      resourceQingcloudLoadbalancerPloicy(),
-			"qingcloud_loadbalancer_policy_rule": resourceQingcloudLoadbalancerPloicyRule(),
+			// "qingcloud_volume":            resourceQingcloudVolume(),
+			// "qingcloud_volume_attachment": resourceQingcloudVolumeAttachment(),
+			// "qingcloud_loadbalancer":             resourceQingcloudLoadbalancer(),
+			// "qingcloud_loadbalancer_listener":    resourceQingcloudLoadbalancerListener(),
+			// "qingcloud_loadbalancer_backend":     resourceQingcloudLoadbalancerBackend(),
+			// "qingcloud_loadbalancer_policy":      resourceQingcloudLoadbalancerPloicy(),
+			// "qingcloud_loadbalancer_policy_rule": resourceQingcloudLoadbalancerPloicyRule(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

@@ -4,43 +4,46 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/magicshui/qingcloud-go/router"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func applyRouterUpdates(meta interface{}, routerID string) error {
-	clt := meta.(*QingCloudClient).router
-	params := router.UpdateRoutersRequest{}
-	params.RoutersN.Add(routerID)
-	if _, err := clt.UpdateRouters(params); err != nil {
-		return err
-	}
-	if _, err := RouterTransitionStateRefresh(clt, routerID); err != nil {
-		return err
-	}
-	return nil
-}
+// func applyRouterUpdates(meta interface{}, routerID string) error {
+// 	clt := meta.(*QingCloudClient).router
+// 	params := router.UpdateRoutersRequest{}
+// 	params.RoutersN.Add(routerID)
+// 	if _, err := clt.UpdateRouters(params); err != nil {
+// 		return err
+// 	}
+// 	if _, err := RouterTransitionStateRefresh(clt, routerID); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.ModifyRouterAttributesInput)
-	input.Routers = []*string{qc.String(d.Id())}
+	input.Router = qc.String(d.Id())
 
 	if create {
-		if description := d.Get("description").(string); description != "" {
-			input.Description = qc.String(description)
+		if description := d.Get("description").(string); description == "" {
+			return nil
 		}
+		input.Description = qc.String(d.Get("description").(string))
 	} else {
+		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("eip") && !d.HasChange("securitygroup_id") {
+			return nil
+		}
 		if d.HasChange("description") {
 			input.Description = qc.String(d.Get("description").(string))
 		}
 		if d.HasChange("name") {
 			input.Description = qc.String(d.Get("name").(string))
 		}
-		if d.HasChange("eip") {
+		if d.HasChange("eip_id") {
 			input.EIP = qc.String(d.Get("eip").(string))
 		}
-		if d.HasChange("securitygroup") {
+		if d.HasChange("security_group_id") {
 			input.SecurityGroup = qc.String(d.Get("eip").(string))
 		}
 	}
@@ -52,8 +55,8 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create boo
 	if err != nil {
 		return fmt.Errorf("Error modify router attributes: %s", err)
 	}
-	if output.RetCode != 0 {
-		return fmt.Errorf("Error modify router attrubites: %s", output.Message)
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
 	}
 	return nil
 }

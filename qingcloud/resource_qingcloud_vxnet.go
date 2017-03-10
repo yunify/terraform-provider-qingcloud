@@ -55,19 +55,19 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	input := new(qc.CreateVxNetsInput)
-	input.Count = 1
+	input.Count = qc.Int(1)
 	input.VxNetName = qc.String(d.Get("name").(string))
-	input.VxNetType = qc.String(d.Get("type").(int))
+	input.VxNetType = qc.Int(d.Get("type").(int))
 	err := input.Validate()
 	if err != nil {
 		return fmt.Errorf("Errorf create vxnet input validate: %s", err)
 	}
 	output, err := clt.CreateVxNets(input)
 	if err != nil {
-		return fmt.Errrof("Error create vxnet: %s", err)
+		return fmt.Errorf("Error create vxnet: %s", err)
 	}
-	if output != 0 {
-		return fmt.Errorf("Error create vxnet: %s", output.Message)
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error create vxnet: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.VxNets[0]))
 	if err := modifyVxnetAttributes(d, meta, false); err != nil {
@@ -88,8 +88,8 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("Error create vxnet join router: %s", err)
 		}
-		if joinRouterOutput.RetCode != 0 {
-			return fmt.Errorf("Error create vxnet join router: %s", joinRouterOutput.Message)
+		if joinRouterOutput.RetCode != nil && qc.IntValue(joinRouterOutput.RetCode) != 0 {
+			return fmt.Errorf("Error create vxnet join router: %s", *joinRouterOutput.Message)
 		}
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
 			return err
@@ -101,18 +101,18 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
 	input := new(qc.DescribeVxNetsInput)
-	input.VxNets = []string{qc.String(d.Id())}
-	input.Verbose = 1
+	input.VxNets = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
 	err := input.Validate()
 	if err != nil {
-		return fmt.Errrof("Error describe vxnet input validate: %s", err)
+		return fmt.Errorf("Error describe vxnet input validate: %s", err)
 	}
 	output, err := clt.DescribeVxNets(input)
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet: %s", err)
 	}
-	if output.RetCode != 0 {
-		return fmt.Errorf("Error describe vxnet: %s", output.Message)
+	if output.RetCode == nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error describe vxnet: %s", *output.Message)
 	}
 	vxnet := output.VxNetSet[0]
 	d.Set("name", qc.StringValue(vxnet.VxNetName))
@@ -138,11 +138,11 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet instances: %s", err)
 	}
-	if describeVxnetInstanceOutput.RetCode != 0 {
-		return fmt.Errorf("Error describe vxnet instances: %s", describeVxnetInstanceOutput.Message)
+	if describeVxnetInstanceOutput.RetCode != nil && qc.IntValue(describeVxnetInstanceOutput.RetCode) != 0 {
+		return fmt.Errorf("Error describe vxnet instances: %s", *describeVxnetInstanceOutput.Message)
 	}
-	if describeVxnetInstanceOutput.TotalCount > 0 {
-		return fmt.Error("Error vxnet is using, can't delete")
+	if qc.IntValue(describeVxnetInstanceOutput.TotalCount) > 0 {
+		return fmt.Errorf("Error vxnet is using, can't delete")
 	}
 
 	routerID := d.Get("router").(string)
@@ -163,8 +163,8 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("Error leave router: %s", err)
 		}
-		if leaveRouterOutput.RetCode != 0 {
-			return fmt.Errorf("Error leave router: %s", leaveRouterOutput.Message)
+		if leaveRouterOutput.RetCode != nil && qc.IntValue(leaveRouterOutput.RetCode) != 0 {
+			return fmt.Errorf("Error leave router: %s", *leaveRouterOutput.Message)
 		}
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
 			return err
@@ -180,15 +180,14 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet: %s", err)
 	}
-	if output.RetCode != 0 {
-		return fmt.Errorf("Error delete vxnet: %s", output.Message)
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error delete vxnet: %s", *output.Message)
 	}
 	d.SetId("")
 	return nil
 }
 
 func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).vxnet
 	if d.HasChange("router") || d.HasChange("ip_network") {
 		routerClt := meta.(*QingCloudClient).router
 		routerID := d.Get("router").(string)
@@ -205,15 +204,15 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			joinRouterInput := new(qc.JoinRouterInput)
-			joinRouterInput.VxNet = output.VxNets[0]
+			joinRouterInput.VxNet = qc.String(d.Id())
 			joinRouterInput.Router = qc.String(newRouterID)
 			joinRouterInput.IPNetwork = qc.String(IPNetwork)
 			joinRouterOutput, err := routerClt.JoinRouter(joinRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error create vxnet join router: %s", err)
 			}
-			if joinRouterOutput.RetCode != 0 {
-				return fmt.Errorf("Error create vxnet join router: %s", joinRouterOutput.Message)
+			if joinRouterOutput.RetCode != nil && qc.IntValue(joinRouterOutput.RetCode) != 0 {
+				return fmt.Errorf("Error create vxnet join router: %s", *joinRouterOutput.Message)
 			}
 			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldRouterID); err != nil {
 				return err
@@ -230,12 +229,12 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 			if err != nil {
 				return fmt.Errorf("Error leave router input validate: %s", err)
 			}
-			leaveRouterOutput, err := routerCtl.LeaveRouter(leaveRouterInput)
+			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error leave router: %s", err)
 			}
-			if leaveRouterOutput.RetCode != 0 {
-				return fmt.Errorf("Error leave router: %s", leaveRouterOutput.Message)
+			if leaveRouterOutput.RetCode != nil && qc.IntValue(leaveRouterOutput.RetCode) != 0 {
+				return fmt.Errorf("Error leave router: %s", *leaveRouterOutput.Message)
 			}
 			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldRouterID); err != nil {
 				return err
@@ -253,12 +252,12 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 			if err != nil {
 				return fmt.Errorf("Error leave router input validate: %s", err)
 			}
-			leaveRouterOutput, err := routerCtl.LeaveRouter(leaveRouterInput)
+			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error leave router: %s", err)
 			}
-			if leaveRouterOutput.RetCode != 0 {
-				return fmt.Errorf("Error leave router: %s", leaveRouterOutput.Message)
+			if leaveRouterOutput.RetCode != nil && qc.IntValue(leaveRouterOutput.RetCode) != 0 {
+				return fmt.Errorf("Error leave router: %s", *leaveRouterOutput.Message)
 			}
 			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldRouterID); err != nil {
 				return err
@@ -268,20 +267,24 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			joinRouterInput := new(qc.JoinRouterInput)
-			joinRouterInput.VxNet = output.VxNets[0]
+			joinRouterInput.VxNet = qc.String(d.Id())
 			joinRouterInput.Router = qc.String(newRouterID)
 			joinRouterInput.IPNetwork = qc.String(IPNetwork)
 			joinRouterOutput, err := routerClt.JoinRouter(joinRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error create vxnet join router: %s", err)
 			}
-			if joinRouterOutput.RetCode != 0 {
-				return fmt.Errorf("Error create vxnet join router: %s", joinRouterOutput.Message)
+			if joinRouterOutput.RetCode != nil && qc.IntValue(joinRouterOutput.RetCode) != 0 {
+				return fmt.Errorf("Error create vxnet join router: %s", *joinRouterOutput.Message)
 			}
 			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, newRouterID); err != nil {
 				return err
 			}
 		}
 	}
-	return modifyVxnetAttributes(d, meta, false)
+	err := modifyVxnetAttributes(d, meta, false)
+	if err != nil {
+		return err
+	}
+	return resourceQingcloudVxnetRead(d, meta)
 }

@@ -11,10 +11,14 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}, cre
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupAttributesInput)
 	if create {
-		if description := ("description").(string); description != "" {
-			input.SecurityGroup = qc.String(description)
+		if description := d.Get("description").(string); description == "" {
+			return nil
 		}
+		input.SecurityGroup = qc.String(d.Get("description").(string))
 	} else {
+		if !d.HasChange("description") && !d.HasChange("name") {
+			return nil
+		}
 		if d.HasChange("description") {
 			input.Description = qc.String(d.Get("description").(string))
 		}
@@ -24,14 +28,14 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}, cre
 	}
 	err := input.Validate()
 	if err != nil {
-		return fmt.Errorf("Error modify securitygroup attributes input validate: %s", err)
+		return fmt.Errorf("Error modify security group attributes input validate: %s", err)
 	}
 	output, err := clt.ModifySecurityGroupAttributes(input)
 	if err != nil {
-		return fmt.Errorf("Error modify securitygroup attributes: %s", erre)
+		return fmt.Errorf("Error modify security group attributes: %s", err)
 	}
-	if output.RetCode != 0 {
-		return fmt.Errorf("Error modify securitygroup attributes: %s", output.Message)
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error modify security group attributes: %s", *output.Message)
 	}
 	return nil
 }

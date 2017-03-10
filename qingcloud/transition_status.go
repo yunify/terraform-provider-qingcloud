@@ -5,51 +5,51 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/magicshui/qingcloud-go/eip"
-	"github.com/magicshui/qingcloud-go/instance"
-	"github.com/magicshui/qingcloud-go/loadbalancer"
-	"github.com/magicshui/qingcloud-go/volume"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func LoadbalancerTransitionStateRefresh(clt *loadbalancer.LOADBALANCER, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		params := loadbalancer.DescribeLoadBalancersRequest{}
-		params.LoadbalancersN.Add(id)
-		params.Verbose.Set(1)
+// func LoadbalancerTransitionStateRefresh(clt *loadbalancer.LOADBALANCER, id string) (interface{}, error) {
+// 	refreshFunc := func() (interface{}, string, error) {
+// 		params := loadbalancer.DescribeLoadBalancersRequest{}
+// 		params.LoadbalancersN.Add(id)
+// 		params.Verbose.Set(1)
 
-		resp, err := clt.DescribeLoadBalancers(params)
+// 		resp, err := clt.DescribeLoadBalancers(params)
+// 		if err != nil {
+// 			return nil, "", err
+// 		}
+// 		return resp.LoadbalancerSet[0], resp.LoadbalancerSet[0].TransitionStatus, nil
+// 	}
+
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
+// 		Target:     []string{""},
+// 		Refresh:    refreshFunc,
+// 		Timeout:    10 * time.Minute,
+// 		Delay:      10 * time.Second,
+// 		MinTimeout: 10 * time.Second,
+// 	}
+// 	return stateConf.WaitForState()
+// }
+
+// EipTransitionStateRefresh Waiting for no transition_status
+func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeEIPsInput)
+		input.EIPs = []*string{qc.String(id)}
+		err := input.Validate()
 		if err != nil {
 			return nil, "", err
 		}
-		return resp.LoadbalancerSet[0], resp.LoadbalancerSet[0].TransitionStatus, nil
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
-		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
-
-// Waiting for no transition_status
-func EipTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		params := eip.DescribeEipsRequest{}
-		params.EipsN.Add(id)
-		params.Verbose.Set(1)
-
-		resp, err := clt.DescribeEips(params)
+		output, err := clt.DescribeEIPs(input)
 		if err != nil {
 			return nil, "", err
 		}
-		return resp.EipSet[0], resp.EipSet[0].TransitionStatus, nil
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe eip: %s", *output.Message)
+		}
+		return output.EIPSet[0], qc.StringValue(output.EIPSet[0].TransitionStatus), nil
 	}
-
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"associating", "dissociating", "suspending", "resuming", "releasing"},
 		Target:     []string{""},
@@ -60,30 +60,32 @@ func EipTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	}
 	return stateConf.WaitForState()
 }
-func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		params := volume.DescribeVolumesRequest{}
-		params.VolumesN.Add(id)
-		params.Verbose.Set(1)
 
-		resp, err := clt.DescribeVolumes(params)
-		if err != nil {
-			return nil, "", err
-		}
-		return resp.VolumeSet[0], resp.VolumeSet[0].TransitionStatus, nil
-	}
+// func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
+// 	refreshFunc := func() (interface{}, string, error) {
+// 		params := volume.DescribeVolumesRequest{}
+// 		params.VolumesN.Add(id)
+// 		params.Verbose.Set(1)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
-		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
+// 		resp, err := clt.DescribeVolumes(params)
+// 		if err != nil {
+// 			return nil, "", err
+// 		}
+// 		return resp.VolumeSet[0], resp.VolumeSet[0].TransitionStatus, nil
+// 	}
 
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
+// 		Target:     []string{""},
+// 		Refresh:    refreshFunc,
+// 		Timeout:    10 * time.Minute,
+// 		Delay:      10 * time.Second,
+// 		MinTimeout: 10 * time.Second,
+// 	}
+// 	return stateConf.WaitForState()
+// }
+
+// RouterTransitionStateRefresh Waiting for no transition_status
 func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeRoutersInput)
@@ -97,7 +99,7 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
 		}
-		return output.RouterSet[0], qc.StringValue(resp.RouterSet[0].TransitionStatus), nil
+		return output.RouterSet[0], qc.StringValue(output.RouterSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
@@ -112,14 +114,20 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 
 func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
-		params := instance.DescribeInstanceRequest{}
-		params.InstancesN.Add(id)
-		params.Verbose.Set(1)
-		resp, err := clt.DescribeInstances(params)
+		input := new(qc.DescribeInstancesInput)
+		input.Instances = []*string{qc.String(id)}
+		err := input.Validate()
 		if err != nil {
-			return nil, "", err
+			return nil, "", fmt.Errorf("Error describe instance input validate: %s", err)
 		}
-		return resp.InstanceSet[0], resp.InstanceSet[0].TransitionStatus, nil
+		output, err := clt.DescribeInstances(input)
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe instance: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
+		}
+		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
@@ -138,14 +146,14 @@ func SecurityGroupTransitionStateRefresh(clt *qc.SecurityGroupService, id string
 		input.SecurityGroups = []*string{qc.String(id)}
 		err := input.Validate()
 		if err != nil {
-			return fmt.Errorf("Error describe securitygroup input validate: %s", err.Error())
+			return nil, "", fmt.Errorf("Error describe security group input validate: %s", err)
 		}
 		output, err := clt.DescribeSecurityGroups(input)
 		if err != nil {
-			return fmt.Errorf("Error describe securitygroup input validate: %s", err.Error())
+			return nil, "", fmt.Errorf("Error describe security group: %s", err)
 		}
-		if output.RetCode != 0 {
-			return fmt.Errorf("Error describe securitygroup input validate: %s", err.Error())
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe security group: %s", err)
 		}
 		sg := output.SecurityGroupSet[0]
 		if *sg.IsApplied == 1 {

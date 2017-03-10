@@ -110,7 +110,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error describe eip: %s", err)
 	}
 	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", output.Message)
+		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
 	ip := output.EIPSet[0]
 	d.Set("name", ip.EIPName)
@@ -125,26 +125,6 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
-	return nil
-}
-
-func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).eip
-
-	input := new(qc.ReleaseEIPsInput)
-	input.EIPs = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error release eip input validate: %s", err)
-	}
-	output, err := clt.ReleaseEIPs(input)
-	if err != nil {
-		return fmt.Errorf("Error release eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", output.Message)
-	}
-	d.SetId("")
 	return nil
 }
 
@@ -183,11 +163,31 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
 		}
 		if *output.RetCode != 0 {
-			return fmt.Errorf("Errorf Change EIP billing_mode %s", output.Message)
+			return fmt.Errorf("Errorf Change EIP billing_mode %s", *output.Message)
 		}
 	}
 	if err := modifyEipAttributes(d, meta, false); err != nil {
 		return err
 	}
 	return resourceQingcloudEipRead(d, meta)
+}
+
+func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).eip
+
+	input := new(qc.ReleaseEIPsInput)
+	input.EIPs = []*string{qc.String(d.Id())}
+	err := input.Validate()
+	if err != nil {
+		return fmt.Errorf("Error release eip input validate: %s", err)
+	}
+	output, err := clt.ReleaseEIPs(input)
+	if err != nil {
+		return fmt.Errorf("Error release eip: %s", err)
+	}
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe eip: %s", *output.Message)
+	}
+	d.SetId("")
+	return nil
 }

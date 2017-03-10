@@ -81,6 +81,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	}
 
 	return &QingCloudClient{
+		zone:          c.Zone,
 		eip:           eip,
 		keypair:       keypair,
 		securitygroup: securitygroup,
