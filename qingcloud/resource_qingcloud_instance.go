@@ -206,15 +206,30 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	// change vxnet
-
+	err = instanceUpdateChangeVxNet(d, meta)
+	if err != nil {
+		return err
+	}
 	// change security_group
-
+	err = instanceUpdateChangeSecurityGroup(d, meta)
+	if err != nil {
+		return err
+	}
 	// change eip
-
+	err = instanceUpdateChangeEip(d, meta)
+	if err != nil {
+		return err
+	}
 	// change keypair
-
+	err = instanceUpdateChangeKeyPairs(d, meta)
+	if err != nil {
+		return err
+	}
 	// resize instance
-
+	err = instanceUpdateResize(d, meta)
+	if err != nil {
+		return err
+	}
 	return resourceQingcloudInstanceRead(d, meta)
 }
 

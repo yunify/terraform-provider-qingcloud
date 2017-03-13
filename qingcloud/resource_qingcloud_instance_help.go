@@ -271,12 +271,118 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 }
 
 func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	if !d.HasChange("instance_type") && !d.HasChange("cpu") && !d.HasChange("memory") {
+		return nil
+	}
+	clt := meta.(*QingCloudClient).instance
 	// check instance state
-
+	// describeInstanceOutput := new(qc.DescribeInstancesInput)
+	// describeInstanceOutput.Instances = []*string{qc.String(d.Id())}
+	describeInstanceOutput, err := describeInstance(d, meta)
+	if err != nil {
+		return err
+	}
+	instance := describeInstanceOutput.InstanceSet[0]
 	// stop instance
-
+	if instance.Status != qc.String("stopped") {
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+			return err
+		}
+		_, err := stopInstance(d, meta)
+		if err != nil {
+			return err
+		}
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+			return err
+		}
+	}
 	//  resize instance
-
+	input := new(qc.ResizeInstancesInput)
+	if d.HasChange("instance_type") {
+		input.InstanceType = qc.String(d.Get("instance_type").(string))
+	}
+	if d.HasChange("cpu") {
+		input.CPU = qc.Int(d.Get("cpu").(int))
+	}
+	if d.HasChange("memory") {
+		input.Memory = qc.Int(d.Get("memory").(int))
+	}
+	err = input.Validate()
+	if err != nil {
+		return fmt.Errorf("Error resize instance input validate: %s", err)
+	}
+	output, err := clt.ResizeInstances(input)
+	if err != nil {
+		return fmt.Errorf("Error resize instance: %s", err)
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error resize instance: %s", err)
+	}
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+		return err
+	}
 	// start instance
+	_, err = stopInstance(d, meta)
+	if err != nil {
+		return err
+	}
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+		return err
+	}
+	return nil
+}
+
+func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeInstancesOutput, error) {
+	clt := meta.(*QingCloudClient).instance
+	input := new(qc.DescribeInstancesInput)
+	input.Instances = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	err := input.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("Error describe instance input validate: %s", err)
+	}
+	output, err := clt.DescribeInstances(input)
+	if err != nil {
+		return nil, fmt.Errorf("Error describe instance: %s", err)
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return nil, fmt.Errorf("Error describe instance: %s", err)
+	}
+	return output, nil
+}
+
+func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOutput, error) {
+	clt := meta.(*QingCloudClient).instance
+	input := new(qc.StopInstancesInput)
+	input.Instances = []*string{qc.String(d.Id())}
+	err := input.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("Error stop instance input validate: %s", err)
+	}
+	output, err := clt.StopInstances(input)
+	if err != nil {
+		return nil, fmt.Errorf("Error stop instance: %s", err)
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return nil, fmt.Errorf("Error stop instance: %s", *output.Message)
+	}
+	return output, nil
+}
+
+func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstancesOutput, error) {
+	clt := meta.(*QingCloudClient).instance
+	input := new(qc.StartInstancesInput)
+	input.Instances = []*string{qc.String(d.Id())}
+	err := input.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("Error start instance input validate: %s", err)
+	}
+	output, err := clt.StartInstances(input)
+	if err != nil {
+		return nil, fmt.Errorf("Error start instance: %s", err)
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return nil, fmt.Errorf("Error start instance: %s", *output.Message)
+	}
+	return output, nil
 }
