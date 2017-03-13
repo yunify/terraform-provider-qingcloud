@@ -1,11 +1,6 @@
 package qingcloud
 
-// import (
-// 	"fmt"
-
-// 	"github.com/hashicorp/terraform/helper/schema"
-// 	"github.com/magicshui/qingcloud-go/volume"
-// )
+// import "github.com/hashicorp/terraform/helper/schema"
 
 // func resourceQingcloudVolume() *schema.Resource {
 // 	return &schema.Resource{
@@ -14,11 +9,6 @@ package qingcloud
 // 		Update: resourceQingcloudVolumeUpdate,
 // 		Delete: resourceQingcloudVolumeDelete,
 // 		Schema: map[string]*schema.Schema{
-// 			"id": &schema.Schema{
-// 				Type:     schema.TypeString,
-// 				Computed: true,
-// 				ForceNew: true,
-// 			},
 // 			"size": &schema.Schema{
 // 				Type:     schema.TypeInt,
 // 				Required: true,

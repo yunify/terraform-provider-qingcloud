@@ -15,5 +15,3 @@ provider "qingcloud" {
 	secret = "${var.secret}"
 	zone = "${var.zone}"
 }
-
-

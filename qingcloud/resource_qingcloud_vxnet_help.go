@@ -11,7 +11,6 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}, create bool
 	clt := meta.(*QingCloudClient).vxnet
 	input := new(qc.ModifyVxNetAttributesInput)
 	input.VxNet = qc.String(d.Id())
-
 	if create {
 		if description := d.Get("description").(string); description == "" {
 			return nil

@@ -23,7 +23,7 @@ _testmain.go
 *.test
 *.prof
 
-
+vendor/
 /test-tf
 terraform-provider-qingcloud
 terraform-qingcloud

@@ -1,9 +1,11 @@
 language: go
 
 go:
-  - 1.8
+  - 1.7.5
 
 script:
-  - go get -v ./...
+  - add-apt-repository ppa:masterminds/glide && sudo apt-get update
+  - apt-get install glide -y
+  - glide up
   - make build
   - make test
