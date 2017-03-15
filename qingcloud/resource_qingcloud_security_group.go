@@ -44,7 +44,6 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error create security group: %s", *output.Message)
 	}
-
 	d.SetId(qc.StringValue(output.SecurityGroupID))
 	err = modifySecurityGroupAttributes(d, meta, true)
 	if err != nil {
@@ -69,8 +68,8 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error describe security group: %s", *output.Message)
 	}
 	sg := output.SecurityGroupSet[0]
-	d.Set("name", sg.SecurityGroupName)
-	d.Set("description", sg.Description)
+	d.Set("name", qc.StringValue(sg.SecurityGroupName))
+	d.Set("description", qc.StringValue(sg.Description))
 	return nil
 }
 func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {

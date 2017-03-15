@@ -10,11 +10,12 @@ import (
 func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupAttributesInput)
+	input.SecurityGroup = qc.String(d.Id())
 	if create {
 		if description := d.Get("description").(string); description == "" {
 			return nil
 		}
-		input.SecurityGroup = qc.String(d.Get("description").(string))
+		input.Description = qc.String(d.Get("description").(string))
 	} else {
 		if !d.HasChange("description") && !d.HasChange("name") {
 			return nil

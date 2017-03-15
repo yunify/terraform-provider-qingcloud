@@ -100,9 +100,6 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	}
 	clt := meta.(*QingCloudClient).instance
 	sgClt := meta.(*QingCloudClient).securitygroup
-	if _, err := SecurityGroupTransitionStateRefresh(sgClt, d.Get("security_group_id").(string)); err != nil {
-		return err
-	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
@@ -119,9 +116,6 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error apply security group: %s", *output.Message)
-	}
-	if _, err := SecurityGroupTransitionStateRefresh(sgClt, d.Get("security_group_id").(string)); err != nil {
-		return err
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err

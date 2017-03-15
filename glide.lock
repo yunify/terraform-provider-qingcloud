@@ -1,12 +1,12 @@
-hash: be404d6c4bfb09015692c66c8f17f76964342c7eb5f156c1a3ec9b96e250c31b
-updated: 2017-03-13T16:08:10.797703943+08:00
+hash: 063c2955238363ae47244080e432c6ffef45bff1a41f71fb90f1cbc9e4c33c8f
+updated: 2017-03-14T17:38:07.648351825+08:00
 imports:
 - name: github.com/apparentlymart/go-cidr
   version: a3ebdb999b831ecb6ab8a226e31b07b2b9061c47
   subpackages:
   - cidr
 - name: github.com/aws/aws-sdk-go
-  version: 963d664c4279debae251c0f336e247571dc614db
+  version: 05de8bee0d7efef0507aeffccb4e65c2592eb174
   subpackages:
   - aws
   - aws/awserr
@@ -42,7 +42,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-ini/ini
-  version: 300e940a926eb277d3901b20bdfcc54928ad3642
+  version: 98c45284d68a05a0e0a576de574bd975946ef9ad
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-getter
@@ -111,7 +111,7 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: 1deb2db2a6fff8a35532079061b903c3a25eed52
 - name: github.com/yunify/qingcloud-sdk-go
-  version: 13194d6008708eea5c4d3ea4def367c0fa63ff05
+  version: c546c42be7ba63d5167d43366b62d751a86221d7
   subpackages:
   - config
   - logger

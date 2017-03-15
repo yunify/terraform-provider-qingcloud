@@ -28,8 +28,8 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"qingcloud_eip": resourceQingcloudEip(),
 			// "qingcloud_eip_associate": resourceQingcloudEipAssociate(),
-			"qingcloud_keypair":       resourceQingcloudKeypair(),
-			"qingcloud_securitygroup": resourceQingcloudSecurityGroup(),
+			"qingcloud_keypair":        resourceQingcloudKeypair(),
+			"qingcloud_security_group": resourceQingcloudSecurityGroup(),
 			// "qingcloud_securitygroup_rule": resourceQingcloudSecurityGroupRule(),
 			"qingcloud_vxnet":  resourceQingcloudVxnet(),
 			"qingcloud_router": resourceQingcloudRouter(),

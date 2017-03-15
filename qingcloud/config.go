@@ -28,6 +28,7 @@ type QingCloudClient struct {
 
 func (c *Config) Client() (*QingCloudClient, error) {
 	cfg, err := config.New(c.ID, c.Secret)
+	cfg.LogLevel = "debug"
 	if err != nil {
 		return nil, err
 	}

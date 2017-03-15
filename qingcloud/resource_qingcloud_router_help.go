@@ -26,25 +26,33 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create boo
 	input.Router = qc.String(d.Id())
 
 	if create {
-		if description := d.Get("description").(string); description == "" {
+		if !d.HasChange("description") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
 			return nil
 		}
-		input.Description = qc.String(d.Get("description").(string))
+		if d.HasChange("description") {
+			input.Description = qc.String(d.Get("description").(string))
+		}
+		if d.HasChange("eip_id") {
+			input.EIP = qc.String(d.Get("eip_id").(string))
+		}
+		if d.HasChange("security_group_id") {
+			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+		}
 	} else {
-		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("eip") && !d.HasChange("securitygroup_id") {
+		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
 			return nil
 		}
 		if d.HasChange("description") {
 			input.Description = qc.String(d.Get("description").(string))
 		}
 		if d.HasChange("name") {
-			input.Description = qc.String(d.Get("name").(string))
+			input.RouterName = qc.String(d.Get("name").(string))
 		}
 		if d.HasChange("eip_id") {
-			input.EIP = qc.String(d.Get("eip").(string))
+			input.EIP = qc.String(d.Get("eip_id").(string))
 		}
 		if d.HasChange("security_group_id") {
-			input.SecurityGroup = qc.String(d.Get("eip").(string))
+			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 		}
 	}
 	err := input.Validate()

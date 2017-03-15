@@ -21,7 +21,7 @@ func resourceQingcloudEip() *schema.Resource {
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 			},
 			"bandwidth": &schema.Schema{
 				Type:        schema.TypeInt,
@@ -88,6 +88,10 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error create eip: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.EIPs[0]))
+
+	if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+		return nil
+	}
 	// set eip description
 	if err := modifyEipAttributes(d, meta, true); err != nil {
 		return err
@@ -113,15 +117,15 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
 	ip := output.EIPSet[0]
-	d.Set("name", ip.EIPName)
-	d.Set("billing_mode", ip.BillingMode)
-	d.Set("bandwidth", ip.Bandwidth)
-	d.Set("need_icp", ip.NeedICP)
-	d.Set("description", ip.Description)
+	d.Set("name", qc.StringValue(ip.EIPName))
+	d.Set("billing_mode", qc.StringValue(ip.BillingMode))
+	d.Set("bandwidth", qc.IntValue(ip.Bandwidth))
+	d.Set("need_icp", qc.IntValue(ip.NeedICP))
+	d.Set("description", qc.StringValue(ip.Description))
 	// 如下状态是稍等来获取的
-	d.Set("addr", ip.EIPAddr)
-	d.Set("status", ip.Status)
-	d.Set("transition_status", ip.TransitionStatus)
+	d.Set("addr", qc.StringValue(ip.EIPAddr))
+	d.Set("status", qc.StringValue(ip.Status))
+	d.Set("transition_status", qc.StringValue(ip.TransitionStatus))
 	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
@@ -174,10 +178,13 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
+	_, err := EIPTransitionStateRefresh(clt, d.Id())
+	if err != nil {
+		return err
+	}
 	input := new(qc.ReleaseEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
-	err := input.Validate()
+	err = input.Validate()
 	if err != nil {
 		return fmt.Errorf("Error release eip input validate: %s", err)
 	}

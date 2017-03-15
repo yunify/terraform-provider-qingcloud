@@ -35,7 +35,7 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 	if err != nil {
 		return fmt.Errorf("Error modify eip attributes: %s", err)
 	}
-	if *output.RetCode == 0 {
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error modify eip attributes: %s", *output.Message)
 	}
 	return nil
@@ -76,8 +76,8 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 
 func getEIPResourceMap(data *qc.EIP) map[string]interface{} {
 	var a = make(map[string]interface{}, 3)
-	a["resource_id"] = data.Resource.ResourceID
-	a["resource_name"] = data.Resource.ResourceName
-	a["resource_type"] = data.Resource.ResourceType
+	a["resource_id"] = qc.StringValue(data.Resource.ResourceID)
+	a["resource_name"] = qc.StringValue(data.Resource.ResourceName)
+	a["resource_type"] = qc.StringValue(data.Resource.ResourceType)
 	return a
 }

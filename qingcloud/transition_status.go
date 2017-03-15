@@ -48,6 +48,9 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 			return nil, "", fmt.Errorf("Error describe eip: %s", *output.Message)
 		}
+		if len(output.EIPSet) == 0 {
+			return nil, "", fmt.Errorf("Error eip set is empty, request id %s", id)
+		}
 		return output.EIPSet[0], qc.StringValue(output.EIPSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
@@ -55,7 +58,7 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
+		Delay:      1 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()
@@ -99,6 +102,9 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
 		}
+		if len(output.RouterSet) == 0 {
+			return nil, "", fmt.Errorf("Error router set is empty, request id %s", id)
+		}
 		return output.RouterSet[0], qc.StringValue(output.RouterSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
@@ -106,7 +112,7 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
+		Delay:      1 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()
@@ -127,6 +133,15 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
 		}
+		if len(output.InstanceSet) == 0 {
+			return nil, "", fmt.Errorf("Error eip set is empty, request id %s", id)
+		}
+		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
+			return output.InstanceSet[0], "", nil
+		}
+		if qc.StringValue(output.InstanceSet[0].PrivateIP) == "" {
+			return output.InstanceSet[0], "creating", nil
+		}
 		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
@@ -134,40 +149,40 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
+		Delay:      1 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
 
-func SecurityGroupTransitionStateRefresh(clt *qc.SecurityGroupService, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		input := new(qc.DescribeSecurityGroupsInput)
-		input.SecurityGroups = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe security group input validate: %s", err)
-		}
-		output, err := clt.DescribeSecurityGroups(input)
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe security group: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe security group: %s", err)
-		}
-		sg := output.SecurityGroupSet[0]
-		if *sg.IsApplied == 1 {
-			return nil, "updated", nil
-		}
-		return nil, "not_updated", nil
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"not_updated"},
-		Target:     []string{"updated"},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
+// func SecurityGroupTransitionStateRefresh(clt *qc.SecurityGroupService, id string) (interface{}, error) {
+// 	refreshFunc := func() (interface{}, string, error) {
+// 		input := new(qc.DescribeSecurityGroupsInput)
+// 		input.SecurityGroups = []*string{qc.String(id)}
+// 		err := input.Validate()
+// 		if err != nil {
+// 			return nil, "", fmt.Errorf("Error describe security group input validate: %s", err)
+// 		}
+// 		output, err := clt.DescribeSecurityGroups(input)
+// 		if err != nil {
+// 			return nil, "", fmt.Errorf("Error describe security group: %s", err)
+// 		}
+// 		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+// 			return nil, "", fmt.Errorf("Error describe security group: %s", err)
+// 		}
+// 		sg := output.SecurityGroupSet[0]
+// 		if sg.IsApplied != nil && qc.IntValue(sg.IsApplied) == 1 {
+// 			return nil, "", nil
+// 		}
+// 		return nil, "not_updated", nil
+// 	}
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending:    []string{"not_updated"},
+// 		Target:     []string{""},
+// 		Refresh:    refreshFunc,
+// 		Timeout:    10 * time.Minute,
+// 		Delay:      1 * time.Second,
+// 		MinTimeout: 10 * time.Second,
+// 	}
+// 	return stateConf.WaitForState()
+// }

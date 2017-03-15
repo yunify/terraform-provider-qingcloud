@@ -43,6 +43,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			"instance_state": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      "running",
 				ValidateFunc: withinArrayString("pending", "running", "stopped", "suspended", "terminated", "ceased"),
 			},
 			"cpu": &schema.Schema{
@@ -64,17 +65,17 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			"keypair_ids": &schema.Schema{
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
 			"security_group_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"eip_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"public_ip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -91,13 +92,19 @@ func resourceQingcloudInstance() *schema.Resource {
 func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.RunInstancesInput)
+	input.Count = qc.Int(1)
+	input.InstanceName = qc.String(d.Get("name").(string))
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
 	input.InstanceType = qc.String(d.Get("instance_type").(string))
-	input.CPU = qc.Int(d.Get("cpu").(int))
-	input.Memory = qc.Int(d.Get("memory").(int))
+	if d.Get("cpu").(int) != 0 && d.Get("memory").(int) != 0 {
+		input.CPU = qc.Int(d.Get("cpu").(int))
+		input.Memory = qc.Int(d.Get("memory").(int))
+	}
 	input.VxNets = []*string{qc.String(d.Get("vxnet_id").(string))}
-	input.SecurityGroup = qc.String(d.Get("security_group").(string))
+	if d.Get("security_group_id").(string) != "" {
+		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+	}
 	input.LoginMode = qc.String("keypair")
 	kps := d.Get("keypair_ids").(*schema.Set).List()
 	if len(kps) > 0 {
@@ -110,7 +117,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	}
 	output, err := clt.RunInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error run instances: %s", err)
+		return fmt.Errorf("Error run instances: %s, %+v", err, *input)
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error run instances: %s", *output.Message)
@@ -147,7 +154,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 	}
-
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	return resourceQingcloudInstanceRead(d, meta)
 }
 
@@ -170,8 +179,8 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 
 	instance := output.InstanceSet[0]
 	d.Set("name", qc.StringValue(instance.InstanceName))
+	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set("description", qc.StringValue(instance.Description))
-	d.Set("image_id", qc.StringValue(instance.ImageID))
 	d.Set("instance_type", qc.StringValue(instance.InstanceType))
 	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
 	d.Set("instance_state", qc.StringValue(instance.Status))

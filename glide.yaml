@@ -9,7 +9,7 @@ import:
   - plugin
   - terraform
 - package: github.com/yunify/qingcloud-sdk-go
-  version: v2.0.0-alpha.3
+  version: v2.0.0-alpha.4
   subpackages:
   - config
   - service

@@ -65,7 +65,7 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 	input.RouterName = qc.String(d.Get("name").(string))
 	input.RouterType = qc.Int(d.Get("type").(int))
 	input.VpcNetwork = qc.String(d.Get("vpc_network").(string))
-	input.SecurityGroup = qc.String(d.Get("security_group").(string))
+	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.Count = qc.Int(1)
 	err := input.Validate()
 	if err != nil {
@@ -81,8 +81,8 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(qc.StringValue(output.Routers[0]))
 	d.Set("vpc_network", qc.String(d.Get("vpc_network").(string)))
 
-	qingcloudMutexKV.Lock(d.Id())
-	defer qingcloudMutexKV.Unlock(d.Id())
+	// qingcloudMutexKV.Lock(d.Id())
+	// defer qingcloudMutexKV.Unlock(d.Id())
 
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if err != nil {
@@ -122,10 +122,6 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 		output, err := sgClt.ApplySecurityGroup(input)
 		if err != nil {
 			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
-		}
-		_, err = SecurityGroupTransitionStateRefresh(sgClt, *input.SecurityGroup)
-		if err != nil {
-			return fmt.Errorf("Error waiting for apply security group (%s) to updated: %s", *input.SecurityGroup, err.Error())
 		}
 	}
 	return resourceQingcloudRouterRead(d, meta)
@@ -203,10 +199,6 @@ func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
 		}
-		_, err = SecurityGroupTransitionStateRefresh(sgClt, *input.SecurityGroup)
-		if err != nil {
-			return fmt.Errorf("Error waiting for apply security group (%s) to updated: %s", *input.SecurityGroup, err.Error())
-		}
 	}
 	return resourceQingcloudRouterRead(d, meta)
 }
@@ -230,6 +222,9 @@ func resourceQingcloudRouterDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error delete router: %s", *output.Message)
+	}
+	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
 	}
 	d.SetId("")
 	return nil

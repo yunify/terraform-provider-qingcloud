@@ -27,16 +27,6 @@ func resourceQingcloudKeypair() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			// "instance_ids": &schema.Schema{
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// },
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -78,8 +68,8 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error describe keypair: %s", *output.Message)
 	}
 	kp := output.KeyPairSet[0]
-	d.Set("name", kp.KeyPairName)
-	d.Set("description", kp.Description)
+	d.Set("name", qc.StringValue(kp.KeyPairName))
+	d.Set("description", qc.StringValue(kp.Description))
 	return nil
 }
 

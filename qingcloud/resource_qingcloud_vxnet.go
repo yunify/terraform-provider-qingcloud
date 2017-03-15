@@ -32,7 +32,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Optional: true,
 			},
 			// 当第一次创建一个私有网络以后，会首先加入到自己定制的router中，不是 vpc
-			"router": &schema.Schema{
+			"router_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -48,9 +48,9 @@ func resourceQingcloudVxnet() *schema.Resource {
 func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
 
-	routerID := d.Get("router").(string)
-	IPNetwork := d.Get("ip_network").(string)
-	if (routerID != "" && IPNetwork == "") || (routerID == "" && IPNetwork != "") {
+	routerID := d.Get("router_id").(string)
+	ipNetwork := d.Get("ip_network").(string)
+	if (routerID != "" && ipNetwork == "") || (routerID == "" && ipNetwork != "") {
 		return errors.New("router and ip_network must both be empty or no empty at the same time")
 	}
 
@@ -70,19 +70,19 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error create vxnet: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.VxNets[0]))
-	if err := modifyVxnetAttributes(d, meta, false); err != nil {
-		return err
-	}
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
+	if err := modifyVxnetAttributes(d, meta, true); err != nil {
 		return err
 	}
 	if routerID != "" {
+		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
+			return err
+		}
 		// join the router
 		routerClt := meta.(*QingCloudClient).router
 		joinRouterInput := new(qc.JoinRouterInput)
 		joinRouterInput.VxNet = output.VxNets[0]
 		joinRouterInput.Router = qc.String(routerID)
-		joinRouterInput.IPNetwork = qc.String(IPNetwork)
+		joinRouterInput.IPNetwork = qc.String(ipNetwork)
 
 		joinRouterOutput, err := routerClt.JoinRouter(joinRouterInput)
 		if err != nil {
@@ -118,10 +118,6 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", qc.StringValue(vxnet.VxNetName))
 	d.Set("type", qc.IntValue(vxnet.VxNetType))
 	d.Set("description", qc.StringValue(vxnet.Description))
-	if vxnet.Router != nil {
-		d.Set("router", qc.StringValue(vxnet.Router.RouterID))
-		d.Set("ip_network", qc.StringValue(vxnet.Router.IPNetwork))
-	}
 	return nil
 }
 
@@ -145,12 +141,12 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error vxnet is using, can't delete")
 	}
 
-	routerID := d.Get("router").(string)
+	routerID := d.Get("router_id").(string)
 	// vxnet leave router
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
-		return err
-	}
 	if routerID != "" {
+		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, routerID); err != nil {
+			return err
+		}
 		routerCtl := meta.(*QingCloudClient).router
 		leaveRouterInput := new(qc.LeaveRouterInput)
 		leaveRouterInput.Router = qc.String(routerID)
@@ -188,14 +184,14 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("router") || d.HasChange("ip_network") {
+	if d.HasChange("router_id") || d.HasChange("ip_network") {
 		routerClt := meta.(*QingCloudClient).router
-		routerID := d.Get("router").(string)
+		routerID := d.Get("router_id").(string)
 		IPNetwork := d.Get("ip_network").(string)
 		if (routerID != "" && IPNetwork == "") || (routerID == "" && IPNetwork != "") {
 			return errors.New("router and ip_network must both be empty or no empty at the same time")
 		}
-		oldV, newV := d.GetChange("router")
+		oldV, newV := d.GetChange("router_id")
 		oldRouterID := oldV.(string)
 		newRouterID := newV.(string)
 		if oldRouterID == "" {
@@ -281,6 +277,8 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 		}
+		d.Set("router_id", routerID)
+		d.Set("ip_network", IPNetwork)
 	}
 	err := modifyVxnetAttributes(d, meta, false)
 	if err != nil {
