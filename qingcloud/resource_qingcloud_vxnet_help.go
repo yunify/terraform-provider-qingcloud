@@ -40,3 +40,41 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}, create bool
 	}
 	return nil
 }
+
+func computedVxnetVPCID(d *schema.ResourceData, meta interface{}, vxnetID string) (string, error) {
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.DescribeRoutersInput)
+	input.Verbose = qc.Int(1)
+	input.Status = []*string{qc.String("active")}
+	err := input.Validate()
+	if err != nil {
+		return "", fmt.Errorf("Error describe router input validate: %s", err)
+	}
+	output, err := clt.DescribeRouters(input)
+	if err != nil {
+		return "", fmt.Errorf("Error describe router: %s", err)
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return "", fmt.Errorf("Error describe router: %s", err)
+	}
+	for _, router := range output.RouterSet {
+		if router.RouterID != nil {
+			DescribeRouterVxnetsInput := new(qc.DescribeRouterVxNetsInput)
+			DescribeRouterVxnetsInput.Router = router.RouterID
+			err := DescribeRouterVxnetsInput.Validate()
+			if err != nil {
+				return "", fmt.Errorf("Error describe router vxnet: %s", err)
+			}
+			o, err := clt.DescribeRouterVxNets(DescribeRouterVxnetsInput)
+			if err != nil {
+				return "", fmt.Errorf("Error describe router vxnet: %s", err)
+			}
+			for _, vxnet := range o.RouterVxNetSet {
+				if qc.StringValue(vxnet.VxNetID) == vxnetID {
+					return qc.StringValue(router.RouterID), nil
+				}
+			}
+		}
+	}
+	return "", nil
+}
