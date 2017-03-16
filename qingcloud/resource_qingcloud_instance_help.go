@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -148,7 +149,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
 		return err
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	oldV, newV := d.GetChange("eip_id")
@@ -172,7 +173,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
 		return err
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// associate new eip
@@ -195,7 +196,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
 		return err
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	return nil
@@ -238,7 +239,7 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("Error attach keypairs: %s", *attachOutput.Message)
 		}
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// dettach old key_pair
@@ -257,7 +258,7 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		if detachOutput.RetCode != nil && qc.IntValue(detachOutput.RetCode) != 0 {
 			return fmt.Errorf("Error detach keypairs: %s", *detachOutput.Message)
 		}
-		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
 		}
 	}
@@ -265,36 +266,33 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 }
 
 func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("instance_type") && !d.HasChange("cpu") && !d.HasChange("memory") {
+	if !d.HasChange("cpu") && !d.HasChange("memory") {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
 	// check instance state
-	// describeInstanceOutput := new(qc.DescribeInstancesInput)
-	// describeInstanceOutput.Instances = []*string{qc.String(d.Id())}
 	describeInstanceOutput, err := describeInstance(d, meta)
 	if err != nil {
 		return err
 	}
 	instance := describeInstanceOutput.InstanceSet[0]
 	// stop instance
-	if instance.Status != qc.String("stopped") {
-		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if *instance.Status == "running" {
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			log.Printf("InstanceTransitionStateRefresh err: %s", err)
 			return err
 		}
 		_, err := stopInstance(d, meta)
 		if err != nil {
 			return err
 		}
-		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
 		}
 	}
 	//  resize instance
 	input := new(qc.ResizeInstancesInput)
-	if d.HasChange("instance_type") {
-		input.InstanceType = qc.String(d.Get("instance_type").(string))
-	}
+	input.Instances = []*string{qc.String(d.Id())}
 	if d.HasChange("cpu") {
 		input.CPU = qc.Int(d.Get("cpu").(int))
 	}
@@ -312,15 +310,15 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error resize instance: %s", err)
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// start instance
-	_, err = stopInstance(d, meta)
+	_, err = startInstance(d, meta)
 	if err != nil {
 		return err
 	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	return nil

@@ -134,13 +134,16 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
 		}
 		if len(output.InstanceSet) == 0 {
-			return nil, "", fmt.Errorf("Error eip set is empty, request id %s", id)
+			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
 		}
 		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
 			return output.InstanceSet[0], "", nil
 		}
-		if qc.StringValue(output.InstanceSet[0].PrivateIP) == "" {
-			return output.InstanceSet[0], "creating", nil
+		if len(output.InstanceSet[0].VxNets) != 0 {
+			// return output.InstanceSet[0], "creating", nil
+			if qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
+				return output.InstanceSet[0], "creating", nil
+			}
 		}
 		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
@@ -149,7 +152,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    10 * time.Minute,
-		Delay:      1 * time.Second,
+		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()

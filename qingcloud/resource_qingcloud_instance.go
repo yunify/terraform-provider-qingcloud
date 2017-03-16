@@ -28,11 +28,6 @@ func resourceQingcloudInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_type": &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: withinArrayString("c1m1", "c1m2", "c1m4", "c2m2", "c2m4", "c2m8", "c4m4", "c4m8"),
-			},
 			"instance_class": &schema.Schema{
 				Type:         schema.TypeInt,
 				Default:      0,
@@ -96,7 +91,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.InstanceName = qc.String(d.Get("name").(string))
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
-	input.InstanceType = qc.String(d.Get("instance_type").(string))
+	// input.InstanceType = qc.String(d.Get("instance_type").(string))
 	if d.Get("cpu").(int) != 0 && d.Get("memory").(int) != 0 {
 		input.CPU = qc.Int(d.Get("cpu").(int))
 		input.Memory = qc.Int(d.Get("memory").(int))
@@ -181,7 +176,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", qc.StringValue(instance.InstanceName))
 	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set("description", qc.StringValue(instance.Description))
-	d.Set("instance_type", qc.StringValue(instance.InstanceType))
 	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
 	d.Set("instance_state", qc.StringValue(instance.Status))
 	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))
