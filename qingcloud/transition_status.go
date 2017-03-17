@@ -60,7 +60,7 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -116,8 +116,8 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -160,7 +160,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -202,7 +202,7 @@ func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -236,7 +236,7 @@ func VxnetTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, 
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -276,7 +276,7 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
-		MinTimeout: 10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForState()
 }

@@ -34,6 +34,18 @@ func resourceQingcloudRouter() *schema.Resource {
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
 				Description: "VPC 网络地址范围，目前支持 192.168.0.0/16 或 172.16.0.0/16 。 注：此参数只在北京3区需要且是必填参数。",
 			},
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"eip_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -125,6 +137,9 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
 		}
 	}
+	// if err := resourceUpdateTag(d, meta, qingcloudResourceTypeRouter); err != nil {
+	// 	return err
+	// }
 	return resourceQingcloudRouterRead(d, meta)
 }
 
@@ -143,6 +158,9 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	if *output.RetCode != 0 {
 		return fmt.Errorf("Error describe router: %s", *output.Message)
+	}
+	if len(output.RouterSet) == 0 {
+		return fmt.Errorf("Error router not found")
 	}
 	rtr := output.RouterSet[0]
 	if rtr == nil {
@@ -200,6 +218,9 @@ func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
 		}
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeRouter); err != nil {
+		return err
 	}
 	return resourceQingcloudRouterRead(d, meta)
 }

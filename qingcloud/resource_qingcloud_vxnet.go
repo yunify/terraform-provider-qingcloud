@@ -46,6 +46,18 @@ func resourceQingcloudVxnet() *schema.Resource {
 				ValidateFunc: validateVxnetsIPNetworkCIDR,
 				Computed:     true,
 			},
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -82,6 +94,8 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 			return err
 		}
+		qingcloudMutexKV.Lock(vpcID)
+		defer qingcloudMutexKV.Unlock(vpcID)
 		// join the router
 		routerClt := meta.(*QingCloudClient).router
 		joinRouterInput := new(qc.JoinRouterInput)
@@ -99,6 +113,9 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 			return err
 		}
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVxNet); err != nil {
+		return err
 	}
 	return resourceQingcloudVxnetRead(d, meta)
 }
@@ -134,6 +151,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("ip_network", "")
 	}
 	d.Set("vpc_id", qc.StringValue(vxnet.VpcRouterID))
+	resourceSetTag(d, vxnet.Tags)
 	return nil
 }
 
@@ -236,6 +254,9 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	err := modifyVxnetAttributes(d, meta, false)
 	if err != nil {
+		return err
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVxNet); err != nil {
 		return err
 	}
 	return resourceQingcloudVxnetRead(d, meta)

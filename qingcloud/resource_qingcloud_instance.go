@@ -81,6 +81,18 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -153,6 +165,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
+		return err
+	}
 	return resourceQingcloudInstanceRead(d, meta)
 }
 
@@ -203,6 +218,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		}
 		d.Set("keypair_ids", keypairIDs)
 	}
+	resourceSetTag(d, instance.Tags)
 	return nil
 }
 
@@ -235,6 +251,9 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 	// resize instance
 	err = instanceUpdateResize(d, meta)
 	if err != nil {
+		return err
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
 		return err
 	}
 	return resourceQingcloudInstanceRead(d, meta)

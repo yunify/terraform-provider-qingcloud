@@ -42,8 +42,18 @@ func resourceQingcloudEip() *schema.Resource {
 				Description:  "是否需要备案，1为需要，0为不需要，默认是0",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
-			// -------------------------------------------
-			// ----------    如下是自动计算的     -----------
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"addr": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -96,6 +106,11 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	if err := modifyEipAttributes(d, meta, true); err != nil {
 		return err
 	}
+	// set tag
+	err = resourceUpdateTag(d, meta, qingcloudResourceTypeEIP)
+	if err != nil {
+		return err
+	}
 	return resourceQingcloudEipRead(d, meta)
 }
 
@@ -129,12 +144,12 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
+	resourceSetTag(d, ip.Tags)
 	return nil
 }
 
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
 	if !d.HasChange("name") && !d.HasChange("description") && !d.HasChange("bandwidth") && !d.HasChange("billing_mode") {
 		return nil
 	}
@@ -171,6 +186,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 	if err := modifyEipAttributes(d, meta, false); err != nil {
+		return err
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeEIP); err != nil {
 		return err
 	}
 	return resourceQingcloudEipRead(d, meta)

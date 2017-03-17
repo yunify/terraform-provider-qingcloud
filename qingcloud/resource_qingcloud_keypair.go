@@ -49,6 +49,9 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error create keypair: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.KeyPairID))
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
+		return err
+	}
 	return modifyKeypairAttributes(d, meta, false)
 }
 
@@ -70,12 +73,16 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	kp := output.KeyPairSet[0]
 	d.Set("name", qc.StringValue(kp.KeyPairName))
 	d.Set("description", qc.StringValue(kp.Description))
+	resourceSetTag(d, kp.Tags)
 	return nil
 }
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := modifyKeypairAttributes(d, meta, false)
 	if err != nil {
+		return err
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
 		return err
 	}
 	return resourceQingcloudKeypairRead(d, meta)
