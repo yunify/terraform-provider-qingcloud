@@ -3,7 +3,6 @@ package qingcloud
 import (
 	"errors"
 	"fmt"
-	"log"
 	// "log"
 
 	// "github.com/hashicorp/terraform/helper/resource"
@@ -45,6 +44,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateVxnetsIPNetworkCIDR,
+				Computed:     true,
 			},
 		},
 	}
@@ -119,6 +119,9 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	if output.RetCode == nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error describe vxnet: %s", *output.Message)
 	}
+	if len(output.VxNetSet) == 0 {
+		return nil
+	}
 	vxnet := output.VxNetSet[0]
 	d.Set("name", qc.StringValue(vxnet.VxNetName))
 	d.Set("type", qc.IntValue(vxnet.VxNetType))
@@ -126,15 +129,11 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	if vxnet.Router != nil {
 		d.Set("router_id", qc.StringValue(vxnet.Router.RouterID))
 		d.Set("ip_network", qc.StringValue(vxnet.Router.IPNetwork))
+	} else {
+		d.Set("router_id", "")
+		d.Set("ip_network", "")
 	}
-	vpcID, err := computedVxnetVPCID(d, meta, d.Id())
-	if err != nil {
-		return err
-	}
-	log.Printf("vpcid: %s", vpcID)
-	if vpcID != "" {
-		d.Set("vpc_id", vpcID)
-	}
+	d.Set("vpc_id", qc.StringValue(vxnet.VpcRouterID))
 	return nil
 }
 
@@ -245,21 +244,8 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
 
-	describeVxnetInstanceInput := new(qc.DescribeVxNetInstancesInput)
-	describeVxnetInstanceInput.VxNet = qc.String(d.Id())
-	err := describeVxnetInstanceInput.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe vxnet instances input validate: %s", err)
-	}
-	describeVxnetInstanceOutput, err := clt.DescribeVxNetInstances(describeVxnetInstanceInput)
-	if err != nil {
-		return fmt.Errorf("Error describe vxnet instances: %s", err)
-	}
-	if describeVxnetInstanceOutput.RetCode != nil && qc.IntValue(describeVxnetInstanceOutput.RetCode) != 0 {
-		return fmt.Errorf("Error describe vxnet instances: %s", *describeVxnetInstanceOutput.Message)
-	}
-	if qc.IntValue(describeVxnetInstanceOutput.TotalCount) > 0 {
-		return fmt.Errorf("Error vxnet is using, can't delete")
+	if _, err := VxnetTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
 	}
 	vpcID := d.Get("vpc_id").(string)
 	routerID := d.Get("router_id").(string)
@@ -283,13 +269,16 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		if leaveRouterOutput.RetCode != nil && qc.IntValue(leaveRouterOutput.RetCode) != 0 {
 			return fmt.Errorf("Error leave router: %s", *leaveRouterOutput.Message)
 		}
+		if _, err := VxnetLeaveRouterTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 			return err
 		}
 	}
 	input := new(qc.DeleteVxNetsInput)
 	input.VxNets = []*string{qc.String(d.Id())}
-	err = input.Validate()
+	err := input.Validate()
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet input validate: %s", err)
 	}
@@ -299,6 +288,9 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error delete vxnet: %s", *output.Message)
+	}
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
+		return err
 	}
 	d.SetId("")
 	return nil

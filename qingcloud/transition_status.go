@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -57,8 +58,8 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		Pending:    []string{"associating", "dissociating", "suspending", "resuming", "releasing"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      1 * time.Second,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()
@@ -90,6 +91,9 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 
 // RouterTransitionStateRefresh Waiting for no transition_status
 func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeRoutersInput)
 		input.Routers = []*string{qc.String(id)}
@@ -111,14 +115,17 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      1 * time.Second,
+		Timeout:    2 * time.Minute,
+		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()
 }
 
 func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeInstancesInput)
 		input.Instances = []*string{qc.String(id)}
@@ -151,8 +158,124 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeInstancesInput)
+		input.Instances = []*string{qc.String(id)}
+		err := input.Validate()
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe instance input validate: %s", err)
+		}
+		output, err := clt.DescribeInstances(input)
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe instance: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
+		}
+		if len(output.InstanceSet) == 0 {
+			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
+		}
+		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
+			return output.InstanceSet[0], "", nil
+		}
+		if len(output.InstanceSet[0].VxNets) != 0 {
+			if qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
+				return output.InstanceSet[0], "updating", nil
+			}
+		}
+		return output.InstanceSet[0], "", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"updating"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func VxnetTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVxNetInstancesInput)
+		input.VxNet = qc.String(id)
+		err := input.Validate()
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe vxnet instances input validate: %s", err)
+		}
+		output, err := clt.DescribeVxNetInstances(input)
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe vxnet instances: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe vxnet instances: %s", *output.Message)
+		}
+		if len(output.InstanceSet) == 0 {
+			return output.InstanceSet, "", nil
+		}
+		return output.InstanceSet, "instance_in_vxnet", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"instance_in_vxnet"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVxNetsInput)
+		input.VxNets = []*string{qc.String(id)}
+		err := input.Validate()
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe vxnet input validate: %s", err)
+		}
+		output, err := clt.DescribeVxNets(input)
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe vxnet: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe vxnet: %s", *output.Message)
+		}
+		if len(output.VxNetSet) == 0 {
+			return nil, "", nil
+		}
+		vxnet := output.VxNetSet[0]
+		log.Printf("VxnetLeaveRouterTransitionStateRefresh vpc id: %s", *vxnet.VpcRouterID)
+		if qc.StringValue(vxnet.VpcRouterID) != "" {
+			return vxnet, "vxnet_not_leave_router", nil
+		}
+		log.Printf("skip if VxnetLeaveRouterTransitionStateRefresh vpc id: %s", *vxnet.VpcRouterID)
+		return vxnet, "", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"vxnet_not_leave_router"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 	return stateConf.WaitForState()

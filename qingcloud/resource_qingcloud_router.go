@@ -28,6 +28,7 @@ func resourceQingcloudRouter() *schema.Resource {
 			"vpc_network": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: withinArrayString("192.168.0.0/16", "172.16.0.0/16", "172.17.0.0/16",
 					"172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.21.0.0/16", "172.22.0.0/16",
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
@@ -205,8 +206,10 @@ func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceQingcloudRouterDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-	qingcloudMutexKV.Lock(d.Id())
-	defer qingcloudMutexKV.Unlock(d.Id())
+	if d.Get("eip_id").(string) != "" {
+		qingcloudMutexKV.Lock(d.Get("eip_id").(string))
+		defer qingcloudMutexKV.Unlock(d.Get("eip_id").(string))
+	}
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}

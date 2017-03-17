@@ -76,7 +76,7 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 	if newV.(string) != "" {
 		joinVxnetInput := new(qc.JoinVxNetInput)
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
-		joinVxnetInput.VxNet = qc.String(oldV.(string))
+		joinVxnetInput.VxNet = qc.String(newV.(string))
 		err := joinVxnetInput.Validate()
 		if err != nil {
 			return fmt.Errorf("Error join vxnet input validate: %s", err)
@@ -377,4 +377,26 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 		return nil, fmt.Errorf("Error start instance: %s", *output.Message)
 	}
 	return output, nil
+}
+
+func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.LeaveVxNetOutput, error) {
+	vxnetID := d.Get("vxnet_id").(string)
+	if vxnetID != "" {
+		clt := meta.(*QingCloudClient).vxnet
+		input := new(qc.LeaveVxNetInput)
+		input.Instances = []*string{qc.String(d.Id())}
+		input.VxNet = qc.String(vxnetID)
+		err := input.Validate()
+		if err != nil {
+			return nil, fmt.Errorf("Error instance leave vxnet input validate: %s", err)
+		}
+		output, err := clt.LeaveVxNet(input)
+		if err != nil {
+			return nil, fmt.Errorf("Error instance leave vxnet: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return output, fmt.Errorf("Error instance leave vxnet: %s", qc.StringValue(output.Message))
+		}
+	}
+	return nil, nil
 }

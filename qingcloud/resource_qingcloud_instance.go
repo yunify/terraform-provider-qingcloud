@@ -46,8 +46,9 @@ func resourceQingcloudInstance() *schema.Resource {
 				Optional: true,
 			},
 			"memory": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 			},
 			"vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -184,6 +185,9 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		vxnet := instance.VxNets[0]
 		d.Set("vxnet_id", qc.StringValue(vxnet.VxNetID))
 		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+	} else {
+		d.Set("vxnet_id", "")
+		d.Set("private_ip", "")
 	}
 	if instance.EIP != nil {
 		d.Set("eip_id", qc.StringValue(instance.EIP.EIPID))
@@ -241,9 +245,16 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
+	_, err := deleteInstanceLeaveVxnet(d, meta)
+	if err != nil {
+		return err
+	}
+	if _, err := InstanceNetworkTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	err := input.Validate()
+	err = input.Validate()
 	if err != nil {
 		return fmt.Errorf("Error terminate instance input validate: %s", err)
 	}
@@ -253,6 +264,9 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error terminate instance: %s", *output.Message)
+	}
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
 	}
 	d.SetId("")
 	return nil
