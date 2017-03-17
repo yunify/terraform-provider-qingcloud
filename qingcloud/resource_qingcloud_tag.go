@@ -21,7 +21,7 @@ func resourceQingcloudTag() *schema.Resource {
 			"color": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "default",
+				Computed: true,
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
@@ -35,7 +35,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.CreateTagInput)
 	input.TagName = qc.String(d.Get("name").(string))
-	input.Color = qc.String(d.Get("color").(string))
+	// input.Color = qc.String(d.Get("color").(string))
 	err := input.Validate()
 	if err != nil {
 		return fmt.Errorf("Error create tag input validate: %s", err)
@@ -75,7 +75,9 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	tag := output.TagSet[0]
 	d.Set("name", tag.TagName)
 	d.Set("description", tag.Description)
-	d.Set("color", tag.Color)
+	if qc.StringValue(tag.Color) != "default" {
+		d.Set("color", tag.Color)
+	}
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {

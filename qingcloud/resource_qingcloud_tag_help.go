@@ -12,15 +12,20 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
 	if create {
-		if description := d.Get("description").(string); description == "" {
+		if !d.HasChange("description") && !d.HasChange("color") {
 			return nil
 		}
-		input.Description = qc.String(d.Get("description").(string))
+		if d.HasChange("description") {
+			input.Description = qc.String(d.Get("description").(string))
+		}
+		if d.HasChange("color") {
+			input.Color = qc.String(d.Get("color").(string))
+		}
 	} else {
 		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("color") {
 			return nil
 		}
-		if !d.HasChange("description") {
+		if d.HasChange("description") {
 			input.Description = qc.String(d.Get("description").(string))
 		}
 		if d.HasChange("name") {
@@ -56,7 +61,7 @@ func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) {
 }
 
 func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType string) error {
-	if d.HasChange("tag_ids") {
+	if !d.HasChange("tag_ids") {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).tag
