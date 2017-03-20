@@ -74,3 +74,4 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	}
 	return additions, deletions
 }
+

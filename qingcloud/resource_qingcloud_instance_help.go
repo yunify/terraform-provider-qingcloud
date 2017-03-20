@@ -400,3 +400,30 @@ func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.Lea
 	}
 	return nil, nil
 }
+
+func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.LeaveVxNetOutput, error) {
+	eipID := d.Get("eip_id").(string)
+	if eipID != "" {
+		clt := meta.(*QingCloudClient).eip
+		if _, err := EIPTransitionStateRefresh(clt, eipID); err != nil {
+			return nil, err
+		}
+		input := new(qc.DissociateEIPsInput)
+		input.EIPs = []*string{qc.String(eipID)}
+		err := input.Validate()
+		if err != nil {
+			return nil, fmt.Errorf("Error dissciate eip input validate: %s", err)
+		}
+		output, err := clt.DissociateEIPs(input)
+		if err != nil {
+			return nil, fmt.Errorf("Error dissciate eip: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, fmt.Errorf("Error dissciate eip input validate: %s", *output.Message)
+		}
+		if _, err := EIPTransitionStateRefresh(clt, eipID); err != nil {
+			return nil, err
+		}
+	}
+	return nil, nil
+}

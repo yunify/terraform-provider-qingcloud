@@ -261,6 +261,10 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
+	// dissociate eip before leave vxnet
+	if _, err := deleteInstanceDissociateEip(d, meta); err != nil {
+		return err
+	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}

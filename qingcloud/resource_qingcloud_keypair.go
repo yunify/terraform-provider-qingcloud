@@ -21,6 +21,7 @@ func resourceQingcloudKeypair() *schema.Resource {
 			},
 			"public_key": &schema.Schema{
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 			"description": &schema.Schema{
@@ -101,7 +102,6 @@ func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceQingcloudKeypairRead(d, meta)
 }
 
-// 如果要删除一个密钥，那么需要看一下这个密钥是否在其他的instance上是否有使用
 func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	describeKeyPairsInput := new(qc.DescribeKeyPairsInput)
@@ -114,12 +114,27 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s", err)
 	}
-
 	if describeKeyPairsOutput.RetCode != nil && qc.IntValue(describeKeyPairsOutput.RetCode) != 0 {
 		return fmt.Errorf("Error describe keypair: %s", *describeKeyPairsOutput.Message)
 	}
 	if len(describeKeyPairsOutput.KeyPairSet[0].InstanceIDs) > 0 {
-		return fmt.Errorf("Error keypair %s is using, can't delete", d.Id())
+		detachKeyPairInput := new(qc.DetachKeyPairsInput)
+		detachKeyPairInput.KeyPairs = []*string{qc.String(d.Id())}
+		detachKeyPairInput.Instances = describeKeyPairsOutput.KeyPairSet[0].InstanceIDs
+		err := detachKeyPairInput.Validate()
+		if err != nil {
+			return fmt.Errorf("Error detach keypair input: %s", err)
+		}
+		detachKeyPairOutput, err := clt.DetachKeyPairs(detachKeyPairInput)
+		if err != nil {
+			return fmt.Errorf("Error detach keypair: %s", err)
+		}
+		if detachKeyPairOutput.RetCode != nil && qc.IntValue(detachKeyPairOutput.RetCode) != 0 {
+			return fmt.Errorf("Error detach keypair: %s", *detachKeyPairOutput.Message)
+		}
+		if _, err := KeyPairTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}

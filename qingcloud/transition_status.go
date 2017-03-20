@@ -65,6 +65,39 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	return stateConf.WaitForState()
 }
 
+func KeyPairTransitionStateRefresh(clt *qc.KeyPairService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeKeyPairsInput)
+		input.KeyPairs = []*string{qc.String(id)}
+		err := input.Validate()
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe keypair input validate: %s", err)
+		}
+		output, err := clt.DescribeKeyPairs(input)
+		if err != nil {
+			return nil, "", fmt.Errorf("Error describe keypair: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return nil, "", fmt.Errorf("Error describe keypair: %s", *output.Message)
+		}
+		if len(output.KeyPairSet) > 0 {
+			if len(output.KeyPairSet[0].InstanceIDs) > 0 {
+				return output.KeyPairSet[0], "key_using", nil
+			}
+		}
+		return output.KeyPairSet[0], "key_free", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"key_using"},
+		Target:     []string{"key_free"},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
 // func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
 // 	refreshFunc := func() (interface{}, string, error) {
 // 		params := volume.DescribeVolumesRequest{}
