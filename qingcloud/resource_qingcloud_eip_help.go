@@ -27,10 +27,6 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 			input.EIPName = qc.String(d.Get("name").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify EIP attributes input validate: %s", err)
-	}
 	output, err := clt.ModifyEIPAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify eip attributes: %s", err)

@@ -28,10 +28,6 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}, create b
 			input.InstanceName = qc.String(d.Get("name").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify instance attributes input validate: %s", err)
-	}
 	output, err := clt.ModifyInstanceAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify instance attributes: %s", err)
@@ -57,10 +53,7 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 		leaveVxnetInput := new(qc.LeaveVxNetInput)
 		leaveVxnetInput.Instances = []*string{qc.String(d.Id())}
 		leaveVxnetInput.VxNet = qc.String(oldV.(string))
-		err := leaveVxnetInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error leave vxnet input validate: %s", err)
-		}
+
 		leaveVxnetOutput, err := vxnetClt.LeaveVxNet(leaveVxnetInput)
 		if err != nil {
 			return fmt.Errorf("Error leave vxnet: %s", err)
@@ -77,10 +70,6 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 		joinVxnetInput := new(qc.JoinVxNetInput)
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
 		joinVxnetInput.VxNet = qc.String(newV.(string))
-		err := joinVxnetInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error join vxnet input validate: %s", err)
-		}
 		joinVxnetOutput, err := vxnetClt.JoinVxNet(joinVxnetInput)
 		if err != nil {
 			return fmt.Errorf("Error leave vxnet: %s", err)
@@ -107,10 +96,6 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	input := new(qc.ApplySecurityGroupInput)
 	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.Instances = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error ")
-	}
 	output, err := sgClt.ApplySecurityGroup(input)
 	if err != nil {
 		return fmt.Errorf("Error apply security group: %s", err)
@@ -132,10 +117,6 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	eipClt := meta.(*QingCloudClient).eip
 	describeEIPInput := new(qc.DescribeEIPsInput)
 	describeEIPInput.EIPs = []*string{qc.String(d.Get("eip_id").(string))}
-	err := describeEIPInput.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe eip input validate: %s", err)
-	}
 	describeEIPOutput, err := eipClt.DescribeEIPs(describeEIPInput)
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
@@ -157,10 +138,6 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if oldV.(string) != "" {
 		dissociateEIPInput := new(qc.DissociateEIPsInput)
 		dissociateEIPInput.EIPs = []*string{qc.String(oldV.(string))}
-		err := dissociateEIPInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error dissociate eip input validate: %s", err)
-		}
 		dissociateEIPOutput, err := eipClt.DissociateEIPs(dissociateEIPInput)
 		if err != nil {
 			return fmt.Errorf("Error dissociate eip: %s", err)
@@ -181,10 +158,6 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		assoicateEIPInput := new(qc.AssociateEIPInput)
 		assoicateEIPInput.EIP = qc.String(newV.(string))
 		assoicateEIPInput.Instance = qc.String(d.Id())
-		err := assoicateEIPInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error assoicate eip input validate: %s", err)
-		}
 		assoicateEIPOutput, err := eipClt.AssociateEIP(assoicateEIPInput)
 		if err != nil {
 			return fmt.Errorf("Error assoicate eip: %s", err)
@@ -227,10 +200,6 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		attachInput := new(qc.AttachKeyPairsInput)
 		attachInput.Instances = []*string{qc.String(d.Id())}
 		attachInput.KeyPairs = qc.StringSlice(additions)
-		err := attachInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error attach keypairs input validate: %s", err)
-		}
 		attachOutput, err := kpClt.AttachKeyPairs(attachInput)
 		if err != nil {
 			return fmt.Errorf("Error attach keypairs: %s", err)
@@ -247,10 +216,6 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		detachInput := new(qc.DetachKeyPairsInput)
 		detachInput.Instances = []*string{qc.String(d.Id())}
 		detachInput.KeyPairs = qc.StringSlice(deletions)
-		err := detachInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error detach keypairs input validate: %s", err)
-		}
 		detachOutput, err := kpClt.DetachKeyPairs(detachInput)
 		if err != nil {
 			return fmt.Errorf("Errorr detach keypairs: %s", err)
@@ -299,10 +264,6 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("memory") {
 		input.Memory = qc.Int(d.Get("memory").(int))
 	}
-	err = input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error resize instance input validate: %s", err)
-	}
 	output, err := clt.ResizeInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error resize instance: %s", err)
@@ -329,10 +290,6 @@ func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeIns
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	err := input.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("Error describe instance input validate: %s", err)
-	}
 	output, err := clt.DescribeInstances(input)
 	if err != nil {
 		return nil, fmt.Errorf("Error describe instance: %s", err)
@@ -347,10 +304,6 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.StopInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("Error stop instance input validate: %s", err)
-	}
 	output, err := clt.StopInstances(input)
 	if err != nil {
 		return nil, fmt.Errorf("Error stop instance: %s", err)
@@ -365,10 +318,6 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.StartInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("Error start instance input validate: %s", err)
-	}
 	output, err := clt.StartInstances(input)
 	if err != nil {
 		return nil, fmt.Errorf("Error start instance: %s", err)
@@ -386,10 +335,6 @@ func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.Lea
 		input := new(qc.LeaveVxNetInput)
 		input.Instances = []*string{qc.String(d.Id())}
 		input.VxNet = qc.String(vxnetID)
-		err := input.Validate()
-		if err != nil {
-			return nil, fmt.Errorf("Error instance leave vxnet input validate: %s", err)
-		}
 		output, err := clt.LeaveVxNet(input)
 		if err != nil {
 			return nil, fmt.Errorf("Error instance leave vxnet: %s", err)
@@ -410,10 +355,6 @@ func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.
 		}
 		input := new(qc.DissociateEIPsInput)
 		input.EIPs = []*string{qc.String(eipID)}
-		err := input.Validate()
-		if err != nil {
-			return nil, fmt.Errorf("Error dissciate eip input validate: %s", err)
-		}
 		output, err := clt.DissociateEIPs(input)
 		if err != nil {
 			return nil, fmt.Errorf("Error dissciate eip: %s", err)

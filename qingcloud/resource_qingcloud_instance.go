@@ -119,10 +119,6 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 		kp := kps[0].(string)
 		input.LoginKeyPair = qc.String(kp)
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error run intances input validate: %s", err)
-	}
 	output, err := clt.RunInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error run instances: %s, %+v", err, *input)
@@ -147,10 +143,6 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 		associateEIPInput := new(qc.AssociateEIPInput)
 		associateEIPInput.EIP = qc.String(eipID)
 		associateEIPInput.Instance = qc.String(d.Id())
-		err := associateEIPInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error associate eip input validate: %s", err)
-		}
 		associateEIPoutput, err := eipClt.AssociateEIP(associateEIPInput)
 		if err != nil {
 			return fmt.Errorf("Error associate eip: %s", err)
@@ -176,10 +168,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe instance input validate: %s", err)
-	}
 	output, err := clt.DescribeInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error describe instance: %s", err)
@@ -277,10 +265,6 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	err = input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error terminate instance input validate: %s", err)
-	}
 	output, err := clt.TerminateInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error terminate instance: %s", err)

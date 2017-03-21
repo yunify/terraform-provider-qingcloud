@@ -38,10 +38,6 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeEIPsInput)
 		input.EIPs = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", err
-		}
 		output, err := clt.DescribeEIPs(input)
 		if err != nil {
 			return nil, "", err
@@ -69,10 +65,6 @@ func KeyPairTransitionStateRefresh(clt *qc.KeyPairService, id string) (interface
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeKeyPairsInput)
 		input.KeyPairs = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe keypair input validate: %s", err)
-		}
 		output, err := clt.DescribeKeyPairs(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe keypair: %s", err)
@@ -131,10 +123,6 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		input := new(qc.DescribeRoutersInput)
 		input.Routers = []*string{qc.String(id)}
 		input.Verbose = qc.Int(1)
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe router validate input: %s", err)
-		}
 		output, err := clt.DescribeRouters(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
@@ -162,10 +150,6 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeInstancesInput)
 		input.Instances = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe instance input validate: %s", err)
-		}
 		output, err := clt.DescribeInstances(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe instance: %s", err)
@@ -205,10 +189,6 @@ func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeInstancesInput)
 		input.Instances = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe instance input validate: %s", err)
-		}
 		output, err := clt.DescribeInstances(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe instance: %s", err)
@@ -247,10 +227,6 @@ func VxnetTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, 
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVxNetInstancesInput)
 		input.VxNet = qc.String(id)
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe vxnet instances input validate: %s", err)
-		}
 		output, err := clt.DescribeVxNetInstances(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe vxnet instances: %s", err)
@@ -281,10 +257,6 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVxNetsInput)
 		input.VxNets = []*string{qc.String(id)}
-		err := input.Validate()
-		if err != nil {
-			return nil, "", fmt.Errorf("Error describe vxnet input validate: %s", err)
-		}
 		output, err := clt.DescribeVxNets(input)
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe vxnet: %s", err)
@@ -318,10 +290,6 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 // 	refreshFunc := func() (interface{}, string, error) {
 // 		input := new(qc.DescribeSecurityGroupsInput)
 // 		input.SecurityGroups = []*string{qc.String(id)}
-// 		err := input.Validate()
-// 		if err != nil {
-// 			return nil, "", fmt.Errorf("Error describe security group input validate: %s", err)
-// 		}
 // 		output, err := clt.DescribeSecurityGroups(input)
 // 		if err != nil {
 // 			return nil, "", fmt.Errorf("Error describe security group: %s", err)

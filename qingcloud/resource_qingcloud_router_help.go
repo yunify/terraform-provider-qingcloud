@@ -55,10 +55,6 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create boo
 			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify router attributes input validate: %s", err)
-	}
 	output, err := clt.ModifyRouterAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify router attributes: %s", err)

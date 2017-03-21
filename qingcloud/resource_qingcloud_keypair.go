@@ -51,10 +51,6 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input.KeyPairName = qc.String(d.Get("name").(string))
 	input.Mode = qc.String("user")
 	input.PublicKey = qc.String(d.Get("public_key").(string))
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error create keypair input validate: %s", err)
-	}
 	output, err := clt.CreateKeyPair(input)
 	if err != nil {
 		return fmt.Errorf("Error create keypair: %s", err)
@@ -73,10 +69,6 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.DescribeKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe keypair input validate: %s", err)
-	}
 	output, err := clt.DescribeKeyPairs(input)
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s", err)
@@ -106,10 +98,6 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	clt := meta.(*QingCloudClient).keypair
 	describeKeyPairsInput := new(qc.DescribeKeyPairsInput)
 	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
-	err := describeKeyPairsInput.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe keypair input validate: %s", err)
-	}
 	describeKeyPairsOutput, err := clt.DescribeKeyPairs(describeKeyPairsInput)
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s", err)
@@ -121,10 +109,6 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		detachKeyPairInput := new(qc.DetachKeyPairsInput)
 		detachKeyPairInput.KeyPairs = []*string{qc.String(d.Id())}
 		detachKeyPairInput.Instances = describeKeyPairsOutput.KeyPairSet[0].InstanceIDs
-		err := detachKeyPairInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error detach keypair input: %s", err)
-		}
 		detachKeyPairOutput, err := clt.DetachKeyPairs(detachKeyPairInput)
 		if err != nil {
 			return fmt.Errorf("Error detach keypair: %s", err)
@@ -138,10 +122,6 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
-	err = input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error delete keypairs input validate: %s", err)
-	}
 	output, err := clt.DeleteKeyPairs(input)
 	if err != nil {
 		return fmt.Errorf("Error delete keypairs: %s", err)

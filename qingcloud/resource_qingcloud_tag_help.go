@@ -35,10 +35,6 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 			input.Color = qc.String(d.Get("color").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify tag attributes input validate: %s", err)
-	}
 	output, err := clt.ModifyTagAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify tag attributes: %s", err)

@@ -27,10 +27,6 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}, create bool
 			input.VxNetName = qc.String(d.Get("name").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify vxnet attributes input validate: %s", err)
-	}
 	output, err := clt.ModifyVxNetAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify vxnet attributes: %s", err)

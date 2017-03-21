@@ -36,10 +36,6 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	input := new(qc.CreateTagInput)
 	input.TagName = qc.String(d.Get("name").(string))
 	// input.Color = qc.String(d.Get("color").(string))
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error create tag input validate: %s", err)
-	}
 	output, err := clt.CreateTag(input)
 	if err != nil {
 		return fmt.Errorf("Error create tag: %s", err)
@@ -58,10 +54,6 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.DescribeTagsInput)
 	input.Tags = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe tag input validate: %s", err)
-	}
 	output, err := clt.DescribeTags(input)
 	if err != nil {
 		return fmt.Errorf("Error describe tag: %s", err)
@@ -91,10 +83,6 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.DeleteTagsInput)
 	input.Tags = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error delete tag input validate: %s", err)
-	}
 	output, err := clt.DeleteTags(input)
 	if err != nil {
 		return fmt.Errorf("Error delete tag: %s", err)

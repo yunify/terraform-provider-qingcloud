@@ -75,10 +75,6 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	input.Count = qc.Int(1)
 	input.VxNetName = qc.String(d.Get("name").(string))
 	input.VxNetType = qc.Int(d.Get("type").(int))
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Errorf create vxnet input validate: %s", err)
-	}
 	output, err := clt.CreateVxNets(input)
 	if err != nil {
 		return fmt.Errorf("Error create vxnet: %s", err)
@@ -125,10 +121,6 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	input := new(qc.DescribeVxNetsInput)
 	input.VxNets = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe vxnet input validate: %s", err)
-	}
 	output, err := clt.DescribeVxNets(input)
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet: %s", err)
@@ -195,10 +187,6 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 			leaveRouterInput := new(qc.LeaveRouterInput)
 			leaveRouterInput.Router = qc.String(oldRouterID)
 			leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
-			err := leaveRouterInput.Validate()
-			if err != nil {
-				return fmt.Errorf("Error leave router input validate: %s", err)
-			}
 			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error leave router: %s", err)
@@ -218,10 +206,6 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 			leaveRouterInput := new(qc.LeaveRouterInput)
 			leaveRouterInput.Router = qc.String(oldRouterID)
 			leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
-			err := leaveRouterInput.Validate()
-			if err != nil {
-				return fmt.Errorf("Error leave router input validate: %s", err)
-			}
 			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
 				return fmt.Errorf("Error leave router: %s", err)
@@ -279,10 +263,6 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		leaveRouterInput := new(qc.LeaveRouterInput)
 		leaveRouterInput.Router = qc.String(routerID)
 		leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
-		err := leaveRouterInput.Validate()
-		if err != nil {
-			return fmt.Errorf("Error leave router input validate: %s", err)
-		}
 		leaveRouterOutput, err := routerCtl.LeaveRouter(leaveRouterInput)
 		if err != nil {
 			return fmt.Errorf("Error leave router: %s", err)
@@ -299,10 +279,6 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 	input := new(qc.DeleteVxNetsInput)
 	input.VxNets = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error delete vxnet input validate: %s", err)
-	}
 	output, err := clt.DeleteVxNets(input)
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet: %s", err)

@@ -33,10 +33,6 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.CreateSecurityGroupInput)
 	input.SecurityGroupName = qc.String(d.Get("name").(string))
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error create security group input validate: %s", err)
-	}
 	output, err := clt.CreateSecurityGroup(input)
 	if err != nil {
 		return fmt.Errorf("Error create security group: %s", err)
@@ -56,10 +52,6 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe security group input validate: %s", err)
-	}
 	output, err := clt.DescribeSecurityGroups(input)
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
@@ -85,10 +77,6 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	describeSecurityGroupInput := new(qc.DescribeSecurityGroupsInput)
 	describeSecurityGroupInput.SecurityGroups = []*string{qc.String(d.Id())}
 	describeSecurityGroupInput.Verbose = qc.Int(1)
-	err := describeSecurityGroupInput.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe security group input validate: %s", err)
-	}
 	describeSecurityGroupOutput, err := clt.DescribeSecurityGroups(describeSecurityGroupInput)
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
@@ -101,10 +89,6 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	}
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
-	err = input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe security group input validate: %s", err)
-	}
 	output, err := clt.DeleteSecurityGroups(input)
 	if err != nil {
 		return fmt.Errorf("Error delete security group: %s", err)

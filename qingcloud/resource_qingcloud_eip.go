@@ -86,10 +86,6 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	input.EIPName = qc.String(d.Get("name").(string))
 	input.NeedICP = qc.Int(d.Get("need_icp").(int))
 	input.Count = qc.Int(1)
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error create eip input validate: %s", err)
-	}
 	output, err := clt.AllocateEIPs(input)
 	if err != nil {
 		return fmt.Errorf("Error create eip: %s", err)
@@ -120,10 +116,6 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.DescribeEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error describe eip input validate: %s", err)
-	}
 	output, err := clt.DescribeEIPs(input)
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
@@ -157,10 +149,6 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input := new(qc.ChangeEIPsBandwidthInput)
 		input.EIPs = []*string{qc.String(d.Id())}
 		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
-		err := input.Validate()
-		if err != nil {
-			return fmt.Errorf("Error Change EIP bandwidth input validate: %s", err)
-		}
 		output, err := clt.ChangeEIPsBandwidth(input)
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
@@ -173,10 +161,6 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input := new(qc.ChangeEIPsBillingModeInput)
 		input.EIPs = []*string{qc.String(d.Id())}
 		input.BillingMode = qc.String(d.Get("billing_mode").(string))
-		err := input.Validate()
-		if err != nil {
-			return fmt.Errorf("Error Change EIPs billing_mode input validate: %s", err)
-		}
 		output, err := clt.ChangeEIPsBillingMode(input)
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
@@ -202,10 +186,6 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 	input := new(qc.ReleaseEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
-	err = input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error release eip input validate: %s", err)
-	}
 	output, err := clt.ReleaseEIPs(input)
 	if err != nil {
 		return fmt.Errorf("Error release eip: %s", err)
