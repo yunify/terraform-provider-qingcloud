@@ -25,7 +25,7 @@ func validateRouterVxnetsCIDR(v interface{}, k string) (ws []string, errors []er
 	return
 }
 
-func validateVxnetsIPNetworkCIDR(v interface{}, k string) (ws []string, errors []error) {
+func validateNetworkCIDR(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, _, err := net.ParseCIDR(value)
 	if err != nil {

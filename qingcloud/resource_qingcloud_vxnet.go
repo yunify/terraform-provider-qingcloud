@@ -43,7 +43,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 			"ip_network": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateVxnetsIPNetworkCIDR,
+				ValidateFunc: validateNetworkCIDR,
 				Computed:     true,
 			},
 			"tag_ids": &schema.Schema{

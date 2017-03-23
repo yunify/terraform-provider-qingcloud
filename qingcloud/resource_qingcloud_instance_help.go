@@ -28,12 +28,9 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}, create b
 			input.InstanceName = qc.String(d.Get("name").(string))
 		}
 	}
-	output, err := clt.ModifyInstanceAttributes(input)
+	_, err := clt.ModifyInstanceAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify instance attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify instance attributes: %s", *output.Message)
 	}
 	return nil
 }
@@ -54,11 +51,8 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 		leaveVxnetInput.Instances = []*string{qc.String(d.Id())}
 		leaveVxnetInput.VxNet = qc.String(oldV.(string))
 
-		leaveVxnetOutput, err := vxnetClt.LeaveVxNet(leaveVxnetInput)
+		_, err := vxnetClt.LeaveVxNet(leaveVxnetInput)
 		if err != nil {
-			return fmt.Errorf("Error leave vxnet: %s", err)
-		}
-		if leaveVxnetOutput.RetCode != nil && qc.IntValue(leaveVxnetOutput.RetCode) != 0 {
 			return fmt.Errorf("Error leave vxnet: %s", err)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -70,12 +64,9 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 		joinVxnetInput := new(qc.JoinVxNetInput)
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
 		joinVxnetInput.VxNet = qc.String(newV.(string))
-		joinVxnetOutput, err := vxnetClt.JoinVxNet(joinVxnetInput)
+		_, err := vxnetClt.JoinVxNet(joinVxnetInput)
 		if err != nil {
 			return fmt.Errorf("Error leave vxnet: %s", err)
-		}
-		if joinVxnetOutput.RetCode != nil && qc.IntValue(joinVxnetOutput.RetCode) != 0 {
-			return fmt.Errorf("Error join vxnet: %s", err)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
@@ -96,12 +87,9 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	input := new(qc.ApplySecurityGroupInput)
 	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.Instances = []*string{qc.String(d.Id())}
-	output, err := sgClt.ApplySecurityGroup(input)
+	_, err := sgClt.ApplySecurityGroup(input)
 	if err != nil {
 		return fmt.Errorf("Error apply security group: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error apply security group: %s", *output.Message)
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
@@ -121,9 +109,6 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
 	}
-	if describeEIPOutput.RetCode != nil && qc.IntValue(describeEIPOutput.RetCode) != 0 {
-		return fmt.Errorf("Error describe eip: %s", *describeEIPOutput.Message)
-	}
 	if qc.StringValue(describeEIPOutput.EIPSet[0].Status) != "available" {
 		return fmt.Errorf("Error eip %s state is %s", d.Get("eip_id").(string), qc.StringValue(describeEIPOutput.EIPSet[0].Status))
 	}
@@ -138,12 +123,9 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if oldV.(string) != "" {
 		dissociateEIPInput := new(qc.DissociateEIPsInput)
 		dissociateEIPInput.EIPs = []*string{qc.String(oldV.(string))}
-		dissociateEIPOutput, err := eipClt.DissociateEIPs(dissociateEIPInput)
+		_, err := eipClt.DissociateEIPs(dissociateEIPInput)
 		if err != nil {
 			return fmt.Errorf("Error dissociate eip: %s", err)
-		}
-		if dissociateEIPOutput.RetCode != nil && qc.IntValue(dissociateEIPOutput.RetCode) != 0 {
-			return fmt.Errorf("Error dissocidate eip: %s", *dissociateEIPOutput.Message)
 		}
 	}
 
@@ -158,11 +140,8 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		assoicateEIPInput := new(qc.AssociateEIPInput)
 		assoicateEIPInput.EIP = qc.String(newV.(string))
 		assoicateEIPInput.Instance = qc.String(d.Id())
-		assoicateEIPOutput, err := eipClt.AssociateEIP(assoicateEIPInput)
+		_, err := eipClt.AssociateEIP(assoicateEIPInput)
 		if err != nil {
-			return fmt.Errorf("Error assoicate eip: %s", err)
-		}
-		if assoicateEIPOutput.RetCode != nil && qc.IntValue(assoicateEIPOutput.RetCode) != 0 {
 			return fmt.Errorf("Error assoicate eip: %s", err)
 		}
 	}
@@ -200,12 +179,9 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		attachInput := new(qc.AttachKeyPairsInput)
 		attachInput.Instances = []*string{qc.String(d.Id())}
 		attachInput.KeyPairs = qc.StringSlice(additions)
-		attachOutput, err := kpClt.AttachKeyPairs(attachInput)
+		_, err := kpClt.AttachKeyPairs(attachInput)
 		if err != nil {
 			return fmt.Errorf("Error attach keypairs: %s", err)
-		}
-		if attachOutput.RetCode != nil && qc.IntValue(attachOutput.RetCode) != 0 {
-			return fmt.Errorf("Error attach keypairs: %s", *attachOutput.Message)
 		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -216,12 +192,9 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		detachInput := new(qc.DetachKeyPairsInput)
 		detachInput.Instances = []*string{qc.String(d.Id())}
 		detachInput.KeyPairs = qc.StringSlice(deletions)
-		detachOutput, err := kpClt.DetachKeyPairs(detachInput)
+		_, err := kpClt.DetachKeyPairs(detachInput)
 		if err != nil {
 			return fmt.Errorf("Errorr detach keypairs: %s", err)
-		}
-		if detachOutput.RetCode != nil && qc.IntValue(detachOutput.RetCode) != 0 {
-			return fmt.Errorf("Error detach keypairs: %s", *detachOutput.Message)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
@@ -264,11 +237,8 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("memory") {
 		input.Memory = qc.Int(d.Get("memory").(int))
 	}
-	output, err := clt.ResizeInstances(input)
+	_, err = clt.ResizeInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error resize instance: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error resize instance: %s", err)
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -294,9 +264,6 @@ func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeIns
 	if err != nil {
 		return nil, fmt.Errorf("Error describe instance: %s", err)
 	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return nil, fmt.Errorf("Error describe instance: %s", err)
-	}
 	return output, nil
 }
 
@@ -307,9 +274,6 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 	output, err := clt.StopInstances(input)
 	if err != nil {
 		return nil, fmt.Errorf("Error stop instance: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return nil, fmt.Errorf("Error stop instance: %s", *output.Message)
 	}
 	return output, nil
 }
@@ -322,9 +286,6 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 	if err != nil {
 		return nil, fmt.Errorf("Error start instance: %s", err)
 	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return nil, fmt.Errorf("Error start instance: %s", *output.Message)
-	}
 	return output, nil
 }
 
@@ -335,12 +296,9 @@ func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.Lea
 		input := new(qc.LeaveVxNetInput)
 		input.Instances = []*string{qc.String(d.Id())}
 		input.VxNet = qc.String(vxnetID)
-		output, err := clt.LeaveVxNet(input)
+		_, err := clt.LeaveVxNet(input)
 		if err != nil {
 			return nil, fmt.Errorf("Error instance leave vxnet: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return output, fmt.Errorf("Error instance leave vxnet: %s", qc.StringValue(output.Message))
 		}
 	}
 	return nil, nil
@@ -355,12 +313,9 @@ func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.
 		}
 		input := new(qc.DissociateEIPsInput)
 		input.EIPs = []*string{qc.String(eipID)}
-		output, err := clt.DissociateEIPs(input)
+		_, err := clt.DissociateEIPs(input)
 		if err != nil {
 			return nil, fmt.Errorf("Error dissciate eip: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, fmt.Errorf("Error dissciate eip input validate: %s", *output.Message)
 		}
 		if _, err := EIPTransitionStateRefresh(clt, eipID); err != nil {
 			return nil, err

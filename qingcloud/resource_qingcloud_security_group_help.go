@@ -27,16 +27,24 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}, cre
 			input.SecurityGroupName = qc.String(d.Get("name").(string))
 		}
 	}
-	err := input.Validate()
-	if err != nil {
-		return fmt.Errorf("Error modify security group attributes input validate: %s", err)
-	}
-	output, err := clt.ModifySecurityGroupAttributes(input)
+	_, err := clt.ModifySecurityGroupAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error modify security group attributes: %s", err)
 	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify security group attributes: %s", *output.Message)
+	return nil
+}
+
+func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).securitygroup
+	sgID := d.Get("security_group_id").(string)
+	input := new(qc.ApplySecurityGroupInput)
+	input.SecurityGroup = qc.String(sgID)
+	_, err := clt.ApplySecurityGroup(input)
+	if err != nil {
+		return err
+	}
+	if _, err := SecurityGroupApplyTransitionStateRefresh(clt, sgID); err != nil {
+		return err
 	}
 	return nil
 }

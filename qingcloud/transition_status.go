@@ -191,27 +191,24 @@ func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (
 		input.Instances = []*string{qc.String(id)}
 		output, err := clt.DescribeInstances(input)
 		if err != nil {
-			return nil, "", fmt.Errorf("Error describe instance: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
+			return nil, "", err
 		}
 		if len(output.InstanceSet) == 0 {
 			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
 		}
 		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
-			return output.InstanceSet[0], "", nil
+			return output.InstanceSet[0], "done", nil
 		}
 		if len(output.InstanceSet[0].VxNets) != 0 {
 			if qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
 				return output.InstanceSet[0], "updating", nil
 			}
 		}
-		return output.InstanceSet[0], "", nil
+		return output.InstanceSet[0], "done", nil
 	}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"updating"},
-		Target:     []string{""},
+		Target:     []string{"done"},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
@@ -229,19 +226,16 @@ func VxnetTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, 
 		input.VxNet = qc.String(id)
 		output, err := clt.DescribeVxNetInstances(input)
 		if err != nil {
-			return nil, "", fmt.Errorf("Error describe vxnet instances: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe vxnet instances: %s", *output.Message)
+			return nil, "", err
 		}
 		if len(output.InstanceSet) == 0 {
-			return output.InstanceSet, "", nil
+			return output.InstanceSet, "vxnet_free", nil
 		}
-		return output.InstanceSet, "instance_in_vxnet", nil
+		return output.InstanceSet, "vxnet_using", nil
 	}
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"instance_in_vxnet"},
-		Target:     []string{""},
+		Pending:    []string{"vxnet_using"},
+		Target:     []string{"vxnet_free"},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
@@ -259,10 +253,7 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 		input.VxNets = []*string{qc.String(id)}
 		output, err := clt.DescribeVxNets(input)
 		if err != nil {
-			return nil, "", fmt.Errorf("Error describe vxnet: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe vxnet: %s", *output.Message)
+			return nil, "", err
 		}
 		if len(output.VxNetSet) == 0 {
 			return nil, "", nil
@@ -286,30 +277,27 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 	return stateConf.WaitForState()
 }
 
-// func SecurityGroupTransitionStateRefresh(clt *qc.SecurityGroupService, id string) (interface{}, error) {
-// 	refreshFunc := func() (interface{}, string, error) {
-// 		input := new(qc.DescribeSecurityGroupsInput)
-// 		input.SecurityGroups = []*string{qc.String(id)}
-// 		output, err := clt.DescribeSecurityGroups(input)
-// 		if err != nil {
-// 			return nil, "", fmt.Errorf("Error describe security group: %s", err)
-// 		}
-// 		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-// 			return nil, "", fmt.Errorf("Error describe security group: %s", err)
-// 		}
-// 		sg := output.SecurityGroupSet[0]
-// 		if sg.IsApplied != nil && qc.IntValue(sg.IsApplied) == 1 {
-// 			return nil, "", nil
-// 		}
-// 		return nil, "not_updated", nil
-// 	}
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:    []string{"not_updated"},
-// 		Target:     []string{""},
-// 		Refresh:    refreshFunc,
-// 		Timeout:    10 * time.Minute,
-// 		Delay:      1 * time.Second,
-// 		MinTimeout: 10 * time.Second,
-// 	}
-// 	return stateConf.WaitForState()
-// }
+func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeSecurityGroupsInput)
+		input.SecurityGroups = []*string{qc.String(id)}
+		output, err := clt.DescribeSecurityGroups(input)
+		if err != nil {
+			return nil, "not_updated", err
+		}
+		sg := output.SecurityGroupSet[0]
+		if sg.IsApplied != nil && qc.IntValue(sg.IsApplied) == 1 {
+			return nil, "updated", nil
+		}
+		return nil, "not_updated", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"not_updated"},
+		Target:     []string{"updated"},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
