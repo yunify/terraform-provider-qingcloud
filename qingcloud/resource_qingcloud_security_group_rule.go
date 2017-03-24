@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -69,9 +70,15 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Priority = qc.Int(d.Get("priority").(int))
 	rule.Protocol = qc.String(d.Get("protocol").(string))
 	rule.Action = qc.String(d.Get("action").(string))
-	rule.Val1 = qc.String(fmt.Sprintf("%s", d.Get("from_port").(int)))
-	rule.Val2 = qc.String(fmt.Sprintf("%s", d.Get("to_port").(int)))
-	rule.Val3 = qc.String(d.Get("cidr_block").(string))
+	if d.Get("from_port").(int) != 0 {
+		rule.Val1 = qc.String(strconv.Itoa(d.Get("from_port").(int)))
+	}
+	if d.Get("to_port").(int) != 0 {
+		rule.Val2 = qc.String(strconv.Itoa(d.Get("to_port").(int)))
+	}
+	if d.Get("cidr_block").(string) != "" {
+		rule.Val3 = qc.String(d.Get("cidr_block").(string))
+	}
 	input.Rules = []*qc.SecurityGroupRule{rule}
 	output, err := clt.AddSecurityGroupRules(input)
 	if err != nil {
@@ -82,8 +89,8 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
 	// Lock security group resource for apply security group
-	qingcloudMutexKV.Lock(sgID)
-	defer qingcloudMutexKV.Unlock(sgID)
+	// qingcloudMutexKV.Lock(sgID)
+	// defer qingcloudMutexKV.Unlock(sgID)
 	err = applySecurityGroupRule(d, meta)
 	if err != nil {
 		return err
@@ -94,6 +101,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupRulesInput)
+	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	output, err := clt.DescribeSecurityGroupRules(input)
 	if err != nil {
@@ -104,8 +112,20 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	d.Set("protocol", qc.StringValue(sgRule.Protocol))
 	d.Set("priority", qc.IntValue(sgRule.Priority))
 	d.Set("action", qc.StringValue(sgRule.Action))
-	d.Set("from_port", fmt.Sprintf("%d", qc.StringValue(sgRule.Val1)))
-	d.Set("to_port", fmt.Sprintf("%d", qc.StringValue(sgRule.Val2)))
+	if qc.StringValue(sgRule.Val1) != "" {
+		fp, err := strconv.Atoi(qc.StringValue(sgRule.Val1))
+		if err != nil {
+			return err
+		}
+		d.Set("from_port", fp)
+	}
+	if qc.StringValue(sgRule.Val2) != "" {
+		tp, err := strconv.Atoi(qc.StringValue(sgRule.Val2))
+		if err != nil {
+			return err
+		}
+		d.Set("to_port", tp)
+	}
 	d.Set("cidr_block", qc.StringValue(sgRule.Val3))
 	return nil
 }
@@ -115,9 +135,6 @@ func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta inter
 	if err != nil {
 		return err
 	}
-	sgID := d.Get("security_group_id").(string)
-	qingcloudMutexKV.Lock(sgID)
-	defer qingcloudMutexKV.Unlock(sgID)
 	err = applySecurityGroupRule(d, meta)
 	if err != nil {
 		return err

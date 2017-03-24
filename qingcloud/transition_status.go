@@ -287,9 +287,10 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		}
 		sg := output.SecurityGroupSet[0]
 		if sg.IsApplied != nil && qc.IntValue(sg.IsApplied) == 1 {
-			return nil, "updated", nil
+			log.Printf("update securitygroup apply")
+			return sg, "updated", nil
 		}
-		return nil, "not_updated", nil
+		return sg, "not_updated", nil
 	}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"not_updated"},
