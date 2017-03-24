@@ -1,12 +1,12 @@
-hash: 063c2955238363ae47244080e432c6ffef45bff1a41f71fb90f1cbc9e4c33c8f
-updated: 2017-03-14T17:38:07.648351825+08:00
+hash: 4b9731c0fd0c8cc0f1d2d664dda80d36f03128fde1536c81c499cbaec7e15aa1
+updated: 2017-03-24T11:57:17.009432105+08:00
 imports:
 - name: github.com/apparentlymart/go-cidr
   version: a3ebdb999b831ecb6ab8a226e31b07b2b9061c47
   subpackages:
   - cidr
 - name: github.com/aws/aws-sdk-go
-  version: 05de8bee0d7efef0507aeffccb4e65c2592eb174
+  version: 2c0ef11c03b8f28d694021d4a6bda2e24b040cd4
   subpackages:
   - aws
   - aws/awserr
@@ -30,7 +30,6 @@ imports:
   - private/protocol/rest
   - private/protocol/restxml
   - private/protocol/xml/xmlutil
-  - private/waiter
   - service/s3
   - service/sts
 - name: github.com/bgentry/go-netrc
@@ -42,7 +41,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-ini/ini
-  version: 98c45284d68a05a0e0a576de574bd975946ef9ad
+  version: 1730955e3146956d6a087861380f9b4667ed5071
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-getter
@@ -77,7 +76,7 @@ imports:
 - name: github.com/hashicorp/logutils
   version: 0dc08b1671f34c4250ce212759ebd880f743d883
 - name: github.com/hashicorp/terraform
-  version: 403a86dc557fae52f8e39676b11e1e4356b7d1a2
+  version: 7c25ef851bd26f720e749983597b36b17061e3ca
   subpackages:
   - config
   - config/module
@@ -102,14 +101,16 @@ imports:
   version: f81071c9d77b7931f78c90b416a074ecdc50e959
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/mitchellh/hashstructure
+  version: ab25296c0f51f1022f01cd99dfb45f1775de8799
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/mitchellh/reflectwalk
   version: 417edcfd99a4d472c262e58f22b4bfe97580f03e
 - name: github.com/satori/go.uuid
-  version: b061729afc07e77a8aa4fad0a2fd840958f1942a
+  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 - name: github.com/Sirupsen/logrus
-  version: 1deb2db2a6fff8a35532079061b903c3a25eed52
+  version: 10f801ebc38b33738c9d17d50860f484a0988ff5
 - name: github.com/yunify/qingcloud-sdk-go
   version: c546c42be7ba63d5167d43366b62d751a86221d7
   subpackages:
@@ -121,7 +122,7 @@ imports:
   - service
   - utils
 - name: golang.org/x/sys
-  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
+  version: 8fd966b47dbdd4faa03de0d06e3d733baeb9a1a9
   subpackages:
   - unix
 - name: gopkg.in/yaml.v2
