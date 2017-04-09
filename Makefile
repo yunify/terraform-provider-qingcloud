@@ -12,6 +12,7 @@ copy:
 	cp terraform-provider-qingcloud $(shell dirname `which terraform`)
 
 test: vet fmtcheck errcheck
+	go test -v ./qingcloud
 	TF_ACC=1 go test -v ./qingcloud -run=TestAccQingcloud -timeout=120m -parallel=4
 
 vet:
