@@ -90,29 +90,51 @@ func KeyPairTransitionStateRefresh(clt *qc.KeyPairService, id string) (interface
 	return stateConf.WaitForState()
 }
 
-// func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
-// 	refreshFunc := func() (interface{}, string, error) {
-// 		params := volume.DescribeVolumesRequest{}
-// 		params.VolumesN.Add(id)
-// 		params.Verbose.Set(1)
+func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVolumesInput)
+		input.Volumes = []*string{qc.String(id)}
+		output, err := clt.DescribeVolumes(input)
+		if err != nil {
+			return nil, "", err
+		}
+		volume := output.VolumeSet[0]
+		return volume, qc.StringValue(volume.TransitionStatus), nil
+	}
 
-// 		resp, err := clt.DescribeVolumes(params)
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-// 		return resp.VolumeSet[0], resp.VolumeSet[0].TransitionStatus, nil
-// 	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
 
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
-// 		Target:     []string{""},
-// 		Refresh:    refreshFunc,
-// 		Timeout:    10 * time.Minute,
-// 		Delay:      10 * time.Second,
-// 		MinTimeout: 10 * time.Second,
-// 	}
-// 	return stateConf.WaitForState()
-// }
+func VolumeDeleteTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVolumesInput)
+		input.Volumes = []*string{qc.String(id)}
+		output, err := clt.DescribeVolumes(input)
+		if err != nil {
+			return nil, "", err
+		}
+		volume := output.VolumeSet[0]
+		return volume, qc.StringValue(volume.Status), nil
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "in-use", "suspended", "deleted", "ceased"},
+		Target:     []string{"available"},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
 
 // RouterTransitionStateRefresh Waiting for no transition_status
 func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}, error) {
@@ -287,7 +309,6 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		}
 		sg := output.SecurityGroupSet[0]
 		if sg.IsApplied != nil && qc.IntValue(sg.IsApplied) == 1 {
-			log.Printf("update securitygroup apply")
 			return sg, "updated", nil
 		}
 		return sg, "not_updated", nil
@@ -297,6 +318,54 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		Target:     []string{"updated"},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func CacheParameterGroupTransitionStateRefresh(clt *qc.CacheService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeCacheParameterGroupsInput)
+		input.CacheParameterGroups = []*string{qc.String(id)}
+		output, err := clt.DescribeCacheParameterGroups(input)
+		if err != nil {
+			return nil, "", err
+		}
+		cpg := output.CacheParameterGroupSet[0]
+		if cpg.IsApplied != nil && qc.IntValue(cpg.IsApplied) == 1 {
+			return cpg, "updated", nil
+		}
+		return cpg, "not_updated", nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"not_updated"},
+		Target:     []string{"updated"},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func CacheTransitionStateRefresh(clt *qc.CacheService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeCachesInput)
+		input.Caches = []*string{qc.String(id)}
+		input.Verbose = qc.Int(1)
+		output, err := clt.DescribeCaches(input)
+		if err != nil {
+			return nil, "", err
+		}
+		c := output.CacheSet[0]
+		return c, qc.StringValue(c.TransitionStatus), nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    10 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}

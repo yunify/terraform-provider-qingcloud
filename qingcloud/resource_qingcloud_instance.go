@@ -54,6 +54,10 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"static_ip": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"hostname": &schema.Schema{
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -109,7 +113,13 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 		input.CPU = qc.Int(d.Get("cpu").(int))
 		input.Memory = qc.Int(d.Get("memory").(int))
 	}
-	input.VxNets = []*string{qc.String(d.Get("vxnet_id").(string))}
+	var vxnet string
+	if d.Get("static_ip").(string) != "" {
+		vxnet = fmt.Sprintf("%s|%s", d.Get("vxnet_id").(string), d.Get("static_ip").(string))
+	} else {
+		vxnet = d.Get("vxnet_id").(string)
+	}
+	input.VxNets = []*string{qc.String(vxnet)}
 	if d.Get("security_group_id").(string) != "" {
 		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	}
@@ -188,6 +198,9 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		vxnet := instance.VxNets[0]
 		d.Set("vxnet_id", qc.StringValue(vxnet.VxNetID))
 		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+		if d.Get("static_ip") != "" {
+			d.Set("static_ip", qc.StringValue(vxnet.PrivateIP))
+		}
 	} else {
 		d.Set("vxnet_id", "")
 		d.Set("private_ip", "")

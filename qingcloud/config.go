@@ -22,7 +22,7 @@ type QingCloudClient struct {
 	volume        *qc.VolumeService
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
-	cahce         *qc.CacheService
+	cache         *qc.CacheService
 	mongo         *qc.MongoService
 }
 
@@ -92,7 +92,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		volume:        volume,
 		loadbalancer:  loadbalancer,
 		tag:           tag,
-		cahce:         cache,
+		cache:         cache,
 		mongo:         mongo,
 	}, nil
 }

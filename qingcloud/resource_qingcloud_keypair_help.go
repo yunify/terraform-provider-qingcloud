@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 
 	// "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -51,12 +50,6 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}, create bo
 			input.KeyPairName = qc.String(d.Get("name").(string))
 		}
 	}
-	output, err := clt.ModifyKeyPairAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify keypair attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify keypair attributes: %s", *output.Message)
-	}
-	return nil
+	_, err := clt.ModifyKeyPairAttributes(input)
+	return err
 }
