@@ -1,12 +1,12 @@
-hash: 4b9731c0fd0c8cc0f1d2d664dda80d36f03128fde1536c81c499cbaec7e15aa1
-updated: 2017-03-24T11:57:17.009432105+08:00
+hash: 806438b07958272785c8d7572c1adf793c5a5b23a43da441e7b96f95d920ff7c
+updated: 2017-04-10T14:28:13.548413131+08:00
 imports:
 - name: github.com/apparentlymart/go-cidr
   version: a3ebdb999b831ecb6ab8a226e31b07b2b9061c47
   subpackages:
   - cidr
 - name: github.com/aws/aws-sdk-go
-  version: 2c0ef11c03b8f28d694021d4a6bda2e24b040cd4
+  version: c555a87c32af3840e6ab7c106e7aee3dac87f99e
   subpackages:
   - aws
   - aws/awserr
@@ -41,11 +41,11 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-ini/ini
-  version: 1730955e3146956d6a087861380f9b4667ed5071
+  version: e7fea39b01aea8d5671f6858f0532f56e8bff3a5
 - name: github.com/hashicorp/errwrap
   version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
 - name: github.com/hashicorp/go-getter
-  version: c3d66e76678dce180a7b452653472f949aedfbcd
+  version: e48f67b534e614bf7fbd978fd0020f61a17b7527
   subpackages:
   - helper/url
 - name: github.com/hashicorp/go-multierror
@@ -97,6 +97,11 @@ imports:
   version: d1caa6c97c9fc1cc9e83bbe34d0603f9ff0ce8bd
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+- name: github.com/lowstz/qingcloud-sdk-go
+  version: 6bb4f6da9fec11268c58c9a114f3381627fefa40
+  subpackages:
+  - config
+  - service
 - name: github.com/mitchellh/copystructure
   version: f81071c9d77b7931f78c90b416a074ecdc50e959
 - name: github.com/mitchellh/go-homedir
@@ -119,12 +124,11 @@ imports:
   - request
   - request/data
   - request/errors
-  - service
   - utils
 - name: golang.org/x/sys
-  version: 8fd966b47dbdd4faa03de0d06e3d733baeb9a1a9
+  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
   subpackages:
   - unix
 - name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []

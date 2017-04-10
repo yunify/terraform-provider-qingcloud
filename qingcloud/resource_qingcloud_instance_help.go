@@ -323,3 +323,8 @@ func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.
 	}
 	return nil, nil
 }
+
+func updateInstanceVolume(d *schema.ResourceData, meta interface{}, create bool) error {
+	// clt := meta.(*QingCloudClient).instance
+	return nil
+}

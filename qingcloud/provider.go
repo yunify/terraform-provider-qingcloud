@@ -37,6 +37,7 @@ func Provider() terraform.ResourceProvider {
 			// "qingcloud_router_static_entry": resourceQingcloudRouterStaticEntry(),
 			"qingcloud_instance":              resourceQingcloudInstance(),
 			"qingcloud_volume":                resourceQingcloudVolume(),
+			"qingcloud_volume_attachment":     resourceQingcloudVolumeAttachment(),
 			"qingcloud_tag":                   resourceQingcloudTag(),
 			"qingcloud_cache":                 resourceQingcloudCache(),
 			"qingcloud_cache_parameter_group": resourceQingcloudCacheParameterGroup(),

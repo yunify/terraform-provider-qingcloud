@@ -8,8 +8,11 @@ import:
   - helper/schema
   - plugin
   - terraform
-- package: github.com/yunify/qingcloud-sdk-go
-  version: v2.0.0-alpha.4
+- package: github.com/lowstz/qingcloud-sdk-go
+  version: v2.0.0-alpha.5-1
   subpackages:
-  - config
   - service
+- package: github.com/yunify/qingcloud-sdk-go
+  version: v2.0.0-alpha.5
+  subpackages:
+  - config  

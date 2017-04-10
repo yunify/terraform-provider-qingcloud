@@ -45,7 +45,7 @@ func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
 	if oldSize >= newSize {
 		return errors.New("volume size can't reduce")
 	}
-	if newSize/10 != 0 {
+	if newSize%10 != 0 {
 		return errors.New("volume size must be a multiple of 10")
 	}
 	// if disk is attached, shutdown instance, detach disk,

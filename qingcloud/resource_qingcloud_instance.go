@@ -77,6 +77,14 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"volume_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"volume_device_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -88,12 +96,6 @@ func resourceQingcloudInstance() *schema.Resource {
 			"tag_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -131,10 +133,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	}
 	output, err := clt.RunInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error run instances: %s, %+v", err, *input)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error run instances: %s", *output.Message)
+		return err
 	}
 	d.SetId(qc.StringValue(output.Instances[0]))
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -170,6 +169,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
 		return err
 	}
+
+	// update volume
+	// volumeDS :=
 	return resourceQingcloudInstanceRead(d, meta)
 }
 
