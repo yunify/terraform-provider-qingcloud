@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
+	qc "github.com/lowstz/qingcloud-sdk-go/service"
 )
 
 // func LoadbalancerTransitionStateRefresh(clt *loadbalancer.LOADBALANCER, id string) (interface{}, error) {
@@ -97,6 +97,9 @@ func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}
 		output, err := clt.DescribeVolumes(input)
 		if err != nil {
 			return nil, "", err
+		}
+		if len(output.VolumeSet) != 1 {
+			return output, "creating", nil
 		}
 		volume := output.VolumeSet[0]
 		return volume, qc.StringValue(volume.TransitionStatus), nil

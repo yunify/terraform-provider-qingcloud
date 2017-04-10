@@ -3,7 +3,7 @@ package qingcloud
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 
-	qc "github.com/yunify/qingcloud-sdk-go/service"
+	qc "github.com/lowstz/qingcloud-sdk-go/service"
 )
 
 func modifyCacheAttributes(d *schema.ResourceData, meta interface{}, create bool) error {

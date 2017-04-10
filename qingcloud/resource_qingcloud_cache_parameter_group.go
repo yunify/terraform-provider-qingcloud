@@ -3,7 +3,7 @@ package qingcloud
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	// "github.com/magicshui/qingcloud-go/cache"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
+	qc "github.com/lowstz/qingcloud-sdk-go/service"
 )
 
 func resourceQingcloudCacheParameterGroup() *schema.Resource {
@@ -14,9 +14,10 @@ func resourceQingcloudCacheParameterGroup() *schema.Resource {
 		Delete: resourceQingcloudCacheParameterGroupDelete,
 		Schema: map[string]*schema.Schema{
 			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: withinArrayString("redis3.0.5", "redis2.8.17", "memcached1.4.13"),
 			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,

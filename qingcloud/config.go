@@ -1,8 +1,8 @@
 package qingcloud
 
 import (
+	qc "github.com/lowstz/qingcloud-sdk-go/service"
 	"github.com/yunify/qingcloud-sdk-go/config"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 type Config struct {
