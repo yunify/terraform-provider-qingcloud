@@ -23,10 +23,12 @@ _testmain.go
 *.test
 *.prof
 
+.DS_Store
 vendor/
 /test-tf
-terraform-provider-qingcloud
-terraform-qingcloud
+terraform-provider-qingcloud*
+terraform-qingcloud*
 api.md
 /test-*
 *.tfstate
+build
