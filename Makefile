@@ -34,6 +34,7 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 dist:
+	rm ./build/*
 	gox -osarch="linux/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
 	gox -osarch="darwin/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
 	gox -osarch="windows/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
