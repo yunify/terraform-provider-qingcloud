@@ -1,0 +1,18 @@
+package: github.com/CuriosityChina/terraform-qingcloud
+import:
+- package: github.com/hashicorp/terraform
+  version: 0.9.1
+  subpackages:
+  - helper/mutexkv
+  - helper/resource
+  - helper/schema
+  - plugin
+  - terraform
+- package: github.com/lowstz/qingcloud-sdk-go
+  version: v2.0.0-alpha.5-1
+  subpackages:
+  - service
+- package: github.com/yunify/qingcloud-sdk-go
+  version: v2.0.0-alpha.5
+  subpackages:
+  - config  
