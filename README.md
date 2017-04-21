@@ -7,8 +7,19 @@ Terraform-Qingcloud-Plugin
 ## Usage
 
 ### Install qingcloud-provider
+
+#### On Linux
 ``` bash
-go install -v github.com/CuriosityChina/terraform-qingcloud/provider-qingcloud
+wget -c https://github.com/CuriosityChina/terraform-qingcloud/releases/download/v2.0.0/terraform-provider-qingcloud_linux-amd64.tgz
+tar -zxvf terraform-provider-qingcloud_linux-amd64.tgz
+cp terraform-provider-qingcloud_linux-amd64 $(dirname `which terraform`)/terraform-provider-qingcloud
+```
+
+#### On Mac
+``` bash
+wget -c https://github.com/CuriosityChina/terraform-qingcloud/releases/download/v2.0.0/terraform-provider-qingcloud_darwin-amd64.tgz
+tar -zxvf terraform-provider-qingcloud_darwin-amd64.tgz
+cp terraform-provider-qingcloud_darwin-amd64 $(dirname `which terraform`)/terraform-provider-qingcloud
 ```
 
 ## Finish Resource：
