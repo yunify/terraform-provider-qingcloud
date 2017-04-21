@@ -9,6 +9,7 @@ import (
 func modifyCacheAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).cache
 	input := new(qc.ModifyCacheAttributesInput)
+	input.Cache = qc.String(d.Id())
 	if create {
 		if description := d.Get("description").(string); description == "" {
 			return nil

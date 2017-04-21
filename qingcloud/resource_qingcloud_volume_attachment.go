@@ -63,6 +63,7 @@ func resourceQingcloudVolumeAttachmentRead(d *schema.ResourceData, meta interfac
 	}
 	volumeClt := meta.(*QingCloudClient).volume
 	input := new(qc.DescribeVolumesInput)
+	input.Verbose = qc.Int(1)
 	input.Volumes = []*string{qc.String(volumeID)}
 	output, err := volumeClt.DescribeVolumes(input)
 	if err != nil {
@@ -75,7 +76,7 @@ func resourceQingcloudVolumeAttachmentRead(d *schema.ResourceData, meta interfac
 	volume := output.VolumeSet[0]
 	d.Set("instance_id", qc.StringValue(volume.Instance.InstanceID))
 	d.Set("volume_id", qc.StringValue(volume.VolumeID))
-	d.Set("device_name", qc.StringValue(volume.Device))
+	d.Set("device_name", qc.StringValue(volume.Instance.Device))
 	return nil
 }
 

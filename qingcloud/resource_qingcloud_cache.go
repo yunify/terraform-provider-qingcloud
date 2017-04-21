@@ -79,11 +79,20 @@ func resourceQingcloudCacheCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 	d.SetId(qc.StringValue(output.CacheID))
+	if _, err := CacheTransitionStateRefresh(clt, qc.StringValue(output.CacheID)); err != nil {
+		return err
+	}
+	if err := modifyCacheAttributes(d, meta, true); err != nil {
+		return err
+	}
 	return resourceQingcloudCacheRead(d, meta)
 }
 
 func resourceQingcloudCacheRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).cache
+	if _, err := CacheTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	input := new(qc.DescribeCachesInput)
 	input.Caches = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
@@ -135,6 +144,9 @@ func resourceQingcloudCacheDelete(d *schema.ResourceData, meta interface{}) erro
 	input := new(qc.DeleteCachesInput)
 	input.Caches = []*string{qc.String(d.Id())}
 	if _, err := clt.DeleteCaches(input); err != nil {
+		return err
+	}
+	if _, err := CacheTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")

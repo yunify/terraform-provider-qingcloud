@@ -27,10 +27,6 @@ func resourceQingcloudCacheParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"password": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
 }
@@ -48,9 +44,6 @@ func resourceQingcloudCacheParameterGroupCreate(d *schema.ResourceData, meta int
 	if err := modifyCacheParameterGroupAttributes(d, meta, true); err != nil {
 		return err
 	}
-	if err := cacheParameterGroupSetPassword(d, meta, true); err != nil {
-		return err
-	}
 	return resourceQingcloudCacheParameterGroupRead(d, meta)
 }
 
@@ -66,18 +59,6 @@ func resourceQingcloudCacheParameterGroupRead(d *schema.ResourceData, meta inter
 	d.Set("type", qc.StringValue(group.CacheType))
 	d.Set("name", qc.StringValue(group.CacheParameterGroupName))
 	d.Set("description", qc.StringValue(group.Description))
-
-	describeCacheParameterInput := new(qc.DescribeCacheParametersInput)
-	describeCacheParameterInput.CacheParameterGroup = qc.String(d.Id())
-	describeCacheParameterOutput, err := clt.DescribeCacheParameters(describeCacheParameterInput)
-	if err != nil {
-		return err
-	}
-	for _, v := range describeCacheParameterOutput.CacheParameterSet {
-		if qc.StringValue(v.CacheParameterName) == "requirepass" {
-			d.Set("password", qc.StringValue(v.CacheParameterValue))
-		}
-	}
 	return nil
 }
 
