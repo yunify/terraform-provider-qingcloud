@@ -1,36 +1,35 @@
 # terraform-qingcloud [![Build Status](https://travis-ci.org/CuriosityChina/terraform-qingcloud.svg?branch=master)](https://travis-ci.org/CuriosityChina/terraform-qingcloud)
-Terraform 的 QingCloud 插件
 
-# 使用方式
+Old version can found on [v1](https://github.com/CuriosityChina/terraform-qingcloud/tree/v1) branch
 
-## 安装 qingcloud-provider
-```
+Terraform-Qingcloud-Plugin
+
+## Usage
+
+### Install qingcloud-provider
+``` bash
 go install -v github.com/CuriosityChina/terraform-qingcloud/provider-qingcloud
 ```
 
-## 设置 terraform 的插件路径
+## Finish Resource：
+- [x] Instance
+- [x] Volume
+- [x] Vxnet
+- [x] Router
+- [x] Eip
+- [x] SecurityGroups
+- [x] Keypairs
+- [ ] Image
+- [ ] LoadBalancer
+- [x] Tag
+- [x] redis
+- [ ] mongodb
 
-```
-# 启动编辑器
-subl ~/.terraformrc
 
-# 修改如下qingcloud 到你本地的路径
-providers {
-	qingcloud = "/Users/YOUR/GO/PATH/bin/provider-qingcloud"
-}
-```
+## Contributing
 
-## 目前我们会用到的资源：
-
-+ Instance
-+ Volume
-+ Vxnet
-+ Routers
-+ Eip
-+ SecurityGroups
-+ Keypairs
-+ Image
-+ LoadBalancer
-+ Tag
-
-其他资源欢迎提交 PR
+1. Fork it ( https://github.com/CuriosityChina/terraform-qingcloud/fork )
+2. Create your feature branch (`git checkout -b new-feature`)
+3. Commit your changes (`git commit -asm 'Add some feature'`)
+4. Push to the branch (`git push origin new-feature`)
+5. Create a new Pull Request
