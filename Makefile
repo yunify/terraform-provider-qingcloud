@@ -3,9 +3,9 @@ VETARGS?=-all
 TEST?=$$(go list ./...)
 
 
-all: build copy
+all: bin copy
 
-build:
+bin:
 	go build -o terraform-provider-qingcloud
 
 copy:

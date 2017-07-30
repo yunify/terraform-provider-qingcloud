@@ -231,12 +231,8 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	//  resize instance
 	input := new(qc.ResizeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	if d.HasChange("cpu") {
-		input.CPU = qc.Int(d.Get("cpu").(int))
-	}
-	if d.HasChange("memory") {
-		input.Memory = qc.Int(d.Get("memory").(int))
-	}
+	input.CPU = qc.Int(d.Get("cpu").(int))
+	input.Memory = qc.Int(d.Get("memory").(int))
 	_, err = clt.ResizeInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error resize instance: %s", err)
