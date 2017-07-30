@@ -32,3 +32,4 @@ api.md
 /test-*
 *.tfstate
 build
+bin

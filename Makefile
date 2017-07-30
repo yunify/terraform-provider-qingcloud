@@ -3,9 +3,9 @@ VETARGS?=-all
 TEST?=$$(go list ./...)
 
 
-all: bin copy
+all: build copy
 
-bin:
+build:
 	go build -o terraform-provider-qingcloud
 
 copy:
@@ -34,10 +34,10 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 dist:
-	rm ./build/*
+	rm -rf ./bin/*
 	gox -osarch="linux/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
 	gox -osarch="darwin/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
 	gox -osarch="windows/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
-	mkdir -p ./build
-	mv terraform-provider-qingcloud_* ./build
-	cd build && ls --color=no | xargs -I {} tar -czf {}.tgz {}
+	mkdir -p ./bin
+	mv terraform-provider-qingcloud_* ./bin
+	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
