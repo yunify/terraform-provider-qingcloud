@@ -197,7 +197,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
+		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
