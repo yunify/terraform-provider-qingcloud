@@ -2,8 +2,7 @@ package qingcloud
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
-	// "github.com/magicshui/qingcloud-go/cache"
-	qc "github.com/lowstz/qingcloud-sdk-go/service"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func resourceQingcloudCacheParameterGroup() *schema.Resource {

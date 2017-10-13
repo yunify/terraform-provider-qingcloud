@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	qc "github.com/lowstz/qingcloud-sdk-go/service"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 // func LoadbalancerTransitionStateRefresh(clt *loadbalancer.LOADBALANCER, id string) (interface{}, error) {

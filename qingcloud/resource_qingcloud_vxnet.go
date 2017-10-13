@@ -3,11 +3,10 @@ package qingcloud
 import (
 	"errors"
 	"fmt"
-	// "log"
 
-	// "github.com/hashicorp/terraform/helper/resource"
+
 	"github.com/hashicorp/terraform/helper/schema"
-	qc "github.com/lowstz/qingcloud-sdk-go/service"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func resourceQingcloudVxnet() *schema.Resource {

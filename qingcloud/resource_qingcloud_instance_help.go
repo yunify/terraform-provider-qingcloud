@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	qc "github.com/lowstz/qingcloud-sdk-go/service"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
