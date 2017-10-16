@@ -22,19 +22,19 @@ resource "qingcloud_eip" "init"{
 #     \/_____/\/____/\/____/ \/___/  \/_/   \/_/\/__/ `/___/> \   \/___/  \/_/ \/___/  \/___/  \ \ \/ 
 #                                                        /\___/                                 \ \_\ 
 #                                                        \/__/                                   \/_/ 
-resource "qingcloud_securitygroup" "basic"{
+resource "qingcloud_security_group" "basic"{
 	name = "防火墙"
 	description = "这是第一个防火墙"
 }
 
-# /\  _`\ /\  _`\ /\ \/\ \    
-# \ \,\L\_\ \,\L\_\ \ \_\ \   
-#  \/_\__ \\/_\__ \\ \  _  \  
-#    /\ \L\ \/\ \L\ \ \ \ \ \ 
+# /\  _`\ /\  _`\ /\ \/\ \
+# \ \,\L\_\ \,\L\_\ \ \_\ \
+#  \/_\__ \\/_\__ \\ \  _  \
+#    /\ \L\ \/\ \L\ \ \ \ \ \
 #    \ `\____\ `\____\ \_\ \_\
 #     \/_____/\/_____/\/_/\/_/
 resource "qingcloud_keypair" "arthur"{
-	keypair_name = "arthur"
+	name = "arthur"
 	description = "sdfafd"
 	public_key = "${file("~/.ssh/id_rsa.pub")}"
 }
@@ -43,16 +43,10 @@ resource "qingcloud_instance" "init"{
 	count = 1
 	name = "master-${count.index}"
 	image_id = "centos7x64d"
-	instance_type = "c1m1"
 	instance_class = "0"
 	vxnet_id="vxnet-0"
 	keypair_ids = ["${qingcloud_keypair.arthur.id}"]
-	security_group_id ="${qingcloud_securitygroup.basic.id}"
+	security_group_id ="${qingcloud_security_group.basic.id}"
+	eip_id = "${qingcloud_eip.init.id}"
 }
 
-
-resource "qingcloud_eip_associate" "init"{
-	resource_type = "instance"
-	resource_id = "${qingcloud_instance.init.id}"
-	eip = "${qingcloud_eip.init.id}"
-}
