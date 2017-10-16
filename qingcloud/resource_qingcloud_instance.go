@@ -42,13 +42,16 @@ func resourceQingcloudInstance() *schema.Resource {
 				ValidateFunc: withinArrayString("pending", "running", "stopped", "suspended", "terminated", "ceased"),
 			},
 			"cpu": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: withinArrayInt(1, 2, 4, 8, 16),
+				Default:      1,
 			},
 			"memory": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
+				Default:      1024,
 			},
 			"vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
