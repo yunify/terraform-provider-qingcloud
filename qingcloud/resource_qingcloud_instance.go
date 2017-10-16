@@ -198,7 +198,11 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("memory", qc.IntValue(instance.MemoryCurrent))
 	if instance.VxNets != nil && len(instance.VxNets) > 0 {
 		vxnet := instance.VxNets[0]
-		d.Set("vxnet_id", qc.StringValue(vxnet.VxNetID))
+		if qc.IntValue(vxnet.VxNetType) == 2 {
+			d.Set("vxnet_id", "vxnet-0")
+		} else {
+			d.Set("vxnet_id", qc.StringValue(vxnet.VxNetID))
+		}
 		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
 		if d.Get("static_ip") != "" {
 			d.Set("static_ip", qc.StringValue(vxnet.PrivateIP))
