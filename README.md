@@ -1,7 +1,7 @@
-# terraform-qingcloud
+# terraform-qingcloud 
 
 
-Terraform-Qingcloud-Plugin
+Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingcloud-terraform-provider.svg?branch=master)](https://travis-ci.org/yunify/qingcloud-terraform-provider)
 
 ## Usage
 
