@@ -182,7 +182,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.SetPartial("tag_ids")
 	d.Partial(false)
-	return nil
+	return resourceQingcloudEipRead(d, meta)
 }
 
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
