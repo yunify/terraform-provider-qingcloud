@@ -30,7 +30,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [ ] Volume
 - [ ] Vxnet
 - [ ] Router
-- [ ] Eip
+- [x] Eip
 - [ ] SecurityGroups
 - [ ] Keypairs
 - [ ] Image
