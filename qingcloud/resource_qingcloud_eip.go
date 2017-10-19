@@ -31,7 +31,7 @@ func resourceQingcloudEip() *schema.Resource {
 			"billing_mode": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "traffic",
+				Default:      "bandwidth",
 				Description:  "公网IP计费模式：bandwidth 按带宽计费，traffic 按流量计费，默认是 bandwidth",
 				ValidateFunc: withinArrayString("traffic", "bandwidth"),
 			},
