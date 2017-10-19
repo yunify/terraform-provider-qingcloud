@@ -142,7 +142,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-	if !d.HasChange("name") && !d.HasChange("description") && !d.HasChange("bandwidth") && !d.HasChange("billing_mode") {
+	if !d.HasChange("name") && !d.HasChange("description") && !d.HasChange("bandwidth") && !d.HasChange("billing_mode") && !d.HasChange("tag_ids") {
 		return nil
 	}
 	if d.HasChange("bandwidth") {
