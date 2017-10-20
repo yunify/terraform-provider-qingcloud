@@ -105,21 +105,6 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	if describeKeyPairsOutput.RetCode != nil && qc.IntValue(describeKeyPairsOutput.RetCode) != 0 {
 		return fmt.Errorf("Error describe keypair: %s", *describeKeyPairsOutput.Message)
 	}
-	if len(describeKeyPairsOutput.KeyPairSet[0].InstanceIDs) > 0 {
-		detachKeyPairInput := new(qc.DetachKeyPairsInput)
-		detachKeyPairInput.KeyPairs = []*string{qc.String(d.Id())}
-		detachKeyPairInput.Instances = describeKeyPairsOutput.KeyPairSet[0].InstanceIDs
-		detachKeyPairOutput, err := clt.DetachKeyPairs(detachKeyPairInput)
-		if err != nil {
-			return fmt.Errorf("Error detach keypair: %s", err)
-		}
-		if detachKeyPairOutput.RetCode != nil && qc.IntValue(detachKeyPairOutput.RetCode) != 0 {
-			return fmt.Errorf("Error detach keypair: %s", *detachKeyPairOutput.Message)
-		}
-		if _, err := KeyPairTransitionStateRefresh(clt, d.Id()); err != nil {
-			return err
-		}
-	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	output, err := clt.DeleteKeyPairs(input)
