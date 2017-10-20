@@ -182,7 +182,8 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		output, err := kpClt.AttachKeyPairs(attachInput)
 		if err != nil {
 			return fmt.Errorf("Error attach keypairs: %s", err)
-		} else if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 			return fmt.Errorf("Error attach keypair: %s", *output.Message)
 		}
 	}
@@ -197,7 +198,8 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		output, err := kpClt.DetachKeyPairs(detachInput)
 		if err != nil {
 			return fmt.Errorf("Errorr detach keypairs: %s", err)
-		} else if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 			return fmt.Errorf("Error detach keypair: %s", *output.Message)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
