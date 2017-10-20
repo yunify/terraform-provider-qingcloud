@@ -171,7 +171,7 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		nkps = append(nkps, v.(string))
 	}
 	additions, deletions := stringSliceDiff(nkps, okps)
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err == nil {
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// attach new key_pair
@@ -179,9 +179,12 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		attachInput := new(qc.AttachKeyPairsInput)
 		attachInput.Instances = []*string{qc.String(d.Id())}
 		attachInput.KeyPairs = qc.StringSlice(additions)
-		_, err := kpClt.AttachKeyPairs(attachInput)
+		output, err := kpClt.AttachKeyPairs(attachInput)
 		if err != nil {
 			return fmt.Errorf("Error attach keypairs: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error attach keypair: %s", *output.Message)
 		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -192,9 +195,12 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		detachInput := new(qc.DetachKeyPairsInput)
 		detachInput.Instances = []*string{qc.String(d.Id())}
 		detachInput.KeyPairs = qc.StringSlice(deletions)
-		_, err := kpClt.DetachKeyPairs(detachInput)
+		output, err := kpClt.DetachKeyPairs(detachInput)
 		if err != nil {
 			return fmt.Errorf("Errorr detach keypairs: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error detach keypair: %s", *output.Message)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
