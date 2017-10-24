@@ -31,11 +31,12 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [ ] Vxnet
 - [ ] Router
 - [x] Eip
-- [ ] SecurityGroups
+- [x] SecurityGroups
+- [ ] SecurityGroupRules
 - [x] Keypairs
 - [ ] Image
 - [ ] LoadBalancer
-- [ ] Tag
+- [x] Tag
 - [ ] redis
 - [ ] mongodb
 
