@@ -25,6 +25,18 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 				Optional:    true,
 				Description: "防火墙介绍",
 			},
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 	}
 }
@@ -45,6 +57,9 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeSecurityGroup); err != nil {
+		return err
+	}
 	return resourceQingcloudSecurityGroupRead(d, meta)
 }
 
@@ -62,13 +77,22 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	sg := output.SecurityGroupSet[0]
 	d.Set("name", qc.StringValue(sg.SecurityGroupName))
 	d.Set("description", qc.StringValue(sg.Description))
+	resourceSetTag(d, sg.Tags)
 	return nil
 }
 func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	d.Partial(true)
 	err := modifySecurityGroupAttributes(d, meta, false)
 	if err != nil {
 		return err
 	}
+	d.SetPartial("description")
+	d.SetPartial("name")
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeSecurityGroup); err != nil {
+		return err
+	}
+	d.SetPartial("tag_ids")
+	d.Partial(false)
 	return resourceQingcloudSecurityGroupRead(d, meta)
 }
 
