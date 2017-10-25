@@ -1,12 +1,12 @@
 hash: 0a18590612e0c94a3302078d079eec4a2cc1433c82e5a52a8d4990d2e3a3b678
-updated: 2017-10-24T15:45:35.484330533+08:00
+updated: 2017-10-25T14:16:56.501329398+08:00
 imports:
 - name: github.com/apparentlymart/go-cidr
   version: 2bd8b58cf4275aeb086ade613de226773e29e853
   subpackages:
   - cidr
 - name: github.com/aws/aws-sdk-go
-  version: e83347f2c76da594a7a8adbf7324939b6c489e6b
+  version: 31a032ed4ab3900e27b21554622fab3c222c9981
   subpackages:
   - aws
   - aws/awserr
@@ -133,7 +133,7 @@ imports:
   - internal/xlog
   - lzma
 - name: github.com/yunify/qingcloud-sdk-go
-  version: b137be9cc52f3eb501365e3659a0a0d097998a51
+  version: af4279fa17135e731c1f312a673d64bff7cca252
   subpackages:
   - config
   - logger
@@ -147,7 +147,7 @@ imports:
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
-  version: 92447d55896d6f92b4a0d4fd83bd078b0374e8fa
+  version: 4b14673ba32bee7f5ac0f990a48f033919fd418b
   subpackages:
   - context
   - http2
@@ -162,7 +162,7 @@ imports:
   - unix
   - windows
 - name: golang.org/x/text
-  version: c01e4764d870b77f8abe5096ee19ad20d80e8075
+  version: 6eab0e8f74e86c598ec3b6fad4888e0c11482d48
   subpackages:
   - secure/bidirule
   - transform
@@ -173,7 +173,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 0d57c57a68d6c3f0cf1d708ab380b10e092c759f
+  version: 5856538706dc3abc44dd5ba1a8bb19a0dfb1ab25
   subpackages:
   - balancer
   - balancer/roundrobin
