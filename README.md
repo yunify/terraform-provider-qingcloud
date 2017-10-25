@@ -32,7 +32,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [ ] Router
 - [x] Eip
 - [x] SecurityGroups
-- [ ] SecurityGroupRules
+- [x] SecurityGroupRules
 - [x] Keypairs
 - [ ] Image
 - [ ] LoadBalancer
