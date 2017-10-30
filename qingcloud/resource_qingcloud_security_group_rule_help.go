@@ -9,8 +9,7 @@ import (
 
 // Warning
 // The null character string and null pointer is difference when Go SDK processing parameter.
-// For example,val3 ,if is "",
-//then request has "val3=",if it is nil,then don't have "val3="。
+// For example,if val3 is "",then request has "val3=";if it is nil,and the request doesn't have "val3=".
 func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupRuleAttributesInput)
