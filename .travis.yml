@@ -7,7 +7,6 @@ script:
   - sudo add-apt-repository ppa:masterminds/glide -y && sudo apt-get update
   - sudo apt-get install glide -y
   - glide up
-  - go get github.com/mitchellh/gox
   - make build
   - make test
   - make dist
