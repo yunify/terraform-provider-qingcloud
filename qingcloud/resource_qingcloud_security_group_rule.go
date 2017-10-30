@@ -2,7 +2,6 @@ package qingcloud
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -19,43 +18,50 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"protocol": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "协议",
+				Description:  "protocol",
 				ValidateFunc: withinArrayString("tcp", "udp", "icmp", "gre", "esp", "ah", "ipip"),
 			},
 			"priority": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayIntRange(0, 100),
+				Default:      0,
+				Description:  "priority,From high to low 0 - 100",
 			},
 			"action": &schema.Schema{
 				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: withinArrayString("accept", "drops"),
+				Required:     true,
+				ValidateFunc: withinArrayString("accept", "drop"),
 			},
-			// "direction": &schema.Schema{
-			// 	Type:         schema.TypeInt,
-			// 	Optional:     true,
-			// 	Description:  "方向，0 表示下行，1 表示上行。默认为 0。",
-			// 	ValidateFunc: withinArrayInt(0, 1),
-			// },
+			"direction": &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "direction,0 express down ,1 express up.default 0。",
+				ValidateFunc: withinArrayInt(0, 1),
+				Default:      0,
+			},
 			"from_port": &schema.Schema{
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Optional: true,
-				Description: "如果协议为 tcp 或 udp，此值表示起始端口。 如果协议为 icmp，此值表示 ICMP 类型。 其他协议无需此值。	",
+				Description: "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.	",
 			},
 			"to_port": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				Description: "如果协议为 tcp 或 udp，此值表示结束端口。 如果协议为 icmp，此值表示 ICMP 代码。 其他协议无需此值。	",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
 			},
 			"cidr_block": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description: "目标 IP，如果填写，则这条防火墙规则只对此IP（或IP段）有效。	",
+				Description: "target IP,the Security Group Rule only affect to those IPs。	",
 			},
 		},
 	}
@@ -70,11 +76,14 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Priority = qc.Int(d.Get("priority").(int))
 	rule.Protocol = qc.String(d.Get("protocol").(string))
 	rule.Action = qc.String(d.Get("action").(string))
-	if d.Get("from_port").(int) != 0 {
-		rule.Val1 = qc.String(strconv.Itoa(d.Get("from_port").(int)))
+	if d.Get("name").(string) != "" {
+		rule.SecurityGroupRuleName = qc.String(d.Get("name").(string))
 	}
-	if d.Get("to_port").(int) != 0 {
-		rule.Val2 = qc.String(strconv.Itoa(d.Get("to_port").(int)))
+	if d.Get("from_port").(string) != "" {
+		rule.Val1 = qc.String(d.Get("from_port").(string))
+	}
+	if d.Get("to_port").(string) != "" {
+		rule.Val2 = qc.String(d.Get("to_port").(string))
 	}
 	if d.Get("cidr_block").(string) != "" {
 		rule.Val3 = qc.String(d.Get("cidr_block").(string))
@@ -89,8 +98,6 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
 	// Lock security group resource for apply security group
-	// qingcloudMutexKV.Lock(sgID)
-	// defer qingcloudMutexKV.Unlock(sgID)
 	err = applySecurityGroupRule(d, meta)
 	if err != nil {
 		return err
@@ -112,26 +119,16 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	d.Set("protocol", qc.StringValue(sgRule.Protocol))
 	d.Set("priority", qc.IntValue(sgRule.Priority))
 	d.Set("action", qc.StringValue(sgRule.Action))
-	if qc.StringValue(sgRule.Val1) != "" {
-		fp, err := strconv.Atoi(qc.StringValue(sgRule.Val1))
-		if err != nil {
-			return err
-		}
-		d.Set("from_port", fp)
-	}
-	if qc.StringValue(sgRule.Val2) != "" {
-		tp, err := strconv.Atoi(qc.StringValue(sgRule.Val2))
-		if err != nil {
-			return err
-		}
-		d.Set("to_port", tp)
-	}
+	d.Set("from_port", qc.StringValue(sgRule.Val1))
+	d.Set("to_port", qc.StringValue(sgRule.Val2))
 	d.Set("cidr_block", qc.StringValue(sgRule.Val3))
+	d.Set("name", qc.StringValue(sgRule.SecurityGroupRuleName))
 	return nil
 }
 
 func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := ModifySecurityGroupRuleAttributes(d, meta, true)
+
+	err := ModifySecurityGroupRuleAttributes(d, meta, false)
 	if err != nil {
 		return err
 	}
