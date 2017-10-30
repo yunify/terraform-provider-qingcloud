@@ -7,9 +7,10 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-//注意Go SDK 处理参数的时候，空字符串和空指针是不一样的。比如 val3 这个值，如果给 ""，
-//那么请求串中会包含 "val3="，但是如果值是 nil，那么构建请求时会忽略这个参数。
-//在ModifySecurityGroupRuleAttributes中会造成一定的差异性。
+// Warning
+// The null character string and null pointer is difference when Go SDK processing parameter.
+// For example,val3 ,if is "",
+//then request has "val3=",if it is nil,then don't have "val3="。
 func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupRuleAttributesInput)

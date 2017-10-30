@@ -25,7 +25,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 			"protocol": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "协议",
+				Description:  "protocol",
 				ValidateFunc: withinArrayString("tcp", "udp", "icmp", "gre", "esp", "ah", "ipip"),
 			},
 			"priority": &schema.Schema{
@@ -33,7 +33,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: withinArrayIntRange(0, 100),
 				Default:      0,
-				Description:  "优先级，由高到低为 0 - 100",
+				Description:  "priority,From high to low 0 - 100",
 			},
 			"action": &schema.Schema{
 				Type:         schema.TypeString,
@@ -43,25 +43,25 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 			"direction": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "方向，0 表示下行，1 表示上行。默认为 0。",
+				Description:  "direction,0 express down ,1 express up.default 0。",
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
 			"from_port": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "如果协议为 tcp 或 udp，此值表示起始端口。 如果协议为 icmp，此值表示 ICMP 类型。 其他协议无需此值。	",
+				Description: "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.	",
 			},
 			"to_port": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "如果协议为 tcp 或 udp，此值表示结束端口。 如果协议为 icmp，此值表示 ICMP 代码。 其他协议无需此值。	",
+				Description: "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
 			},
 			"cidr_block": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description: "目标 IP，如果填写，则这条防火墙规则只对此IP（或IP段）有效。	",
+				Description: "target IP,the Security Group Rule only affect to those IPs。	",
 			},
 		},
 	}
