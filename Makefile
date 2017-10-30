@@ -33,7 +33,10 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-dist:
+dist-tools:
+	@go get github.com/mitchellh/gox
+
+dist: dist-tools
 	rm -rf ./bin/*
 	gox -osarch="linux/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
 	gox -osarch="darwin/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
@@ -41,3 +44,5 @@ dist:
 	mkdir -p ./bin
 	mv terraform-provider-qingcloud_* ./bin
 	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
+
+.PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist

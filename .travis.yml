@@ -9,3 +9,15 @@ script:
   - glide up
   - make build
   - make test
+  - make dist
+deploy:
+    provider: releases
+    api_key:
+        secure: iwV4AduiacmmEMIc8EpXQEbweMUxbdACtljR8kTDwIqCoXZzkIQ0lqQKrtPCVmNqdUFhDwyrpMxJBnwKh8ETrH4UZKANHWX3dW7W/E1gkYFiey9MJiZArNsBQy8ai+P4cr7/DXzZ3VfSTeIJ/TEt5Tzc+pqAxKoFTnfV07vk7mBscADM0OOSefl/W3kmO5T9lHCoFcEmVpSJf3bzFBGjVis3O3cZlc+6U2QrBCMKkmlB8S7KbadFBN2FifdB/ALlq6lMHJHjv9nhEKRK4vJ7lfalfA12GT8X+OP6uPpZ5kAuB0astEMVTMI9f2zB1ijN21+6fIXFMHZjJP7bOF0FQevp2XWvBxdgFeflYpEfOK5wZSkRXX1akLJif6O1tc5FQCw2qaw6N/Mb5l1ukGMt1th28T8FnvUpZWwy3UrOb8HG1RPOROhz4BIGNJ1mYlKc/LtID2weSnU4Ppn9jKvKXqt15oBov3N1KZigbka1EW/W0GX1B4piTk7IEBVCGPLz6VOE2j4burl8OJpzE+fyd1kOYgBZr/QMuGWJSgDJZ8an2p/vNCMxcfWawRNAYJN7djBXuSAKcW4NaEGXwQ/EXhyv6I3R2WJmYgwpwW2zdzn3nW+sOP9W2FqmSPPMc+HN2a4CapVKXIi8TQWZsu+i5OVYdanKfBdBzk0ft5DCjy8=
+    file:
+       - ./bin/terraform-provider-qingcloud_darwin-amd64.tgz
+       - ./bin/terraform-provider-qingcloud_linux-amd64.tgz
+       - ./bin/terraform-provider-qingcloud_windows-amd64.exe.tgz
+    skip_cleanup: true
+    on:
+        tags: true
