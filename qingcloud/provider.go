@@ -1,6 +1,8 @@
 package qingcloud
 
 import (
+	"os"
+
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -9,15 +11,15 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
+			"access_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: descriptions["token"],
+				Description: descriptions["access_key"],
 			},
-			"secret": &schema.Schema{
+			"secret_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: descriptions["secret"],
+				Description: descriptions["secret_key"],
 			},
 			"zone": &schema.Schema{
 				Type:        schema.TypeString,
@@ -55,10 +57,25 @@ func Provider() terraform.ResourceProvider {
 var qingcloudMutexKV = mutexkv.NewMutexKV()
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	accesskey, ok := d.GetOk("access_key")
+	if !ok {
+		accesskey = os.Getenv("QINGCLOUD_ACCESS_KEY")
+	}
+	secretkey, ok := d.GetOk("secret_key")
+	if !ok {
+		secretkey = os.Getenv("QINGCLOUD_SECRET_KEY")
+	}
+	zone, ok := d.GetOk("zone")
+	if !ok {
+		zone = os.Getenv("QINGCLOUD_ZONE")
+		if zone == "" {
+			zone = DEFAULT_ZONE
+		}
+	}
 	config := Config{
-		ID:     d.Get("id").(string),
-		Secret: d.Get("secret").(string),
-		Zone:   d.Get("zone").(string),
+		ID:     accesskey.(string),
+		Secret: secretkey.(string),
+		Zone:   zone.(string),
 	}
 	return config.Client()
 }
@@ -67,8 +84,8 @@ var descriptions map[string]string
 
 func init() {
 	descriptions = map[string]string{
-		"id":     "qingcloud access key ID ",
-		"secret": "qingcloud access key secret",
+		"access_key": "qingcloud access key ID ",
+		"secret_key": "qingcloud access key secret",
 		"zone":   "qingcloud reigon zone",
 	}
 }

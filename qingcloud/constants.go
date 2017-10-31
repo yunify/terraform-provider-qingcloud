@@ -17,4 +17,6 @@ const (
 	qingcloudResourceTypeZookeeper     = "zookeeper"
 	qingcloudResourceTypeQueue         = "queue"
 	qingcloudResourceTypeSpark         = "spark"
+
+	DEFAULT_ZONE                       = "pek3a"
 )
