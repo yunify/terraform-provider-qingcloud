@@ -1,8 +1,8 @@
-variable "id" {
+variable "access_key" {
 	default = "yourID"
 }
 
-variable "secret" {
+variable "secret_key" {
 	default = "yourSecret"
 }
 
@@ -11,9 +11,7 @@ variable "zone" {
 }
 
 provider "qingcloud" {
-	id = "${var.id}"
-	secret = "${var.secret}"
+	access_key = "${var.access_key}"
+	secret_key = "${var.secret_key}"
 	zone = "${var.zone}"
 }
-
-
