@@ -13,18 +13,28 @@ func Provider() terraform.ResourceProvider {
 		Schema: map[string]*schema.Schema{
 			"access_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: descriptions["access_key"],
 			},
 			"secret_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: descriptions["secret_key"],
 			},
 			"zone": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: descriptions["zone"],
+			},
+			"id": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["access_key"],
+			},
+			"secret": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["secret_key"],
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -59,9 +69,15 @@ var qingcloudMutexKV = mutexkv.NewMutexKV()
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	accesskey, ok := d.GetOk("access_key")
 	if !ok {
+		accesskey, ok = d.GetOk("id")
+	}
+	if !ok {
 		accesskey = os.Getenv("QINGCLOUD_ACCESS_KEY")
 	}
 	secretkey, ok := d.GetOk("secret_key")
+	if !ok {
+		secretkey, ok = d.GetOk("secret")
+	}
 	if !ok {
 		secretkey = os.Getenv("QINGCLOUD_SECRET_KEY")
 	}
