@@ -18,5 +18,5 @@ const (
 	qingcloudResourceTypeQueue         = "queue"
 	qingcloudResourceTypeSpark         = "spark"
 
-	DEFAULT_ZONE                       = "pek3a"
+	DEFAULT_ZONE = "pek3a"
 )

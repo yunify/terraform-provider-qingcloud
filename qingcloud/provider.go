@@ -86,6 +86,6 @@ func init() {
 	descriptions = map[string]string{
 		"access_key": "qingcloud access key ID ",
 		"secret_key": "qingcloud access key secret",
-		"zone":   "qingcloud reigon zone",
+		"zone":       "qingcloud reigon zone",
 	}
 }
