@@ -5,9 +5,8 @@ go:
 
 script:
   - sudo add-apt-repository ppa:masterminds/glide -y && sudo apt-get update
-  - sudo apt-get install glide -y
-  - make build
   - make test
+  - make build
   - make dist
 deploy:
     provider: releases
