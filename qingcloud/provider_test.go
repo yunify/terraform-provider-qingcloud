@@ -19,13 +19,11 @@ func init() {
 	}
 }
 
-// This function will be activated in next release.
-// Because of ${provider.id} hasn't been deleted yet.
-//func TestProvider(t *testing.T) {
-//	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
-//		t.Fatalf("err: %s", err)
-//	}
-//}
+func TestProvider(t *testing.T) {
+	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
 
 func TestProvider_impl(t *testing.T) {
 	var _ terraform.ResourceProvider = Provider()
