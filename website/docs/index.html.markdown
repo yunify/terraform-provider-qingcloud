@@ -106,11 +106,11 @@ The following arguments are supported:
 
 * `access_key` - (Optional) This is the Qingcloud access key. It must be provided,
 but it can also be sourced from the `QINGCLOUD_ACCESS_KEY` environment variable.
-In old version access_key name is id , and it was deprecated.In v2.0.3 id can not be used.
+In old version access_key name is id , and it was deprecated.
 
 * `secret_key` - (Optional) This is the Qingcloud secret key. It must be provided, but
 it can also be sourced from the `QINGCLOUD_SECRET_KEY` environment variable.
-In old version secret_key name is secret , and it was deprecated.In v2.0.3 id can not be used.
+In old version secret_key name is secret , and it was deprecated.
 
 * `zone` - (Required) This is the Qingcloud zone. It must be provided, but
 it can also be sourced from the `QINGCLOUD_ZONE` environment variables.
