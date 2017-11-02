@@ -112,7 +112,6 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
 	input := new(qc.DescribeEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
@@ -143,6 +142,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	d.Partial(true)
+	waitEipLease(d, meta)
 	if d.HasChange("need_icp") {
 		return fmt.Errorf("Errorf EIP need_icp could not be updated")
 	}
@@ -157,6 +157,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		if *output.RetCode != 0 {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
 		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
+		}
 		d.SetPartial("bandwidth")
 	}
 	if d.HasChange("billing_mode") {
@@ -169,6 +172,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 		if *output.RetCode != 0 {
 			return fmt.Errorf("Errorf Change EIP billing_mode %s", *output.Message)
+		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
 		}
 		d.SetPartial("billing_mode")
 	}
@@ -188,6 +194,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	_, err := EIPTransitionStateRefresh(clt, d.Id())
+	waitEipLease(d, meta)
 	if err != nil {
 		return err
 	}
