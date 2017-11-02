@@ -82,9 +82,13 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	input := new(qc.AllocateEIPsInput)
 	input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
 	input.BillingMode = qc.String(d.Get("billing_mode").(string))
-	input.EIPName = qc.String(d.Get("name").(string))
 	input.NeedICP = qc.Int(d.Get("need_icp").(int))
 	input.Count = qc.Int(1)
+	if d.Get("name") != "" {
+		input.EIPName = qc.String(d.Get("name").(string))
+	} else {
+		input.EIPName = nil
+	}
 	output, err := clt.AllocateEIPs(input)
 	if err != nil {
 		return fmt.Errorf("Error create eip: %s", err)
