@@ -3,12 +3,12 @@ VETARGS?=-all
 TEST?=$$(go list ./...)
 
 
-all: build copy
+all: test build 
 
-build:
+build: fmt
 	go build -o terraform-provider-qingcloud
 
-copy:
+install:
 	cp terraform-provider-qingcloud $(shell dirname `which terraform`)
 
 test: vet fmtcheck errcheck
