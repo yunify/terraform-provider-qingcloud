@@ -24,13 +24,11 @@ _testmain.go
 *.prof
 
 .DS_Store
-vendor/
 /test-tf
 terraform-provider-qingcloud*
-terraform-qingcloud*
-api.md
 /test-*
 *.tfstate
 build
 bin
 .idea/
+glide.lock
