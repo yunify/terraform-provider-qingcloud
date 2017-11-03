@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/yunify/qingcloud-sdk-go/client"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"time"
 )
 
 func resourceQingcloudEip() *schema.Resource {
@@ -209,6 +211,9 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	if *output.RetCode != 0 {
 		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
 	d.SetId("")
 	return nil
 }
