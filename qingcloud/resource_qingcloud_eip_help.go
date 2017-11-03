@@ -21,10 +21,18 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 			return nil
 		}
 		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
+			if d.Get("description") == "" {
+				input.Description = qc.String(" ")
+			} else {
+				input.Description = qc.String(d.Get("description").(string))
+			}
 		}
 		if d.HasChange("name") {
-			input.EIPName = qc.String(d.Get("name").(string))
+			if d.Get("name") == "" {
+				input.EIPName = qc.String(" ")
+			} else {
+				input.EIPName = qc.String(d.Get("name").(string))
+			}
 		}
 	}
 	output, err := clt.ModifyEIPAttributes(input)
