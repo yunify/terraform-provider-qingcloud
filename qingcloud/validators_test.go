@@ -73,3 +73,21 @@ func TestWithinArrayIntRange(t *testing.T) {
 		}
 	}
 }
+func TestValidateColorString(t *testing.T) {
+	validColor := []string{"#1f1f1F", "#AFAFAF", "#1AFFa1", "#222fff", "#F00"}
+	for _, v := range validColor {
+		_, errors := validateColorString(v, "color string")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid color string: %q", v, errors)
+		}
+	}
+	invalidColor := []string{"123456", "#afafah", "#123abce", "aFaE3f",
+		"F00", "#afaf", "#F0h"}
+	for _, v := range invalidColor {
+		_, errors := validateColorString(v, "color string")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid color string: %q", v, errors)
+		}
+	}
+
+}

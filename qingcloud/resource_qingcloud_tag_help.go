@@ -26,7 +26,11 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 			return nil
 		}
 		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
+			if d.Get("description").(string) == "" {
+				input.Description = qc.String(" ")
+			} else {
+				input.Description = qc.String(d.Get("description").(string))
+			}
 		}
 		if d.HasChange("name") {
 			input.TagName = qc.String(d.Get("name").(string))
