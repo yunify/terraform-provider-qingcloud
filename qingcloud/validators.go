@@ -6,7 +6,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"regexp"
 )
+
+var ColorRegex = regexp.MustCompile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
 
 func validateRouterVxnetsCIDR(v interface{}, k string) (ws []string, errors []error) {
 	vxnets := v.(map[string]interface{})
@@ -80,4 +83,13 @@ func withinArrayIntRange(begin, end int) schema.SchemaValidateFunc {
 		errors = append(errors, fmt.Errorf("%q (%q) should > %d  && < %d ", k, value, begin, end))
 		return
 	}
+}
+func validateColorString(v interface{}, k string) (ws []string, errors []error) {
+	colorstring := v.(string)
+	if !ColorRegex.MatchString(colorstring) {
+		errors = append(errors, fmt.Errorf("%q (%q) doesn't match", k, colorstring))
+		return
+	}
+	return
+
 }

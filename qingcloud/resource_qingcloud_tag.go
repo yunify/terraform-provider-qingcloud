@@ -19,9 +19,10 @@ func resourceQingcloudTag() *schema.Resource {
 				Required: true,
 			},
 			"color": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "#9f9bb7",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "#9f9bb7",
+				ValidateFunc: validateColorString,
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
