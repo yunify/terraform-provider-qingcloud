@@ -19,9 +19,10 @@ func resourceQingcloudTag() *schema.Resource {
 				Required: true,
 			},
 			"color": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "#9f9bb7",
+				ValidateFunc: validateColorString,
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
@@ -35,7 +36,6 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.CreateTagInput)
 	input.TagName = qc.String(d.Get("name").(string))
-	// input.Color = qc.String(d.Get("color").(string))
 	output, err := clt.CreateTag(input)
 	if err != nil {
 		return fmt.Errorf("Error create tag: %s", err)
@@ -48,7 +48,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	return nil
+	return resourceQingcloudTagRead(d, meta)
 }
 func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
@@ -65,11 +65,9 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error tag not found")
 	}
 	tag := output.TagSet[0]
-	d.Set("name", tag.TagName)
-	d.Set("description", tag.Description)
-	if qc.StringValue(tag.Color) != "default" {
-		d.Set("color", tag.Color)
-	}
+	d.Set("name", qc.StringValue(tag.TagName))
+	d.Set("description", qc.StringValue(tag.Description))
+	d.Set("color", qc.StringValue(tag.Color))
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {
