@@ -13,6 +13,7 @@ type Config struct {
 
 type QingCloudClient struct {
 	zone          string
+	job           *qc.JobService
 	eip           *qc.EIPService
 	keypair       *qc.KeyPairService
 	securitygroup *qc.SecurityGroupService
@@ -36,6 +37,11 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	job, err := clt.Job(c.Zone)
+	if err != nil {
+		return nil, err
+	}
+
 	eip, err := clt.EIP(c.Zone)
 	if err != nil {
 		return nil, err
@@ -83,6 +89,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 
 	return &QingCloudClient{
 		zone:          c.Zone,
+		job:           job,
 		eip:           eip,
 		keypair:       keypair,
 		securitygroup: securitygroup,
