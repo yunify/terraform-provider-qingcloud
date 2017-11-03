@@ -62,6 +62,63 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 	})
 
 }
+func TestAccQingcloudEIP_tag(t *testing.T) {
+	var eip qc.DescribeEIPsOutput
+
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := eip.EIPSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(eip.EIPSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(eip.EIPSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_eip.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccEipConfigTag,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(
+						"qingcloud_eip.foo", &eip),
+					testTagNameValue("11", "22"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccEipConfigTagTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(
+						"qingcloud_eip.foo", &eip),
+					testTagDetach(),
+				),
+			},
+		},
+	})
+
+}
 
 func testAccCheckEIPExists(n string, eip *qc.DescribeEIPsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -133,3 +190,38 @@ resource "qingcloud_eip" "foo" {
     bandwidth = 4
     need_icp = 0
 } `
+
+const testAccEipConfigTag = `
+
+resource "qingcloud_eip" "foo" {
+    name = "eip"
+    description = "eip"
+    billing_mode = "bandwidth"
+    bandwidth = 4
+    need_icp = 0
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+`
+const testAccEipConfigTagTwo = `
+
+resource "qingcloud_eip" "foo" {
+    name = "eip"
+    description = "eip"
+    billing_mode = "bandwidth"
+    bandwidth = 4
+    need_icp = 0
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+`
