@@ -374,3 +374,10 @@ func CacheTransitionStateRefresh(clt *qc.CacheService, id string) (interface{}, 
 	}
 	return stateConf.WaitForState()
 }
+func WaitForLease(CreateTime *time.Time) {
+	now := time.Now()
+	subS := now.Sub(qc.TimeValue(CreateTime)).Seconds()
+	if subS < float64(30) {
+		time.Sleep(time.Second * time.Duration(30))
+	}
+}

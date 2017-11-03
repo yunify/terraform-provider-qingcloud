@@ -16,62 +16,62 @@ func resourceQingcloudEip() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "公网 IP 的名称",
+				Optional:    true,
+				Description: "the name of eip",
 			},
 			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "the description of eip",
 			},
 			"bandwidth": &schema.Schema{
 				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "公网IP带宽上限，单位为Mbps",
+				Required:    true,
+				Description: "Maximum bandwidth to the elastic public network, measured in Mbps",
 			},
 			"billing_mode": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "bandwidth",
-				Description:  "公网IP计费模式：bandwidth 按带宽计费，traffic 按流量计费，默认是 bandwidth",
+				Description:  "Internet charge type of the EIP : bandwidth , traffic ,default bandwidth",
 				ValidateFunc: withinArrayString("traffic", "bandwidth"),
 			},
 			"need_icp": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				Description:  "是否需要备案，1为需要，0为不需要，默认是0",
+				Description:  "need icp , 1 need , 0 no need ,default 0",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
 			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "tag ids , eip wants to use",
 			},
 			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "compute by tag ids",
 			},
 			"addr": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "ip address of this eip",
 			},
-
 			"status": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "the status of eip",
 			},
-			"transition_status": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// 目前正在使用这个 IP 的资源
 			"resource": &schema.Schema{
 				Type:         schema.TypeMap,
 				Computed:     true,
 				ComputedWhen: []string{"id"},
+				Description:  "the resource who use this eip",
 			},
 		},
 	}
@@ -79,7 +79,6 @@ func resourceQingcloudEip() *schema.Resource {
 
 func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
 	input := new(qc.AllocateEIPsInput)
 	input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
 	input.BillingMode = qc.String(d.Get("billing_mode").(string))
@@ -112,7 +111,6 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-
 	input := new(qc.DescribeEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
@@ -132,7 +130,6 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	// 如下状态是稍等来获取的
 	d.Set("addr", qc.StringValue(ip.EIPAddr))
 	d.Set("status", qc.StringValue(ip.Status))
-	d.Set("transition_status", qc.StringValue(ip.TransitionStatus))
 	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
@@ -143,6 +140,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	d.Partial(true)
+	waitEipLease(d, meta)
 	if d.HasChange("need_icp") {
 		return fmt.Errorf("Errorf EIP need_icp could not be updated")
 	}
@@ -157,6 +155,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		if *output.RetCode != 0 {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
 		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
+		}
 		d.SetPartial("bandwidth")
 	}
 	if d.HasChange("billing_mode") {
@@ -169,6 +170,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 		if *output.RetCode != 0 {
 			return fmt.Errorf("Errorf Change EIP billing_mode %s", *output.Message)
+		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
 		}
 		d.SetPartial("billing_mode")
 	}
@@ -188,6 +192,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	_, err := EIPTransitionStateRefresh(clt, d.Id())
+	waitEipLease(d, meta)
 	if err != nil {
 		return err
 	}
