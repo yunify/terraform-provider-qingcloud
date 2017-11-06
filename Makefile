@@ -3,7 +3,7 @@ VETARGS?=-all
 TEST?=$$(go list ./... |grep -v 'vendor')
 
 
-all: test build 
+all: build test
 
 build: fmt
 	go build -o terraform-provider-qingcloud
