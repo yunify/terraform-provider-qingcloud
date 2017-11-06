@@ -30,7 +30,7 @@ script:
     fi
 
     find . -name cov_part.out | xargs cat > cov.out
-    node /usr/local/lib/node_modules/codeclimate-test-reporter/bin/codeclimate.js < cov.out
+    codeclimate-test-reporter < cov.out
 
   - make build
   - make dist
