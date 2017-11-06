@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -93,6 +94,26 @@ func testAccCheckEIPExists(n string, eip *qc.DescribeEIPsOutput) resource.TestCh
 	}
 }
 func testAccCheckEIPDestroy(s *terraform.State) error {
+	return testAccCheckEIPDestroyWithProvider(s, testAccProvider)
+}
+
+func testAccCheckEIPDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	client := provider.Meta().(*QingCloudClient)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "qingcloud_eip" {
+			continue
+		}
+
+		// Try to find the resource
+		input := new(qc.DescribeEIPsInput)
+		input.EIPs = []*string{qc.String(rs.Primary.ID)}
+		output, err := client.eip.DescribeEIPs(input)
+		if err == nil && qc.IntValue(output.RetCode) == 0 {
+			if len(output.EIPSet) != 0 && qc.StringValue(output.EIPSet[0].Status) != "released" {
+				return fmt.Errorf("Found  EIP: %s", rs.Primary.ID)
+			}
+		}
+	}
 	return nil
 }
 
