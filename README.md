@@ -1,7 +1,9 @@
-# terraform-qingcloud 
+# terraform-qingcloud
 
 
 Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingcloud-terraform-provider.svg?branch=master)](https://travis-ci.org/yunify/qingcloud-terraform-provider)
+
+[![codebeat badge](https://codebeat.co/badges/4559529b-cb96-4120-a489-30ca998c3790)](https://codebeat.co/projects/github-com-yunify-qingcloud-terraform-provider-master)
 
 ## Usage
 
@@ -10,7 +12,7 @@ Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingclo
 #### On Linux
 ``` bash
 go get github.com/yunify/qingcloud-terraform-provider
-glide up 
+glide up
 make build
 make test
 cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provider-qingcloud
@@ -19,7 +21,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 #### On Mac
 ``` bash
 go get github.com/yunify/qingcloud-terraform-provider
-glide up 
+glide up
 make build
 make test
 cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provider-qingcloud
