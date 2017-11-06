@@ -3,12 +3,12 @@ package qingcloud
 import (
 	"fmt"
 	"log"
-
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/hashicorp/terraform/helper/resource"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
-	"github.com/hashicorp/terraform/helper/schema"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func TestAccQingcloudKeypair_basic(t *testing.T) {
@@ -98,7 +98,6 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 
 }
 
-
 func testAccCheckKeypairExists(n string, tag *qc.DescribeKeyPairsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -132,7 +131,7 @@ func testAccCheckKeypairExists(n string, tag *qc.DescribeKeyPairsOutput) resourc
 func testAccCheckKeypairDestroy(s *terraform.State) error {
 	return testAccCheckKeypairDestroyWithProvider(s, testAccProvider)
 }
-func testAccCheckKeypairDestroyWithProvider(s *terraform.State , provider *schema.Provider) error  {
+func testAccCheckKeypairDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	client := provider.Meta().(*QingCloudClient)
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "qingcloud_keypair" {
