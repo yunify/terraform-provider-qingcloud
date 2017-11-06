@@ -12,8 +12,8 @@ script:
     shopt -s globstar;
     rootdir=`pwd`;
 
-    for dir in $(go list ./... |grep -v 'vendor'); do 
-      cd $GOPATH/$dir;
+    for dir in $(go list ./... |grep -v 'vendor'); do
+      cd $GOPATH/src/$dir;
       exec 5>&1;
       out=$(go test -v -coverprofile=cov_part.out | tee >(cat - >&5))
       if [ $? -eq 1 ] ; then
