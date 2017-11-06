@@ -11,10 +11,10 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
+
 	if d.HasChange("color") {
 		input.Color = qc.String(d.Get("color").(string))
 	}
-
 	if d.HasChange("description") {
 		if d.Get("description").(string) == "" {
 			input.Description = qc.String(" ")
