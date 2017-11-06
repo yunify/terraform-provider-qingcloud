@@ -3,8 +3,6 @@
 
 Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingcloud-terraform-provider.svg?branch=master)](https://travis-ci.org/yunify/qingcloud-terraform-provider)
 
-[![codecov](https://codecov.io/gh/yunify/qingcloud-terraform-provider/branch/master/graph/badge.svg)](https://codecov.io/gh/yunify/qingcloud-terraform-provider)
-
 [![codebeat badge](https://codebeat.co/badges/4559529b-cb96-4120-a489-30ca998c3790)](https://codebeat.co/projects/github-com-yunify-qingcloud-terraform-provider-master)
 
 ## Usage

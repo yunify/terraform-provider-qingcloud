@@ -5,18 +5,32 @@ go:
   - tip
 
 script:
+  - npm install -g codeclimate-test-reporter
   - make test
   - |
-    set -e
-    echo "" > coverage.txt
-    for d in $(go list ./... | grep -v vendor); do
-    go test -race -coverprofile=profile.out -covermode=atomic $d
-    if [ -f profile.out ]; then
-        cat profile.out >> coverage.txt
-        rm profile.out
-    fi
+    shopt -s globstar
+    rootdir=`pwd`
+
+    for dir in **/ ; do
+      cd $dir
+      exec 5>&1
+      out=$(go test -v -coverprofile=cov_part.out | tee >(cat - >&5))
+      if [ $? -eq 1 ] ; then
+        if [ $(cat $out | grep -o 'no buildable Go source files') == "" ] ; then
+          echo "Tests failed! Exiting..." ; exit 1
+        fi
+      fi
+      cd $rootdir
     done
-    
+
+    if [ -z "$CI_NAME" ]; then
+      echo "CI_NAME is unset. Skipping coverage report!"
+      exit 0
+    fi
+
+    find . -name cov_part.out | xargs cat > cov.out
+    node /usr/local/lib/node_modules/codeclimate-test-reporter/bin/codeclimate.js < cov.out
+
   - make build
   - make dist
 deploy:
