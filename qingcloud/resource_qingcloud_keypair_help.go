@@ -44,10 +44,18 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}, create bo
 			return nil
 		}
 		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
+			if d.Get("description").(string) == "" {
+				input.Description = qc.String(" ")
+			} else {
+				input.Description = qc.String(d.Get("description").(string))
+			}
 		}
 		if d.HasChange("name") {
-			input.KeyPairName = qc.String(d.Get("name").(string))
+			if d.Get("name").(string) == "" {
+				input.KeyPairName = qc.String(" ")
+			} else {
+				input.KeyPairName = qc.String(d.Get("name").(string))
+			}
 		}
 	}
 	_, err := clt.ModifyKeyPairAttributes(input)

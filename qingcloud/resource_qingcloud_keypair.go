@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -23,6 +24,14 @@ func resourceQingcloudKeypair() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
+				StateFunc: func(v interface{}) string {
+					switch v.(type) {
+					case string:
+						return strings.TrimSpace(v.(string))
+					default:
+						return ""
+					}
+				},
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
@@ -48,7 +57,11 @@ func resourceQingcloudKeypair() *schema.Resource {
 func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.CreateKeyPairInput)
-	input.KeyPairName = qc.String(d.Get("name").(string))
+	if d.Get("name").(string) != "" {
+		input.KeyPairName = qc.String(d.Get("name").(string))
+	} else {
+		input.KeyPairName = nil
+	}
 	input.Mode = qc.String("user")
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	output, err := clt.CreateKeyPair(input)
@@ -62,7 +75,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
 		return err
 	}
-	if err := modifyKeypairAttributes(d, meta, false); err != nil {
+	if err := modifyKeypairAttributes(d, meta, true); err != nil {
 		return err
 	}
 	return resourceQingcloudKeypairRead(d, meta)
