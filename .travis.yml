@@ -9,12 +9,12 @@ script:
   - npm install -g codeclimate-test-reporter
   - make test
   - |
-    shopt -s globstar
-    rootdir=`pwd`
+    shopt -s globstar;
+    rootdir=`pwd`;
 
-    for dir in $(go list ./... |grep -v 'vendor') do
-      cd $GOPATH/$dir
-      exec 5>&1
+    for dir in $(go list ./... |grep -v 'vendor'); do 
+      cd $GOPATH/$dir;
+      exec 5>&1;
       out=$(go test -v -coverprofile=cov_part.out | tee >(cat - >&5))
       if [ $? -eq 1 ] ; then
         if [ $(cat $out | grep -o 'no buildable Go source files') == "" ] ; then
