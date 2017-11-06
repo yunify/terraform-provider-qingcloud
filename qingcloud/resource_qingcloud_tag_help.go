@@ -11,33 +11,19 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
-	if create {
-		if !d.HasChange("description") && !d.HasChange("color") {
-			return nil
-		}
-		if d.HasChange("description") {
+
+	if d.HasChange("color") {
+		input.Color = qc.String(d.Get("color").(string))
+	}
+	if d.HasChange("description") {
+		if d.Get("description").(string) == "" {
+			input.Description = qc.String(" ")
+		} else {
 			input.Description = qc.String(d.Get("description").(string))
 		}
-		if d.HasChange("color") {
-			input.Color = qc.String(d.Get("color").(string))
-		}
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("color") {
-			return nil
-		}
-		if d.HasChange("description") {
-			if d.Get("description").(string) == "" {
-				input.Description = qc.String(" ")
-			} else {
-				input.Description = qc.String(d.Get("description").(string))
-			}
-		}
-		if d.HasChange("name") {
-			input.TagName = qc.String(d.Get("name").(string))
-		}
-		if d.HasChange("color") {
-			input.Color = qc.String(d.Get("color").(string))
-		}
+	}
+	if d.HasChange("name") {
+		input.TagName = qc.String(d.Get("name").(string))
 	}
 	output, err := clt.ModifyTagAttributes(input)
 	if err != nil {
