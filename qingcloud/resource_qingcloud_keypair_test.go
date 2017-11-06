@@ -40,6 +40,63 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccQingcloudKeypair_tag(t *testing.T) {
+	var keypair qc.DescribeKeyPairsOutput
+
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := keypair.KeyPairSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(keypair.KeyPairSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(keypair.KeyPairSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_keypair.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckEIPDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccKeypairConfigTag,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeypairExists(
+						"qingcloud_keypair.foo", &keypair),
+					testTagNameValue("11", "22"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccKeypairConfigTagTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeypairExists(
+						"qingcloud_keypair.foo", &keypair),
+					testTagDetach(),
+				),
+			},
+		},
+	})
+
+}
 
 
 func testAccCheckKeypairExists(n string, tag *qc.DescribeKeyPairsOutput) resource.TestCheckFunc {
@@ -105,5 +162,31 @@ resource "qingcloud_keypair" "foo"{
 	name="keypair1"
 	description="test"
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCa7DDEP+CR9l26yJ5dAlmZvTwlZoxIZ2yD79dU/UNAlNzhdc+iqaC+aA2afyM4KCx8qtsawj5zzU0714fK+uA27MvQSwB0A25NqnJPgAw3v0WrOfFFG01Ecirc2MmMU2RHUk0cwZ5rVbcg8SUOwSs2tVKlWi98v1XcEw3vuM2ruPLkj8z9/Rf0o6FJ8vkpvsPXigFW82wkmI2WsgczvCbwApklaqdewC7Dxa0dFtA0gcqsgQzD4NR4glrHObyfxP3WRlPeyR7fFJRZFBqoLLELrqS5tYEpp6jVdzlHAf7WqOuLf0AoI+1Qsx57c92M0Rnj2MLs/6QNWKOVjzEfgXTD root@junwuhui.cn"
+}
+`
+const testAccKeypairConfigTag = `
+
+resource "qingcloud_keypair" "foo" {
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+`
+const testAccKeypairConfigTagTwo = `
+
+resource "qingcloud_keypair" "foo" {
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
 }
 `

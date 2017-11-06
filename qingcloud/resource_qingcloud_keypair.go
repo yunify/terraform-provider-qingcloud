@@ -42,7 +42,6 @@ func resourceQingcloudKeypair() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
-				Computed: true,
 			},
 			"tag_names": &schema.Schema{
 				Type:     schema.TypeSet,
