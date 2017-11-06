@@ -45,6 +45,3 @@ deploy:
     skip_cleanup: true
     on:
         tags: true
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
