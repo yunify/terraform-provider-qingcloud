@@ -18,6 +18,24 @@ resource "qingcloud_eip" "init"{
         bandwidth = 2
 }
 ```
+```Create a new EIP with tags.
+resource "qingcloud_eip" "foo" {
+    name = "eip"
+    description = "eip"
+    billing_mode = "bandwidth"
+    bandwidth = 4
+    need_icp = 0
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
