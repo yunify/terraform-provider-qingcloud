@@ -44,11 +44,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error create tag: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.TagID))
-	err = modifyTagAttributes(d, meta, true)
-	if err != nil {
-		return err
-	}
-	return resourceQingcloudTagRead(d, meta)
+	return resourceQingcloudTagUpdate(d, meta)
 }
 func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
@@ -72,7 +68,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := modifyTagAttributes(d, meta, false)
+	err := modifyTagAttributes(d, meta)
 	if err != nil {
 		return err
 	}
