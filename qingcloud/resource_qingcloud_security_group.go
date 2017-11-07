@@ -26,10 +26,10 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 				Description: "The description of SecurityGroup",
 			},
 			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 				Description: "tag ids , SecurityGroup wants to use",
 			},
 			"tag_names": &schema.Schema{
@@ -54,14 +54,7 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error create security group: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupID))
-	err = modifySecurityGroupAttributes(d, meta, true)
-	if err != nil {
-		return err
-	}
-	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeSecurityGroup); err != nil {
-		return err
-	}
-	return resourceQingcloudSecurityGroupRead(d, meta)
+	return resourceQingcloudSecurityGroupUpdate(d, meta)
 }
 
 func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
@@ -87,7 +80,7 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 }
 func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
-	err := modifySecurityGroupAttributes(d, meta, false)
+	err := modifySecurityGroupAttributes(d, meta)
 	if err != nil {
 		return err
 	}
