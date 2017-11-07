@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -195,6 +194,10 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error describe instance: %s", *output.Message)
+	}
+	if len(output.InstanceSet) == 0 {
+		d.SetId("")
+		return nil
 	}
 
 	instance := output.InstanceSet[0]

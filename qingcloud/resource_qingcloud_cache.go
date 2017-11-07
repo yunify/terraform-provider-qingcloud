@@ -100,6 +100,13 @@ func resourceQingcloudCacheRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe cache: %s ", *output.Message)
+	}
+	if len(output.CacheSet) == 0 {
+		d.SetId("")
+		return nil
+	}
 	cache := output.CacheSet[0]
 	d.Set("vxnet_id", qc.StringValue(cache.VxNet.VxNetID))
 	d.Set("size", qc.IntValue(cache.CacheSize))

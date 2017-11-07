@@ -114,6 +114,13 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error describe security group rule: %s ", *output.Message)
+	}
+	if len(output.SecurityGroupRuleSet) == 0 {
+		d.SetId("")
+		return nil
+	}
 	sgRule := output.SecurityGroupRuleSet[0]
 	d.Set("security_group_id", qc.StringValue(sgRule.SecurityGroupID))
 	d.Set("protocol", qc.StringValue(sgRule.Protocol))

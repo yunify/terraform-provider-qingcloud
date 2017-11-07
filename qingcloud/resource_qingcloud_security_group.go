@@ -74,6 +74,10 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error describe security group: %s", *output.Message)
 	}
+	if len(output.SecurityGroupSet) == 0 {
+		d.SetId("")
+		return nil
+	}
 	sg := output.SecurityGroupSet[0]
 	d.Set("name", qc.StringValue(sg.SecurityGroupName))
 	d.Set("description", qc.StringValue(sg.Description))

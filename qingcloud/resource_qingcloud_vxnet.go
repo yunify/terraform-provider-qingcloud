@@ -127,6 +127,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error describe vxnet: %s", *output.Message)
 	}
 	if len(output.VxNetSet) == 0 {
+		d.SetId("")
 		return nil
 	}
 	vxnet := output.VxNetSet[0]

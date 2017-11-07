@@ -144,13 +144,10 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error describe router: %s", *output.Message)
 	}
 	if len(output.RouterSet) == 0 {
-		return fmt.Errorf("Error router not found")
-	}
-	rtr := output.RouterSet[0]
-	if rtr == nil {
 		d.SetId("")
 		return nil
 	}
+	rtr := output.RouterSet[0]
 	d.Set("name", qc.StringValue(rtr.RouterName))
 	d.Set("type", qc.IntValue(rtr.RouterType))
 	d.Set("security_group_id", qc.StringValue(rtr.SecurityGroupID))
