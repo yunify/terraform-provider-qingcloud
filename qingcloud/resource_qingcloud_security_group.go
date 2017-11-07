@@ -18,18 +18,19 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "防火墙名称",
+				Description: "The name of SecurityGroup ",
 			},
 			"description": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "防火墙介绍",
+				Description: "The description of SecurityGroup",
 			},
 			"tag_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				Description: "tag ids , SecurityGroup wants to use",
 			},
 			"tag_names": &schema.Schema{
 				Type:     schema.TypeSet,
