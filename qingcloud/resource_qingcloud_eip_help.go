@@ -7,41 +7,37 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func modifyEipAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	input := new(qc.ModifyEIPAttributesInput)
 	input.EIP = qc.String(d.Id())
-	if create {
-		if description := d.Get("description").(string); description == "" {
-			return nil
+	attributeUpdate := false
+	if d.HasChange("description") {
+		if d.Get("description") == "" {
+			input.Description = qc.String(" ")
+		} else {
+			input.Description = qc.String(d.Get("description").(string))
 		}
-		input.Description = qc.String(d.Get("description").(string))
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") {
-			return nil
+		attributeUpdate = true
+	}
+	if d.HasChange("name") && !d.IsNewResource() {
+		if d.Get("name") == "" {
+			input.EIPName = qc.String(" ")
+		} else {
+			input.EIPName = qc.String(d.Get("name").(string))
 		}
-		if d.HasChange("description") {
-			if d.Get("description") == "" {
-				input.Description = qc.String(" ")
-			} else {
-				input.Description = qc.String(d.Get("description").(string))
-			}
+		attributeUpdate = true
+	}
+	if attributeUpdate {
+		output, err := clt.ModifyEIPAttributes(input)
+		if err != nil {
+			return fmt.Errorf("Error modify eip attributes: %s", err)
 		}
-		if d.HasChange("name") {
-			if d.Get("name") == "" {
-				input.EIPName = qc.String(" ")
-			} else {
-				input.EIPName = qc.String(d.Get("name").(string))
-			}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error modify eip attributes: %s", *output.Message)
 		}
 	}
-	output, err := clt.ModifyEIPAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify eip attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify eip attributes: %s", *output.Message)
-	}
+
 	return nil
 }
 
