@@ -26,7 +26,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
 					resource.TestCheckResourceAttr(
-						"qingcloud_security_group.foo", "name", "first_eip"),
+						"qingcloud_security_group.foo", "name", "first_sg"),
 				),
 			},
 			resource.TestStep{
@@ -42,6 +42,65 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
+	var sg qc.DescribeSecurityGroupsOutput
+
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := sg.SecurityGroupSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(sg.SecurityGroupSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(sg.SecurityGroupSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_security_group.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccSecurityGroupConfigTag,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(
+						"qingcloud_security_group.foo", &sg),
+					testTagNameValue("11", "22"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccSecurityGroupConfigTagTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(
+						"qingcloud_security_group.foo", &sg),
+					testTagDetach(),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckSecurityGroupExists(n string, sg *qc.DescribeSecurityGroupsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -92,10 +151,37 @@ func testAccCheckSecurityGroupDestroyWithProvider(s *terraform.State, provider *
 
 const testAccSecurityGroupConfig = `
 resource "qingcloud_security_group" "foo" {
-    name = "first_eip"
+    name = "first_sg"
 } `
 const testAccSecurityGroupConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "test"
 	description = "test"
 }`
+
+const testAccSecurityGroupConfigTag = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+`
+const testAccSecurityGroupConfigTagTwo = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_tag" "test"{
+	name="11"
+}
+resource "qingcloud_tag" "test2"{
+	name="22"
+}
+`
