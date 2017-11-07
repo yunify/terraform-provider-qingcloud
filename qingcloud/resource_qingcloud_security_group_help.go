@@ -15,10 +15,14 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("description") {
 		if d.Get("description") == "" {
 			input.Description = qc.String(" ")
+		} else {
+			input.Description = qc.String(d.Get("description").(string))
 		}
+		attributeUpdate = true
 	}
 	if d.HasChange("name") && !d.IsNewResource() {
 		input.SecurityGroupName = qc.String(d.Get("name").(string))
+		attributeUpdate = true
 	}
 	if attributeUpdate {
 		_, err := clt.ModifySecurityGroupAttributes(input)
