@@ -3,6 +3,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -10,6 +11,37 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
+	var sg qc.DescribeSecurityGroupsOutput
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_security_group.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccSecurityGroupConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
+					resource.TestCheckResourceAttr(
+						"qingcloud_security_group.foo", "name", "first_eip"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccSecurityGroupConfigTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
+					resource.TestCheckResourceAttr(
+						"qingcloud_security_group.foo", "name", "test"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_security_group.foo", "description", "test"),
+				),
+			},
+		},
+	})
+}
 func testAccCheckSecurityGroupExists(n string, sg *qc.DescribeSecurityGroupsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -36,7 +68,7 @@ func testAccCheckSecurityGroupExists(n string, sg *qc.DescribeSecurityGroupsOutp
 }
 
 func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
-	return testAccCheckEIPDestroyWithProvider(s, testAccProvider)
+	return testAccCheckSecurityGroupDestroyWithProvider(s, testAccProvider)
 }
 
 func testAccCheckSecurityGroupDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -61,5 +93,9 @@ func testAccCheckSecurityGroupDestroyWithProvider(s *terraform.State, provider *
 const testAccSecurityGroupConfig = `
 resource "qingcloud_security_group" "foo" {
     name = "first_eip"
-	description == "aaa"
 } `
+const testAccSecurityGroupConfigTwo = `
+resource "qingcloud_security_group" "foo" {
+    name = "test"
+	description = "test"
+}`
