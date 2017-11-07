@@ -7,13 +7,14 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
-
+	attributeUpdate := false
 	if d.HasChange("color") {
 		input.Color = qc.String(d.Get("color").(string))
+		attributeUpdate = true
 	}
 	if d.HasChange("description") {
 		if d.Get("description").(string) == "" {
@@ -21,16 +22,20 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}, create bool) 
 		} else {
 			input.Description = qc.String(d.Get("description").(string))
 		}
+		attributeUpdate = true
 	}
-	if d.HasChange("name") {
+	if d.HasChange("name") && !d.IsNewResource() {
 		input.TagName = qc.String(d.Get("name").(string))
+		attributeUpdate = true
 	}
-	output, err := clt.ModifyTagAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify tag attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify tag attributes: %s", *output.Message)
+	if attributeUpdate {
+		output, err := clt.ModifyTagAttributes(input)
+		if err != nil {
+			return fmt.Errorf("Error modify tag attributes: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error modify tag attributes: %s", *output.Message)
+		}
 	}
 	return nil
 }
