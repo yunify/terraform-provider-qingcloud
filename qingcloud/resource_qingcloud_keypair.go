@@ -74,7 +74,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
 		return err
 	}
-	if err := modifyKeypairAttributes(d, meta, true); err != nil {
+	if err := modifyKeypairAttributes(d, meta); err != nil {
 		return err
 	}
 	return resourceQingcloudKeypairRead(d, meta)
@@ -99,7 +99,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := modifyKeypairAttributes(d, meta, false)
+	err := modifyKeypairAttributes(d, meta)
 	if err != nil {
 		return err
 	}

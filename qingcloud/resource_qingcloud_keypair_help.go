@@ -4,7 +4,6 @@ import (
 
 	// "github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -29,35 +28,30 @@ import (
 // 	return err
 // }
 
-func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.ModifyKeyPairAttributesInput)
 	input.KeyPair = qc.String(d.Id())
-
-	if create {
-		if description := d.Get("description").(string); description == "" {
-			return nil
+	attributeUpdate := false
+	if d.HasChange("description") {
+		if d.Get("description").(string) == "" {
+			input.Description = qc.String(" ")
+		} else {
+			input.Description = qc.String(d.Get("description").(string))
 		}
-		input.Description = qc.String(d.Get("description").(string))
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") {
-			return nil
-		}
-		if d.HasChange("description") {
-			if d.Get("description").(string) == "" {
-				input.Description = qc.String(" ")
-			} else {
-				input.Description = qc.String(d.Get("description").(string))
-			}
-		}
-		if d.HasChange("name") {
-			if d.Get("name").(string) == "" {
-				input.KeyPairName = qc.String(" ")
-			} else {
-				input.KeyPairName = qc.String(d.Get("name").(string))
-			}
-		}
+		attributeUpdate = true
 	}
-	_, err := clt.ModifyKeyPairAttributes(input)
-	return err
+	if d.HasChange("name") && !d.IsNewResource() {
+		if d.Get("name").(string) == "" {
+			input.KeyPairName = qc.String(" ")
+		} else {
+			input.KeyPairName = qc.String(d.Get("name").(string))
+		}
+		attributeUpdate = true
+	}
+	if attributeUpdate {
+		_, err := clt.ModifyKeyPairAttributes(input)
+		return err
+	}
+	return nil
 }
