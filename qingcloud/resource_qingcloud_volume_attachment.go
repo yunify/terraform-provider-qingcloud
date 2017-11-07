@@ -1,6 +1,8 @@
 package qingcloud
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -68,6 +70,9 @@ func resourceQingcloudVolumeAttachmentRead(d *schema.ResourceData, meta interfac
 	output, err := volumeClt.DescribeVolumes(input)
 	if err != nil {
 		return err
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error create tag: %s", *output.Message)
 	}
 	if len(output.VolumeSet) == 0 {
 		d.SetId("")

@@ -62,7 +62,8 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error create tag: %s", *output.Message)
 	}
 	if len(output.TagSet) == 0 {
-		return fmt.Errorf("Error tag not found")
+		d.SetId("")
+		return nil
 	}
 	tag := output.TagSet[0]
 	d.Set("name", qc.StringValue(tag.TagName))

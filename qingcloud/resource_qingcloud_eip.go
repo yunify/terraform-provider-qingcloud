@@ -127,6 +127,10 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if *output.RetCode != 0 {
 		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
+	if len(output.EIPSet) == 0 {
+		d.SetId("")
+		return nil
+	}
 	ip := output.EIPSet[0]
 	d.Set("name", qc.StringValue(ip.EIPName))
 	d.Set("billing_mode", qc.StringValue(ip.BillingMode))

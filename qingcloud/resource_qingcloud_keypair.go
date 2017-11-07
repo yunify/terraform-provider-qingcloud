@@ -85,10 +85,14 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	output, err := clt.DescribeKeyPairs(input)
 	if err != nil {
-		return fmt.Errorf("Error describe keypair: %s", err)
+		return fmt.Errorf("Error describe keypair: %s ", err)
 	}
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe keypair: %s", *output.Message)
+		return fmt.Errorf("Error describe keypair: %s ", *output.Message)
+	}
+	if len(output.KeyPairSet) == 0 {
+		d.SetId("")
+		return nil
 	}
 	kp := output.KeyPairSet[0]
 	d.Set("name", qc.StringValue(kp.KeyPairName))

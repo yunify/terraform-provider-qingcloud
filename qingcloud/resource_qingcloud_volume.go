@@ -1,8 +1,9 @@
 package qingcloud
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"fmt"
 
+	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -82,6 +83,13 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 	output, err := clt.DescribeVolumes(input)
 	if err != nil {
 		return err
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error create tag: %s", *output.Message)
+	}
+	if len(output.VolumeSet) == 0 {
+		d.SetId("")
+		return nil
 	}
 	volume := output.VolumeSet[0]
 	d.Set("name", qc.StringValue(volume.VolumeName))
