@@ -48,14 +48,16 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Default:      0,
 			},
 			"from_port": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.	",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.",
+				ValidateFunc: validatePortString,
 			},
 			"to_port": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validatePortString,
+				Description:  "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
 			},
 			"cidr_block": &schema.Schema{
 				Type:         schema.TypeString,

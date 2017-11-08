@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	qc "github.com/yunify/qingcloud-sdk-go/service"
-	"github.com/hashicorp/terraform/terraform"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func testAccCheckSecurityGroupRuleExists(n string, sg *qc.DescribeSecurityGroupRulesOutput) resource.TestCheckFunc {
@@ -57,4 +57,3 @@ func testAccCheckSecurityGroupRuleDestroyWithProvider(s *terraform.State, provid
 	}
 	return nil
 }
-

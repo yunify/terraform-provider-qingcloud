@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
 	"github.com/yunify/qingcloud-sdk-go/client"
-
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) error {
