@@ -61,7 +61,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description: "target IP,the Security Group Rule only affect to those IPs .",
+				Description:  "target IP,the Security Group Rule only affect to those IPs .",
 			},
 		},
 	}
