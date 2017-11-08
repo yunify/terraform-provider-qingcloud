@@ -1,3 +1,49 @@
+Release v1.12.24 (2017-11-07)
+===
+
+### Service Client Updates
+* `service/elasticloadbalancingv2`: Updates service documentation
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/rds`: Updates service API and documentation
+  * DescribeOrderableDBInstanceOptions now returns the minimum and maximum allowed values for storage size, total provisioned IOPS, and provisioned IOPS per GiB for a DB instance.
+* `service/s3`: Updates service API, documentation, and examples
+  * This releases adds support for 4 features: 1. Default encryption for S3 Bucket, 2. Encryption status in inventory and Encryption support for inventory.  3. Cross region replication of KMS-encrypted objects, and 4. ownership overwrite for CRR.
+
+Release v1.12.23 (2017-11-07)
+===
+
+### Service Client Updates
+* `service/api.pricing`: Adds new service
+* `service/ec2`: Updates service API
+  * You are now able to create and launch EC2 C5 instances, the next generation of EC2's compute-optimized instances, in us-east-1, us-west-2 and eu-west-1. C5 instances offer up to 72 vCPUs, 144 GiB of DDR4 instance memory, 25 Gbps in Network bandwidth and improved EBS and Networking bandwidth on smaller instance sizes to deliver improved performance for compute-intensive workloads.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/kms`: Updates service API, documentation, and examples
+  * Documentation updates for AWS KMS.
+* `service/organizations`: Updates service documentation
+  * This release updates permission statements for several API operations, and corrects some other minor errors.
+* `service/states`: Updates service API, documentation, and paginators
+  * Documentation update.
+
+Release v1.12.22 (2017-11-03)
+===
+
+### Service Client Updates
+* `service/ecs`: Updates service API and documentation
+  * Amazon ECS users can now add devices to their containers and enable init process in containers through the use of docker's 'devices' and 'init' features. These fields can be specified under linuxParameters in ContainerDefinition in the Task Definition Template.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+Release v1.12.21 (2017-11-02)
+===
+
+### Service Client Updates
+* `service/apigateway`: Updates service API and documentation
+  * This release supports creating and managing Regional and Edge-Optimized API endpoints.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+### SDK Bugs
+* `aws/request`: Fix bug in request presign creating invalide URL ([#1624](https://github.com/aws/aws-sdk-go/pull/1624))
+  * Fixes a bug the Request Presign and PresignRequest methods that would allow a invalid expire duration as input. A expire time of 0 would be interpreted by the SDK to generate a normal request signature, not a presigned URL. This caused the returned URL unusable.
+  * Fixes [#1617](https://github.com/aws/aws-sdk-go/issues/1617)
 Release v1.12.20 (2017-11-01)
 ===
 
