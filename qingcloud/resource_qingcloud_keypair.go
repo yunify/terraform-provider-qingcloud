@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -17,29 +18,40 @@ func resourceQingcloudKeypair() *schema.Resource {
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "密钥名称",
+				Description: "The name of keypair ",
 			},
 			"public_key": &schema.Schema{
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Required:    true,
+				Description: "The SSH public key ",
+				StateFunc: func(v interface{}) string {
+					switch v.(type) {
+					case string:
+						return strings.TrimSpace(v.(string))
+					default:
+						return ""
+					}
+				},
 			},
 			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The description of keypair ",
 			},
 			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "tag ids , keypair wants to use ",
 			},
 			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "compute by tag ids ",
 			},
 		},
 	}
@@ -48,7 +60,11 @@ func resourceQingcloudKeypair() *schema.Resource {
 func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.CreateKeyPairInput)
-	input.KeyPairName = qc.String(d.Get("name").(string))
+	if d.Get("name").(string) != "" {
+		input.KeyPairName = qc.String(d.Get("name").(string))
+	} else {
+		input.KeyPairName = nil
+	}
 	input.Mode = qc.String("user")
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	output, err := clt.CreateKeyPair(input)
@@ -59,13 +75,8 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error create keypair: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.KeyPairID))
-	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
-		return err
-	}
-	if err := modifyKeypairAttributes(d, meta, false); err != nil {
-		return err
-	}
-	return resourceQingcloudKeypairRead(d, meta)
+
+	return resourceQingcloudKeypairUpdate(d, meta)
 }
 
 func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) error {
@@ -91,13 +102,18 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := modifyKeypairAttributes(d, meta, false)
+	d.Partial(true)
+	err := modifyKeypairAttributes(d, meta)
 	if err != nil {
 		return err
 	}
+	d.SetPartial("description")
+	d.SetPartial("name")
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
 		return err
 	}
+	d.SetPartial("tag_ids")
+	d.Partial(false)
 	return resourceQingcloudKeypairRead(d, meta)
 }
 
