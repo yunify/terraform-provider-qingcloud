@@ -43,7 +43,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 			"direction": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "direction,0 express down ,1 express up.default 0。",
+				Description:  "direction,0 express down ,1 express up.default .",
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
@@ -61,7 +61,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description: "target IP,the Security Group Rule only affect to those IPs。	",
+				Description: "target IP,the Security Group Rule only affect to those IPs .",
 			},
 		},
 	}
