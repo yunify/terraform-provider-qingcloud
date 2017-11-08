@@ -2351,7 +2351,9 @@ func (v *SecurityGroupIPSet) Validate() error {
 
 type SecurityGroupRule struct {
 	// Action's available values: accept, drop
-	Action                *string `json:"action" name:"action"`
+	Action *string `json:"action" name:"action"`
+	// Direction's available values: 0, 1
+	Direction             *int    `json:"direction" name:"direction"`
 	Priority              *int    `json:"priority" name:"priority"`
 	Protocol              *string `json:"protocol" name:"protocol"`
 	SecurityGroupID       *string `json:"security_group_id" name:"security_group_id"`
@@ -2380,6 +2382,26 @@ func (v *SecurityGroupRule) Validate() error {
 				ParameterName:  "Action",
 				ParameterValue: actionParameterValue,
 				AllowedValues:  actionValidValues,
+			}
+		}
+	}
+
+	if v.Direction != nil {
+		directionValidValues := []string{"0", "1"}
+		directionParameterValue := fmt.Sprint(*v.Direction)
+
+		directionIsValid := false
+		for _, value := range directionValidValues {
+			if value == directionParameterValue {
+				directionIsValid = true
+			}
+		}
+
+		if !directionIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "Direction",
+				ParameterValue: directionParameterValue,
+				AllowedValues:  directionValidValues,
 			}
 		}
 	}
