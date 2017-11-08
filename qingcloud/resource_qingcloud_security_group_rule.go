@@ -135,7 +135,7 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 
 func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	err := ModifySecurityGroupRuleAttributes(d, meta, false)
+	err := ModifySecurityGroupRuleAttributes(d, meta)
 	if err != nil {
 		return err
 	}

@@ -2,9 +2,12 @@ package qingcloud
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"github.com/yunify/qingcloud-sdk-go/client"
+
 )
 
 func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) error {
@@ -38,10 +41,13 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	input := new(qc.ApplySecurityGroupInput)
 	input.SecurityGroup = qc.String(sgID)
-	_, err := clt.ApplySecurityGroup(input)
+	output, err := clt.ApplySecurityGroup(input)
 	if err != nil {
 		return err
 	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
 	if _, err := SecurityGroupApplyTransitionStateRefresh(clt, sgID); err != nil {
 		return err
 	}
