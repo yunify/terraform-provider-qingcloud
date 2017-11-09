@@ -78,6 +78,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Priority = qc.Int(d.Get("priority").(int))
 	rule.Protocol = qc.String(d.Get("protocol").(string))
 	rule.Action = qc.String(d.Get("action").(string))
+	rule.Direction = qc.Int(d.Get("direction").(int))
 	if d.Get("name").(string) != "" {
 		rule.SecurityGroupRuleName = qc.String(d.Get("name").(string))
 	}
@@ -112,6 +113,7 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	input := new(qc.DescribeSecurityGroupRulesInput)
 	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
+	input.Direction = nil
 	output, err := clt.DescribeSecurityGroupRules(input)
 	if err != nil {
 		return err
