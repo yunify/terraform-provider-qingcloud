@@ -43,7 +43,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 			"direction": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "direction,0 express down ,1 express up.default .",
+				Description:  "direction,0 express down ,1 express up.default 0 .",
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
