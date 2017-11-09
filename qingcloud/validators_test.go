@@ -89,5 +89,22 @@ func TestValidateColorString(t *testing.T) {
 			t.Fatalf("%q should be a invalid color string: %q", v, errors)
 		}
 	}
+}
+
+func TestValidatePortString(t *testing.T) {
+	validPort := []string{"65535", "0", "2333"}
+	for _, v := range validPort {
+		_, errors := validatePortString(v, "port string")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid port string: %q", v, errors)
+		}
+	}
+	invalidPort := []string{"65536", "-1", "hhhh"}
+	for _, v := range invalidPort {
+		_, errors := validatePortString(v, "port string")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid port string: %q", v, errors)
+		}
+	}
 
 }

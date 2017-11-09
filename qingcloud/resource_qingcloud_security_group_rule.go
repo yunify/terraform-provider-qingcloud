@@ -43,25 +43,27 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 			"direction": &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Description:  "direction,0 express down ,1 express up.default 0。",
+				Description:  "direction,0 express down ,1 express up.default 0 .",
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
 			"from_port": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.	",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "if protocol is tcp or udp,this value is start port. else if protocol is icmp,this value is the type of ICMP. the others protocol don't need this value.",
+				ValidateFunc: validatePortString,
 			},
 			"to_port": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validatePortString,
+				Description:  "if protocol is tcp or udp,this value is end port. else if protocol is icmp,this value is the code of ICMP. the others protocol don't need this value.",
 			},
 			"cidr_block": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description: "target IP,the Security Group Rule only affect to those IPs。	",
+				Description:  "target IP,the Security Group Rule only affect to those IPs .",
 			},
 		},
 	}
@@ -76,6 +78,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Priority = qc.Int(d.Get("priority").(int))
 	rule.Protocol = qc.String(d.Get("protocol").(string))
 	rule.Action = qc.String(d.Get("action").(string))
+	rule.Direction = qc.Int(d.Get("direction").(int))
 	if d.Get("name").(string) != "" {
 		rule.SecurityGroupRuleName = qc.String(d.Get("name").(string))
 	}
@@ -108,7 +111,6 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupRulesInput)
-	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	output, err := clt.DescribeSecurityGroupRules(input)
 	if err != nil {
@@ -135,7 +137,7 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 
 func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	err := ModifySecurityGroupRuleAttributes(d, meta, false)
+	err := ModifySecurityGroupRuleAttributes(d, meta)
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,7 @@ import (
 )
 
 var ColorRegex = regexp.MustCompile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
+var PortRegex = regexp.MustCompile("^0*(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{1,3}|[0-9])$")
 
 func validateRouterVxnetsCIDR(v interface{}, k string) (ws []string, errors []error) {
 	vxnets := v.(map[string]interface{})
@@ -91,5 +92,12 @@ func validateColorString(v interface{}, k string) (ws []string, errors []error) 
 		return
 	}
 	return
-
+}
+func validatePortString(v interface{}, k string) (ws []string, errors []error) {
+	portstring := v.(string)
+	if !PortRegex.MatchString(portstring) {
+		errors = append(errors, fmt.Errorf("%q (%q) doesn't match", k, portstring))
+		return
+	}
+	return
 }
