@@ -74,7 +74,7 @@ func testAccCheckSecurityGroupRuleExists(n string, sg *qc.DescribeSecurityGroupR
 		}
 		client := testAccProvider.Meta().(*QingCloudClient)
 		input := new(qc.DescribeSecurityGroupRulesInput)
-		input.SecurityGroup = qc.String(rs.Primary.Attributes["security_group_id"])
+
 		input.SecurityGroupRules = []*string{qc.String(rs.Primary.ID)}
 		d, err := client.securitygroup.DescribeSecurityGroupRules(input)
 		log.Printf("[WARN] SecurityGroupRule id %#v", rs.Primary.ID)

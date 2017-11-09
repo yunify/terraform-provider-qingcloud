@@ -111,9 +111,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupRulesInput)
-	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
-	input.Direction = nil
 	output, err := clt.DescribeSecurityGroupRules(input)
 	if err != nil {
 		return err
