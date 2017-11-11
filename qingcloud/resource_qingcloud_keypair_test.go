@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"os"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+
 )
 
 func TestAccQingcloudKeypair_basic(t *testing.T) {
@@ -42,7 +44,8 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 }
 func TestAccQingcloudKeypair_tag(t *testing.T) {
 	var keypair qc.DescribeKeyPairsOutput
-
+	keypairTag1Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag1"
+	keypairTag2Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := keypair.KeyPairSet[0].Tags
@@ -78,15 +81,15 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccKeypairConfigTag,
+				Config: fmt.Sprintf(testAccKeypairConfigTagTemplate,keypairTag1Name,keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(
 						"qingcloud_keypair.foo", &keypair),
-					testTagNameValue("11", "22"),
+					testTagNameValue(keypairTag1Name, keypairTag2Name),
 				),
 			},
 			resource.TestStep{
-				Config: testAccKeypairConfigTagTwo,
+				Config: fmt.Sprintf(testAccKeypairConfigTagTwoTemplate,keypairTag1Name,keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(
 						"qingcloud_keypair.foo", &keypair),
@@ -163,7 +166,7 @@ resource "qingcloud_keypair" "foo"{
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCa7DDEP+CR9l26yJ5dAlmZvTwlZoxIZ2yD79dU/UNAlNzhdc+iqaC+aA2afyM4KCx8qtsawj5zzU0714fK+uA27MvQSwB0A25NqnJPgAw3v0WrOfFFG01Ecirc2MmMU2RHUk0cwZ5rVbcg8SUOwSs2tVKlWi98v1XcEw3vuM2ruPLkj8z9/Rf0o6FJ8vkpvsPXigFW82wkmI2WsgczvCbwApklaqdewC7Dxa0dFtA0gcqsgQzD4NR4glrHObyfxP3WRlPeyR7fFJRZFBqoLLELrqS5tYEpp6jVdzlHAf7WqOuLf0AoI+1Qsx57c92M0Rnj2MLs/6QNWKOVjzEfgXTD root@junwuhui.cn"
 }
 `
-const testAccKeypairConfigTag = `
+const testAccKeypairConfigTagTemplate = `
 
 resource "qingcloud_keypair" "foo" {
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
@@ -171,21 +174,21 @@ resource "qingcloud_keypair" "foo" {
 				"${qingcloud_tag.test2.id}"]
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `
-const testAccKeypairConfigTagTwo = `
+const testAccKeypairConfigTagTwoTemplate = `
 
 resource "qingcloud_keypair" "foo" {
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `
