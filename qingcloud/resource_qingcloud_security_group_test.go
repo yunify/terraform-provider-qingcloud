@@ -46,8 +46,8 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 
 func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 	var sg qc.DescribeSecurityGroupsOutput
-	sgTag1Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag1"
-	sgTag2Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag2"
+	sgTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag1"
+	sgTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := sg.SecurityGroupSet[0].Tags
@@ -83,7 +83,7 @@ func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 		CheckDestroy:  testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTemplate,sgTag1Name,sgTag2Name),
+				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(
 						"qingcloud_security_group.foo", &sg),
@@ -91,7 +91,7 @@ func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTwoTemplate,sgTag1Name,sgTag2Name),
+				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTwoTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(
 						"qingcloud_security_group.foo", &sg),

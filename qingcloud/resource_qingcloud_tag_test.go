@@ -14,7 +14,7 @@ import (
 
 func TestAccQingcloudTag_basic(t *testing.T) {
 	var tag qc.DescribeTagsOutput
-	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag1"
+	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag1"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -24,7 +24,7 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccTagConfigTempalte,Tag1Name),
+				Config: fmt.Sprintf(testAccTagConfigTempalte, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(
@@ -34,7 +34,7 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccTagConfigTwoTemplate,Tag1Name),
+				Config: fmt.Sprintf(testAccTagConfigTwoTemplate, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(

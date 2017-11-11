@@ -3,14 +3,13 @@ package qingcloud
 import (
 	"fmt"
 	"log"
-	"testing"
 	"os"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
-
 )
 
 func TestAccQingcloudKeypair_basic(t *testing.T) {
@@ -44,8 +43,8 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 }
 func TestAccQingcloudKeypair_tag(t *testing.T) {
 	var keypair qc.DescribeKeyPairsOutput
-	keypairTag1Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag1"
-	keypairTag2Name := os.Getenv("TRAVIS_BUILD_ID") +"-"+ os.Getenv("TRAVIS_BUILD_NUMBER") +"-tag2"
+	keypairTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag1"
+	keypairTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := keypair.KeyPairSet[0].Tags
@@ -81,7 +80,7 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccKeypairConfigTagTemplate,keypairTag1Name,keypairTag2Name),
+				Config: fmt.Sprintf(testAccKeypairConfigTagTemplate, keypairTag1Name, keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(
 						"qingcloud_keypair.foo", &keypair),
@@ -89,7 +88,7 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccKeypairConfigTagTwoTemplate,keypairTag1Name,keypairTag2Name),
+				Config: fmt.Sprintf(testAccKeypairConfigTagTwoTemplate, keypairTag1Name, keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(
 						"qingcloud_keypair.foo", &keypair),
