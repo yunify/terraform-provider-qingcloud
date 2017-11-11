@@ -14,7 +14,7 @@ import (
 
 func TestAccQingcloudTag_basic(t *testing.T) {
 	var tag qc.DescribeTagsOutput
-	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag1"
+	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-tag1"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -46,8 +46,8 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 
 func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 	var sg qc.DescribeSecurityGroupsOutput
-	sgTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag1"
-	sgTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_BUILD_NUMBER") + "-tag2"
+	sgTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-sg-tag1"
+	sgTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-sg-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := sg.SecurityGroupSet[0].Tags
