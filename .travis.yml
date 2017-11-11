@@ -6,7 +6,7 @@ go:
 
 script:
   - npm install -g codeclimate-test-reporter
-  - make testacc
+  - make testacc 
   - |
     shopt -s globstar;
     rootdir=`pwd`;
