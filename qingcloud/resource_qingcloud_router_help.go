@@ -71,6 +71,23 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).router
+	describeinput := new(qc.DescribeRoutersInput)
+	describeinput.Routers = []*string{qc.String(d.Id())}
+	describeinput.Verbose = qc.Int(1)
+	describeoutput, err := clt.DescribeRouters(describeinput)
+	if err != nil {
+		return fmt.Errorf("Error describe router: %s", err)
+	}
+	if *describeoutput.RetCode != 0 {
+		return fmt.Errorf("Error describe router: %s", *describeoutput.Message)
+	}
+	//wait for lease info
+	WaitForLease(describeoutput.RouterSet[0].CreateTime)
+	return nil
+}
+
 // func modifyRouterVxnets(d *schema.ResourceData, meta interface{}, create bool) error {
 // 	clt := meta.(*QingCloudClient).router
 // 	if create {

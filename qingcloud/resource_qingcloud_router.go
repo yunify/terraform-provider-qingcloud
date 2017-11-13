@@ -98,7 +98,7 @@ func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
 
-	if err := modifyRouterAttributes(d, meta, true); err != nil {
+	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
 	if d.HasChange("eip_id") {
@@ -165,7 +165,7 @@ func resourceQingcloudRouterUpdate(d *schema.ResourceData, meta interface{}) err
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	if err := modifyRouterAttributes(d, meta, false); err != nil {
+	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
 	if d.HasChange("eip_id") {

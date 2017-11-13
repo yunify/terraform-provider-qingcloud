@@ -140,6 +140,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
+	waitRouterLease(d,meta)
 	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
@@ -175,13 +176,10 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-	if d.Get("eip_id").(string) != "" {
-		qingcloudMutexKV.Lock(d.Get("eip_id").(string))
-		defer qingcloudMutexKV.Unlock(d.Get("eip_id").(string))
-	}
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
+	waitRouterLease(d,meta)
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
 	output, err := clt.DeleteRouters(input)
