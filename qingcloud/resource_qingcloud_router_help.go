@@ -26,39 +26,39 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.Router = qc.String(d.Id())
 	attributeUpdate := false
 	if d.HasChange("name") && !d.IsNewResource() {
-		if d.Get("name")!= ""{
+		if d.Get("name") != "" {
 			input.RouterName = qc.String(d.Get("name").(string))
-		}else {
+		} else {
 			input.RouterName = qc.String(" ")
 		}
 		attributeUpdate = true
 	}
 	if d.HasChange("description") {
-		if d.Get("description")!= ""{
+		if d.Get("description") != "" {
 			input.Description = qc.String(d.Get("description").(string))
-		}else {
+		} else {
 			input.Description = qc.String(" ")
 		}
 		attributeUpdate = true
 	}
 	if d.HasChange("eip_id") {
-		if d.Get("eip_id")!= ""{
+		if d.Get("eip_id") != "" {
 			input.EIP = qc.String(d.Get("eip_id").(string))
-		}else {
+		} else {
 			input.EIP = qc.String(" ")
 		}
 		attributeUpdate = true
 	}
 	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		if d.Get("security_group_id")!= ""{
+		if d.Get("security_group_id") != "" {
 			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-		}else {
+		} else {
 			input.SecurityGroup = qc.String(" ")
 		}
 		attributeUpdate = true
 	}
 
-	if attributeUpdate{
+	if attributeUpdate {
 		output, err := clt.ModifyRouterAttributes(input)
 		if err != nil {
 			return fmt.Errorf("Error modify router attributes: %s", err)

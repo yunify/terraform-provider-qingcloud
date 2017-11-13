@@ -22,6 +22,7 @@ func resourceQingcloudVpc() *schema.Resource {
 			"type": &schema.Schema{
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: withinArrayInt(0, 1, 2),
 				Description: "Type of Vpc: 0 - medium,1 - small,2 - large,default 1	",
 			},
@@ -140,7 +141,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d,meta)
+	waitRouterLease(d, meta)
 	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
@@ -179,7 +180,7 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d,meta)
+	waitRouterLease(d, meta)
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
 	output, err := clt.DeleteRouters(input)
