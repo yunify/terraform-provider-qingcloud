@@ -1,6 +1,8 @@
 package qingcloud
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestStringSliceDiff(t *testing.T) {
 	nls := [][]string{
@@ -35,4 +37,22 @@ func TestStringSliceDiff(t *testing.T) {
 			t.Errorf("test case %d want additions: %+v deletions: %+v, got additions: %+v deletions: %+v", k, additionsList[k], deletionsList[k], additions, deletions)
 		}
 	}
+}
+
+func TestIsServerBusy(t *testing.T) {
+	exceptValues := []int{5200, 132, 356}
+	validValues := []int{5100}
+	for _, v := range validValues {
+		result := IsServerBusy(v)
+		if !result {
+			t.Fatalf("%q should be a vaild value in %#v", v, validValues)
+		}
+	}
+	for _, v := range exceptValues {
+		result := IsServerBusy(v)
+		if result {
+			t.Fatalf("%q should be a except value in %#v", v, exceptValues)
+		}
+	}
+
 }

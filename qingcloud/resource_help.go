@@ -1,5 +1,7 @@
 package qingcloud
 
+import "time"
+
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	var additions []string
 	var deletions []string
@@ -25,4 +27,25 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 		}
 	}
 	return additions, deletions
+}
+func IsServerBusy(RetCode int) bool {
+	if RetCode == 5100 {
+		return true
+	}
+	return false
+}
+
+func retry(attempts int, sleep time.Duration, fn func() error) error {
+	if err := fn(); err != nil {
+		if attempts--; attempts > 0 {
+			time.Sleep(sleep)
+			return retry(attempts, 2*sleep, fn)
+		}
+		return err
+	}
+	return nil
+}
+
+func retrySimple(fn func() error) error {
+	return retry(100, 10*time.Second, fn)
 }
