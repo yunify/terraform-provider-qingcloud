@@ -24,7 +24,7 @@ func resourceQingcloudVpc() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayInt(0, 1, 2),
-				Description: "Type of Vpc: 0 - medium,1 - small,2 - large,default 1	",
+				Description: "Type of Vpc: 0 - medium, 1 - small, 2 - large, default 1	",
 			},
 			"vpc_network": &schema.Schema{
 				Type:     schema.TypeString,
