@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"os"
 )
 
 func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
@@ -45,7 +46,8 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 
 func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 	var sg qc.DescribeSecurityGroupsOutput
-
+	sgTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-sg-tag1"
+	sgTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-sg-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := sg.SecurityGroupSet[0].Tags
@@ -81,15 +83,15 @@ func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 		CheckDestroy:  testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSecurityGroupConfigTag,
+				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(
 						"qingcloud_security_group.foo", &sg),
-					testTagNameValue("11", "22"),
+					testTagNameValue(sgTag1Name, sgTag2Name),
 				),
 			},
 			resource.TestStep{
-				Config: testAccSecurityGroupConfigTagTwo,
+				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTwoTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(
 						"qingcloud_security_group.foo", &sg),
@@ -159,7 +161,7 @@ resource "qingcloud_security_group" "foo" {
 	description = "test"
 }`
 
-const testAccSecurityGroupConfigTag = `
+const testAccSecurityGroupConfigTagTemplate = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
@@ -167,21 +169,21 @@ resource "qingcloud_security_group" "foo" {
 				"${qingcloud_tag.test2.id}"]
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `
-const testAccSecurityGroupConfigTagTwo = `
+const testAccSecurityGroupConfigTagTwoTemplate = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `

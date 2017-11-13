@@ -3,6 +3,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -64,7 +65,8 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 }
 func TestAccQingcloudEIP_tag(t *testing.T) {
 	var eip qc.DescribeEIPsOutput
-
+	eipTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-eip-tag1"
+	eipTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-eip-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := eip.EIPSet[0].Tags
@@ -95,20 +97,21 @@ func TestAccQingcloudEIP_tag(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
+
 		IDRefreshName: "qingcloud_eip.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccEipConfigTag,
+				Config: fmt.Sprintf(testAccEipConfigTagTemplate, eipTag1Name, eipTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
 						"qingcloud_eip.foo", &eip),
-					testTagNameValue("11", "22"),
+					testTagNameValue(eipTag1Name, eipTag2Name),
 				),
 			},
 			resource.TestStep{
-				Config: testAccEipConfigTagTwo,
+				Config: fmt.Sprintf(testAccEipConfigTagTwoTemplate, eipTag1Name, eipTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
 						"qingcloud_eip.foo", &eip),
@@ -191,7 +194,7 @@ resource "qingcloud_eip" "foo" {
     need_icp = 0
 } `
 
-const testAccEipConfigTag = `
+const testAccEipConfigTagTemplate = `
 
 resource "qingcloud_eip" "foo" {
     name = "eip"
@@ -203,13 +206,14 @@ resource "qingcloud_eip" "foo" {
 				"${qingcloud_tag.test2.id}"]
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `
-const testAccEipConfigTagTwo = `
+
+const testAccEipConfigTagTwoTemplate = `
 
 resource "qingcloud_eip" "foo" {
     name = "eip"
@@ -219,9 +223,9 @@ resource "qingcloud_eip" "foo" {
     need_icp = 0
 }
 resource "qingcloud_tag" "test"{
-	name="11"
+	name="%v"
 }
 resource "qingcloud_tag" "test2"{
-	name="22"
+	name="%v"
 }
 `

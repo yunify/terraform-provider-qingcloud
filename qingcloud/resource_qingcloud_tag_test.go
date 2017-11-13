@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"os"
 )
 
 func TestAccQingcloudTag_basic(t *testing.T) {
 	var tag qc.DescribeTagsOutput
+	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-tag1"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -22,21 +24,21 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccTagConfig,
+				Config: fmt.Sprintf(testAccTagConfigTempalte, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(
-						"qingcloud_tag.foo", "name", "tag1"),
+						"qingcloud_tag.foo", "name", Tag1Name),
 					resource.TestCheckResourceAttr(
 						"qingcloud_tag.foo", "color", "#9f9bb7"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccTagConfigTwo,
+				Config: fmt.Sprintf(testAccTagConfigTwoTemplate, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(
-						"qingcloud_tag.foo", "name", "tag1"),
+						"qingcloud_tag.foo", "name", Tag1Name),
 					resource.TestCheckResourceAttr(
 						"qingcloud_tag.foo", "description", "test"),
 					resource.TestCheckResourceAttr(
@@ -102,14 +104,14 @@ func testAccCheckTagDestroyWithProvider(s *terraform.State, provider *schema.Pro
 	return nil
 }
 
-const testAccTagConfig = `
+const testAccTagConfigTempalte = `
 resource "qingcloud_tag" "foo"{
-	name="tag1"
+	name="%v"
 }
 `
-const testAccTagConfigTwo = `
+const testAccTagConfigTwoTemplate = `
 resource "qingcloud_tag" "foo"{
-	name="tag1"
+	name="%v"
 	description="test"
 	color = "#fff"
 }
