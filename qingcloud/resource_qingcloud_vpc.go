@@ -35,22 +35,22 @@ func resourceQingcloudVpc() *schema.Resource {
 				Description: "Network address range of vpc.",
 			},
 			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 				Description: "The tagids' id used by the vpc",
 			},
 			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 				Description: "compute by tag ids ",
 			},
 			"eip_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "The eip's id used by the vpc",
 			},
 			"security_group_id": &schema.Schema{
@@ -59,19 +59,19 @@ func resourceQingcloudVpc() *schema.Resource {
 				Description: "The security group's id used by the vpc",
 			},
 			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "The description of vpc",
 			},
 			"private_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "The private ip of vpc",
 			},
 			"public_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-				Description: "The public ip of vpc" ,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The public ip of vpc",
 			},
 		},
 	}
@@ -105,38 +105,7 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
-
-	if err := modifyRouterAttributes(d, meta, true); err != nil {
-		return err
-	}
-	if d.HasChange("eip_id") {
-		input := new(qc.UpdateRoutersInput)
-		input.Routers = []*string{qc.String(d.Id())}
-		output, err := clt.UpdateRouters(input)
-		if err != nil {
-			return fmt.Errorf("Error update router: %s", err.Error())
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error update router input validate: %s", err)
-		}
-		_, err = RouterTransitionStateRefresh(clt, d.Id())
-		if err != nil {
-			return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
-		}
-	}
-	if d.HasChange("security_group_id") {
-		sgClt := meta.(*QingCloudClient).securitygroup
-		input := new(qc.ApplySecurityGroupInput)
-		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-		output, err := sgClt.ApplySecurityGroup(input)
-		if err != nil {
-			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
-		}
-	}
-	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeRouter); err != nil {
-		return err
-	}
-	return resourceQingcloudRouterRead(d, meta)
+	return resourceQingcloudVpcUpdate(d, meta)
 }
 
 func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
@@ -168,12 +137,10 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
-	qingcloudMutexKV.Lock(d.Id())
-	defer qingcloudMutexKV.Unlock(d.Id())
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	if err := modifyRouterAttributes(d, meta, false); err != nil {
+	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
 	if d.HasChange("eip_id") {
@@ -191,7 +158,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 		}
 	}
-	if d.HasChange("security_group_id") {
+	if d.HasChange("security_group_id") && !d.IsNewResource() {
 		sgClt := meta.(*QingCloudClient).securitygroup
 		input := new(qc.ApplySecurityGroupInput)
 		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))

@@ -35,7 +35,7 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_security_group_rule": resourceQingcloudSecurityGroupRule(),
 			"qingcloud_vxnet":               resourceQingcloudVxnet(),
 			"qingcloud_router":              resourceQingcloudRouter(),
-			"qingcloud_vpc":				 resourceQingcloudVpc(),
+			"qingcloud_vpc":                 resourceQingcloudVpc(),
 			// "qingcloud_router_static":      resourceQingcloudRouterStatic(),
 			// "qingcloud_router_static_entry": resourceQingcloudRouterStaticEntry(),
 			"qingcloud_instance":              resourceQingcloudInstance(),

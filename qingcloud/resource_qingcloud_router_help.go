@@ -20,47 +20,53 @@ import (
 // 	return nil
 // }
 
-func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.ModifyRouterAttributesInput)
 	input.Router = qc.String(d.Id())
-
-	if create {
-		if !d.HasChange("description") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
-			return nil
-		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		if d.HasChange("eip_id") {
-			input.EIP = qc.String(d.Get("eip_id").(string))
-		}
-		if d.HasChange("security_group_id") {
-			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-		}
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
-			return nil
-		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		if d.HasChange("name") {
+	attributeUpdate := false
+	if d.HasChange("name") && !d.IsNewResource() {
+		if d.Get("name")!= ""{
 			input.RouterName = qc.String(d.Get("name").(string))
+		}else {
+			input.RouterName = qc.String(" ")
 		}
-		if d.HasChange("eip_id") {
+		attributeUpdate = true
+	}
+	if d.HasChange("description") {
+		if d.Get("description")!= ""{
+			input.Description = qc.String(d.Get("description").(string))
+		}else {
+			input.Description = qc.String(" ")
+		}
+		attributeUpdate = true
+	}
+	if d.HasChange("eip_id") {
+		if d.Get("eip_id")!= ""{
 			input.EIP = qc.String(d.Get("eip_id").(string))
+		}else {
+			input.EIP = qc.String(" ")
 		}
-		if d.HasChange("security_group_id") {
+		attributeUpdate = true
+	}
+	if d.HasChange("security_group_id") && !d.IsNewResource() {
+		if d.Get("security_group_id")!= ""{
 			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+		}else {
+			input.SecurityGroup = qc.String(" ")
 		}
+		attributeUpdate = true
 	}
-	output, err := clt.ModifyRouterAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify router attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+
+	if attributeUpdate{
+		output, err := clt.ModifyRouterAttributes(input)
+		if err != nil {
+			return fmt.Errorf("Error modify router attributes: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+		}
+		return nil
 	}
 	return nil
 }
