@@ -47,8 +47,17 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	} else {
 		input.Val3 = nil
 	}
-
-	output, err := clt.ModifySecurityGroupRuleAttributes(input)
+	var output *qc.ModifySecurityGroupRuleAttributesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.ModifySecurityGroupRuleAttributes(input)
+		if err == nil {
+			if output.RetCode != nil && *output.RetCode == 5100 {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
