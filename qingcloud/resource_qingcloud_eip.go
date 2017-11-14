@@ -96,7 +96,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	simpleRetry(func() error {
 		output, err = clt.AllocateEIPs(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
@@ -126,7 +126,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
@@ -174,7 +174,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBandwidth(input)
 			if err == nil {
-				if output.RetCode != nil && *output.RetCode == 5100 {
+				if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 					return fmt.Errorf("allocate EIP Server Busy")
 				}
 			}
@@ -200,7 +200,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBillingMode(input)
 			if err == nil {
-				if output.RetCode != nil && *output.RetCode == 5100 {
+				if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 					return fmt.Errorf("allocate EIP Server Busy")
 				}
 			}
@@ -245,7 +245,7 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	simpleRetry(func() error {
 		output, err = clt.ReleaseEIPs(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}

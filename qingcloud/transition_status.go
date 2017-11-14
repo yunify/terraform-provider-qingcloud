@@ -43,7 +43,7 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		simpleRetry(func() error {
 			output, err = clt.DescribeEIPs(input)
 			if err == nil {
-				if output.RetCode != nil && *output.RetCode == 5100 {
+				if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 					return fmt.Errorf("allocate EIP Server Busy")
 				}
 			}
@@ -321,7 +321,7 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		simpleRetry(func() error {
 			output, err = clt.DescribeSecurityGroups(input)
 			if err == nil {
-				if output.RetCode != nil && *output.RetCode == 5100 {
+				if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 					return fmt.Errorf("allocate EIP Server Busy")
 				}
 			}

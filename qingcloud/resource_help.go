@@ -34,7 +34,7 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	return additions, deletions
 }
 func IsServerBusy(RetCode int) bool {
-	if RetCode == 5100 {
+	if RetCode == SERVERBUSY {
 		return true
 	}
 	return false

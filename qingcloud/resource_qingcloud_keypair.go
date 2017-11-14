@@ -72,7 +72,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	simpleRetry(func() error {
 		output, err = clt.CreateKeyPair(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
@@ -98,7 +98,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	simpleRetry(func() error {
 		output, err = clt.DescribeKeyPairs(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
@@ -146,7 +146,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	simpleRetry(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
 		if err == nil {
-			if describeKeyPairsOutput.RetCode != nil && *describeKeyPairsOutput.RetCode == 5100 {
+			if describeKeyPairsOutput.RetCode != nil && *describeKeyPairsOutput.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
@@ -164,7 +164,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	simpleRetry(func() error {
 		output, err = clt.DeleteKeyPairs(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == 5100 {
+			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
