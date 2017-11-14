@@ -3,6 +3,7 @@ package qingcloud
 import (
 
 	// "github.com/hashicorp/terraform/helper/resource"
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -50,7 +51,17 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		_, err := clt.ModifyKeyPairAttributes(input)
+		var output *qc.ModifyKeyPairAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifyKeyPairAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && *output.RetCode == 5100 {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		return err
 	}
 	return nil

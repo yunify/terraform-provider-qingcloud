@@ -3,6 +3,8 @@ package qingcloud
 import (
 	"math/rand"
 	"time"
+
+	"github.com/yunify/qingcloud-sdk-go/logger"
 )
 
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
@@ -51,6 +53,7 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 			sleep = sleep + jitter/2
 
 			time.Sleep(sleep)
+			logger.Warn("Retry function")
 			return retry(attempts, 2*sleep, fn)
 		}
 		return err
