@@ -3,14 +3,13 @@ package qingcloud
 import (
 	"fmt"
 	"log"
-	"testing"
 	"os"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
-
 )
 
 func TestAccQingcloudVpc_basic(t *testing.T) {
@@ -50,6 +49,72 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 						"qingcloud_vpc.foo", "description", "test"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc.foo", "name", "test"),
+				),
+			},
+		},
+	})
+
+}
+
+func TestAccQingcloudVpc_eip(t *testing.T) {
+	var vpc qc.DescribeRoutersOutput
+
+	testEIP := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if vpc.RouterSet[0].EIP != nil {
+				input := new(qc.DescribeEIPsInput)
+				input.EIPs = []*string{vpc.RouterSet[0].EIP.EIPID}
+				client := testAccProvider.Meta().(*QingCloudClient)
+				d, err := client.eip.DescribeEIPs(input)
+
+				if err != nil {
+					return err
+				}
+				if d == nil || len(d.EIPSet) == 0 {
+					return fmt.Errorf("EIP not found ")
+				}
+				if qc.StringValue(d.EIPSet[0].EIPAddr) != qc.StringValue(vpc.RouterSet[0].EIP.EIPAddr) {
+					return fmt.Errorf("EIP not match ")
+				}
+				return nil
+			} else {
+				return fmt.Errorf("Can not find eip ")
+			}
+		}
+	}
+	testDetachEIP := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if vpc.RouterSet[0].EIP != nil && vpc.RouterSet[0].EIP.EIPID != nil && qc.StringValue(vpc.RouterSet[0].EIP.EIPID) != "" {
+				return fmt.Errorf("EIP not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		// module name
+		IDRefreshName: "qingcloud_vpc.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVpcConfigEIP,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(
+						"qingcloud_vpc.foo", &vpc),
+					testEIP(),
+				),
+			},
+			resource.TestStep{
+				Config: testAccVpcConfigEIPTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(
+						"qingcloud_vpc.foo", &vpc),
+					testDetachEIP(),
 				),
 			},
 		},
@@ -227,5 +292,30 @@ resource "qingcloud_tag" "test"{
 }
 resource "qingcloud_tag" "test2"{
 	name="%v"
+}
+`
+const testAccVpcConfigEIP = `
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	eip_id = "${qingcloud_eip.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+`
+const testAccVpcConfigEIPTwo = `
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
 }
 `
