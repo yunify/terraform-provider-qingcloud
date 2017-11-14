@@ -118,7 +118,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if *output.RetCode != 0 {
 		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
-	if len(output.EIPSet) == 0 {
+	if len(output.EIPSet) == 0 || qc.StringValue(output.EIPSet[0].Status) == "ceased" || qc.StringValue(output.EIPSet[0].Status) == "released" {
 		d.SetId("")
 		return nil
 	}
