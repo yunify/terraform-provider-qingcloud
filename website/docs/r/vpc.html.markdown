@@ -8,7 +8,8 @@ description: |-
 
 # Qingcloud\_eip
 
-Provides a  Vpc resource.
+Provides a  Vpc resource.  
+User this resource in SDN 2.0 environment.
 
 ## Example Usage
 
