@@ -34,10 +34,7 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	return additions, deletions
 }
 func IsServerBusy(RetCode int) bool {
-	if RetCode == SERVERBUSY {
-		return true
-	}
-	return false
+	return RetCode == SERVERBUSY
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {

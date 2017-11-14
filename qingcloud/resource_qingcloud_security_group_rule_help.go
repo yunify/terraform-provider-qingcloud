@@ -52,7 +52,7 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	simpleRetry(func() error {
 		output, err = clt.ModifySecurityGroupRuleAttributes(input)
 		if err == nil {
-			if output.RetCode != nil && *output.RetCode == SERVERBUSY {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
 				return fmt.Errorf("allocate EIP Server Busy")
 			}
 		}
