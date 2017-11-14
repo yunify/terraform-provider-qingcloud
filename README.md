@@ -36,6 +36,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [x] SecurityGroups
 - [x] SecurityGroupRules
 - [x] Keypairs
+- [x] Vpc
 - [ ] Image
 - [ ] LoadBalancer
 - [x] Tag
