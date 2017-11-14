@@ -21,10 +21,11 @@ func resourceQingcloudVpc() *schema.Resource {
 			},
 			"type": &schema.Schema{
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: withinArrayInt(0, 1, 2),
-				Description: "Type of Vpc: 0 - medium, 1 - small, 2 - large, default 1	",
+				Default:      1,
+				ValidateFunc: withinArrayInt(0, 1, 2, 3),
+				Description: "Type of Vpc: 0 - medium, 1 - small, 2 - large, 3 - ultra-large, default 1	",
 			},
 			"vpc_network": &schema.Schema{
 				Type:     schema.TypeString,
@@ -82,17 +83,16 @@ func resourceQingcloudVpc() *schema.Resource {
 func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.CreateRoutersInput)
-	input.RouterName = qc.String(d.Get("name").(string))
 	if d.Get("name").(string) != "" {
 		input.RouterName = qc.String(d.Get("name").(string))
 	}
-	input.RouterType = qc.Int(d.Get("type").(int))
 	if d.Get("vpc_network").(string) != "" {
 		input.VpcNetwork = qc.String(d.Get("vpc_network").(string))
 	}
 	if d.Get("security_group_id").(string) != "" {
 		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	}
+	input.RouterType = qc.Int(d.Get("type").(int))
 	input.Count = qc.Int(1)
 	output, err := clt.CreateRouters(input)
 	if err != nil {
