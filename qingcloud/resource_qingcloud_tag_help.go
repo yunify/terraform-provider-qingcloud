@@ -29,7 +29,17 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		output, err := clt.ModifyTagAttributes(input)
+		var output *qc.ModifyTagAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifyTagAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && *output.RetCode == 5100 {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modify tag attributes: %s", err)
 		}

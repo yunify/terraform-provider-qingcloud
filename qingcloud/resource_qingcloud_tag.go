@@ -36,7 +36,17 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.CreateTagInput)
 	input.TagName = qc.String(d.Get("name").(string))
-	output, err := clt.CreateTag(input)
+	var output *qc.CreateTagOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateTag(input)
+		if err == nil {
+			if output.RetCode != nil && *output.RetCode == 5100 {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error create tag: %s", err)
 	}
@@ -50,7 +60,17 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.DescribeTagsInput)
 	input.Tags = []*string{qc.String(d.Id())}
-	output, err := clt.DescribeTags(input)
+	var output *qc.DescribeTagsOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeTags(input)
+		if err == nil {
+			if output.RetCode != nil && *output.RetCode == 5100 {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describe tag: %s", err)
 	}
@@ -78,7 +98,17 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.DeleteTagsInput)
 	input.Tags = []*string{qc.String(d.Id())}
-	output, err := clt.DeleteTags(input)
+	var output *qc.DeleteTagsOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteTags(input)
+		if err == nil {
+			if output.RetCode != nil && *output.RetCode == 5100 {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error delete tag: %s", err)
 	}
