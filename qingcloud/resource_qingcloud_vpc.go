@@ -149,28 +149,16 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	d.SetPartial("name")
 	d.SetPartial("description")
 	if d.HasChange("eip_id") {
-		input := new(qc.UpdateRoutersInput)
-		input.Routers = []*string{qc.String(d.Id())}
-		output, err := clt.UpdateRouters(input)
+		err := applyRouterUpdate(d, meta)
 		if err != nil {
-			return fmt.Errorf("Error update router: %s", err.Error())
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error update router: %s", *output.Message)
-		}
-		_, err = RouterTransitionStateRefresh(clt, d.Id())
-		if err != nil {
-			return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
+			return err
 		}
 	}
 	d.SetPartial("eip_id")
 	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		sgClt := meta.(*QingCloudClient).securitygroup
-		input := new(qc.ApplySecurityGroupInput)
-		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-		output, err := sgClt.ApplySecurityGroup(input)
+		err := applySecurityGroupRule(d, meta)
 		if err != nil {
-			return fmt.Errorf("Error apply security group (%s) update %s", *input.SecurityGroup, *output.Message)
+			return err
 		}
 	}
 	d.SetPartial("security_group_id")

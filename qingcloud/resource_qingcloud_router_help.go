@@ -71,6 +71,25 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.UpdateRoutersInput)
+	input.Routers = []*string{qc.String(d.Id())}
+	output, err := clt.UpdateRouters(input)
+	if err != nil {
+		return fmt.Errorf("Error update router: %s", err.Error())
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error update router: %s", *output.Message)
+	}
+	_, err = RouterTransitionStateRefresh(clt, d.Id())
+	if err != nil {
+		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
+	}
+
+	return nil
+}
+
 func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	describeinput := new(qc.DescribeRoutersInput)
