@@ -1,8 +1,8 @@
 package qingcloud
 
 import (
-	"time"
 	"math/rand"
+	"time"
 )
 
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
@@ -58,9 +58,11 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
+
 type stop struct {
 	error
 }
-func retrySimple(fn func() error) error {
+
+func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }

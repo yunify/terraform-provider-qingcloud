@@ -29,7 +29,17 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		output, err := clt.ModifyEIPAttributes(input)
+		var output *qc.ModifyEIPAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifyEIPAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && *output.RetCode == 5100 {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modify eip attributes: %s", err)
 		}
@@ -53,14 +63,24 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	describeinput := new(qc.DescribeEIPsInput)
 	describeinput.EIPs = []*string{qc.String(d.Id())}
 	describeinput.Verbose = qc.Int(1)
-	describeoutput, err := clt.DescribeEIPs(describeinput)
+	var output *qc.DescribeEIPsOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeEIPs(describeinput)
+		if err == nil {
+			if output.RetCode != nil && *output.RetCode == 5100 {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
 	}
-	if *describeoutput.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", *describeoutput.Message)
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe eip: %s", *output.Message)
 	}
 	//wait for lease info
-	WaitForLease(describeoutput.EIPSet[0].CreateTime)
+	WaitForLease(output.EIPSet[0].CreateTime)
 	return nil
 }

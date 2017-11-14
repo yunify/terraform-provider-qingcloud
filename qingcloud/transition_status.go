@@ -38,7 +38,17 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeEIPsInput)
 		input.EIPs = []*string{qc.String(id)}
-		output, err := clt.DescribeEIPs(input)
+		var output *qc.DescribeEIPsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeEIPs(input)
+			if err == nil {
+				if output.RetCode != nil && *output.RetCode == 5100 {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "", err
 		}
