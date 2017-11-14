@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"os"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+
 )
 
 func TestAccQingcloudVpc_basic(t *testing.T) {
@@ -48,6 +50,66 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 						"qingcloud_vpc.foo", "description", "test"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc.foo", "name", "test"),
+				),
+			},
+		},
+	})
+
+}
+
+func TestAccQingcloudVpc_tag(t *testing.T) {
+	var vpc qc.DescribeRoutersOutput
+	vpcTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vpc-tag1"
+	vpcTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vpc-tag2"
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := vpc.RouterSet[0].Tags
+			sameCount := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						sameCount++
+					}
+					if sameCount == len(vpc.RouterSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(vpc.RouterSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_vpc.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVpcConfigTagTemplate, vpcTag1Name, vpcTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(
+						"qingcloud_vpc.foo", &vpc),
+					testTagNameValue(vpcTag1Name, vpcTag2Name),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVpcConfigTagTwoTemplate, vpcTag1Name, vpcTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(
+						"qingcloud_vpc.foo", &vpc),
+					testTagDetach(),
 				),
 			},
 		},
@@ -117,7 +179,8 @@ resource "qingcloud_security_group" "foo" {
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
-} `
+}
+`
 const testAccVpcConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
@@ -128,4 +191,41 @@ resource "qingcloud_vpc" "foo" {
 	name ="test"
 	description = "test"
 	type = 2
-} `
+}
+`
+
+const testAccVpcConfigTagTemplate = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
+
+const testAccVpcConfigTagTwoTemplate = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
