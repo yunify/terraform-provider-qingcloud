@@ -29,7 +29,17 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		output, err := clt.ModifyTagAttributes(input)
+		var output *qc.ModifyTagAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifyTagAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modify tag attributes: %s", err)
 		}
@@ -77,7 +87,17 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			}
 			input.ResourceTagPairs = append(input.ResourceTagPairs, &rtp)
 		}
-		_, err := clt.DetachTags(input)
+		var output *qc.DetachTagsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DetachTags(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)
 		}
@@ -92,7 +112,17 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			}
 			input.ResourceTagPairs = append(input.ResourceTagPairs, &rtp)
 		}
-		_, err := clt.AttachTags(input)
+		var output *qc.AttachTagsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.AttachTags(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)
 		}

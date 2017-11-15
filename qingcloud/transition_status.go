@@ -38,7 +38,17 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeEIPsInput)
 		input.EIPs = []*string{qc.String(id)}
-		output, err := clt.DescribeEIPs(input)
+		var output *qc.DescribeEIPsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeEIPs(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "", err
 		}
@@ -306,7 +316,17 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeSecurityGroupsInput)
 		input.SecurityGroups = []*string{qc.String(id)}
-		output, err := clt.DescribeSecurityGroups(input)
+		var output *qc.DescribeSecurityGroupsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeSecurityGroups(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "not_updated", err
 		}
