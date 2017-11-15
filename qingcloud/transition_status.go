@@ -158,7 +158,17 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		input := new(qc.DescribeRoutersInput)
 		input.Routers = []*string{qc.String(id)}
 		input.Verbose = qc.Int(1)
-		output, err := clt.DescribeRouters(input)
+		var output *qc.DescribeRoutersOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeRouters(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
 		}
