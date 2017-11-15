@@ -18,16 +18,18 @@ func resourceQingcloudVxnet() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "The name of vxnet",
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeInt,
-				Optional: true,
-				Description: "私有网络类型，1 - 受管私有网络，0 - 自管私有网络。	",
+				Required: true,
+				Description: "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description:"The description of vxnet",
 			},
 			// 当第一次创建一个私有网络以后，会首先加入到自己定制的router中，不是 vpc
 			"router_id": &schema.Schema{
@@ -37,24 +39,27 @@ func resourceQingcloudVxnet() *schema.Resource {
 			"vpc_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Description:"The vpc id , vxnet want to join.",
 			},
 			"ip_network": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Computed:     true,
+				Description:"Network segment of Managed vxnet",
 			},
 			"tag_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				Description: "tag ids , vxnet wants to use",
 			},
 			"tag_names": &schema.Schema{
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				Description: "compute by tag ids",
 			},
 		},
 	}
@@ -88,8 +93,6 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 			return err
 		}
-		qingcloudMutexKV.Lock(vpcID)
-		defer qingcloudMutexKV.Unlock(vpcID)
 		// join the router
 		routerClt := meta.(*QingCloudClient).router
 		joinRouterInput := new(qc.JoinRouterInput)
