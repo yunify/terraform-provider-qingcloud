@@ -286,7 +286,17 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVxNetsInput)
 		input.VxNets = []*string{qc.String(id)}
-		output, err := clt.DescribeVxNets(input)
+		var output *qc.DescribeVxNetsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVxNets(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "", err
 		}
