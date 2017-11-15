@@ -7,7 +7,6 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-
 func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.ModifyRouterAttributesInput)
@@ -124,4 +123,3 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	WaitForLease(output.RouterSet[0].CreateTime)
 	return nil
 }
-
