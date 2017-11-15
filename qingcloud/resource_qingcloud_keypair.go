@@ -73,7 +73,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 		output, err = clt.CreateKeyPair(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -99,7 +99,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.DescribeKeyPairs(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -147,7 +147,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
 		if err == nil {
 			if describeKeyPairsOutput.RetCode != nil && IsServerBusy(*describeKeyPairsOutput.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -165,7 +165,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		output, err = clt.DeleteKeyPairs(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

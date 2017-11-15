@@ -35,7 +35,7 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyVxNetAttributes(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -57,7 +57,7 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.JoinRouter(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -86,7 +86,7 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.LeaveRouter(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

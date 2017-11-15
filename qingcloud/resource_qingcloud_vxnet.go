@@ -75,7 +75,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.CreateVxNets(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -101,7 +101,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DescribeVxNets(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -204,7 +204,7 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.DeleteVxNets(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
