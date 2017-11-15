@@ -127,6 +127,84 @@ func TestAccQingcloudVxNet_tag(t *testing.T) {
 
 }
 
+func TestAccQingcloudVxNet_vpc(t *testing.T) {
+	var vxnet qc.DescribeVxNetsOutput
+
+	testVpcAttach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if vxnet.VxNetSet[0].Router != nil {
+				input := new(qc.DescribeRouterVxNetsInput)
+				input.Router = vxnet.VxNetSet[0].VpcRouterID
+				input.Verbose = qc.Int(1)
+				client := testAccProvider.Meta().(*QingCloudClient)
+				d, err := client.router.DescribeRouterVxNets(input)
+				if err != nil {
+					return err
+				}
+				if d == nil || len(d.RouterVxNetSet) == 0 {
+					return fmt.Errorf("Router not found ")
+				}
+				haveVxnet := false
+				for _, oneVxnet := range d.RouterVxNetSet {
+					if qc.StringValue(oneVxnet.VxNetID) == qc.StringValue(vxnet.VxNetSet[0].VxNetID) {
+						haveVxnet = true
+					}
+				}
+				if !haveVxnet {
+					return fmt.Errorf("Router not match ")
+				}
+				return nil
+			} else {
+				return fmt.Errorf("Can not find router ")
+			}
+		}
+	}
+	testVpcDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if vxnet.VxNetSet[0].Router != nil && qc.StringValue(vxnet.VxNetSet[0].Router.RouterID) != "" {
+				return fmt.Errorf("Router not detach ")
+			}
+			return nil
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		// module name
+		IDRefreshName: "qingcloud_vxnet.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVxNetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccVxNetConfigVpc,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxNetExists(
+						"qingcloud_vxnet.foo", &vxnet),
+					testVpcAttach(),
+				),
+			},
+			resource.TestStep{
+				Config: testAccVxNetConfigVpcTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxNetExists(
+						"qingcloud_vxnet.foo", &vxnet),
+					testVpcDetach(),
+				),
+			},
+			resource.TestStep{
+				Config: testAccVxNetConfigVpcThree,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxNetExists(
+						"qingcloud_vxnet.foo", &vxnet),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckVxNetExists(n string, eip *qc.DescribeVxNetsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -224,5 +302,53 @@ resource "qingcloud_tag" "test"{
 }
 resource "qingcloud_tag" "test2"{
 	name="%v"
+}
+`
+
+const testAccVxNetConfigVpc = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+	vpc_id = "${qingcloud_vpc.foo.id}"
+	ip_network = "192.168.0.0/24"
+}
+`
+
+const testAccVxNetConfigVpcTwo = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+}
+`
+const testAccVxNetConfigVpcThree = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+	vpc_id = "${qingcloud_vpc.foo.id}"
+	ip_network = "192.168.0.0/24"
 }
 `
