@@ -27,7 +27,17 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		_, err := clt.ModifySecurityGroupAttributes(input)
+		var output *qc.ModifySecurityGroupAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifySecurityGroupAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("Error modify security group attributes: %s ", err)
 		}
@@ -40,7 +50,17 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	sgID := d.Get("security_group_id").(string)
 	input := new(qc.ApplySecurityGroupInput)
 	input.SecurityGroup = qc.String(sgID)
-	output, err := clt.ApplySecurityGroup(input)
+	var output *qc.ApplySecurityGroupOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.ApplySecurityGroup(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}

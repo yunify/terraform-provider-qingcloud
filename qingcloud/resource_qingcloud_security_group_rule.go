@@ -92,7 +92,17 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 		rule.Val3 = qc.String(d.Get("cidr_block").(string))
 	}
 	input.Rules = []*qc.SecurityGroupRule{rule}
-	output, err := clt.AddSecurityGroupRules(input)
+	var output *qc.AddSecurityGroupRulesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.AddSecurityGroupRules(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error add security group rule: %s", err)
 	}
@@ -112,7 +122,17 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupRulesInput)
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
-	output, err := clt.DescribeSecurityGroupRules(input)
+	var output *qc.DescribeSecurityGroupRulesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeSecurityGroupRules(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -152,7 +172,17 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DeleteSecurityGroupRulesInput)
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
-	_, err := clt.DeleteSecurityGroupRules(input)
+	var output *qc.DeleteSecurityGroupRulesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteSecurityGroupRules(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}

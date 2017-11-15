@@ -46,7 +46,17 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.CreateSecurityGroupInput)
 	input.SecurityGroupName = qc.String(d.Get("name").(string))
-	output, err := clt.CreateSecurityGroup(input)
+	var output *qc.CreateSecurityGroupOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateSecurityGroup(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error create security group: %s", err)
 	}
@@ -61,7 +71,17 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DescribeSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
-	output, err := clt.DescribeSecurityGroups(input)
+	var output *qc.DescribeSecurityGroupsOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeSecurityGroups(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
 	}
@@ -99,7 +119,17 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	describeSecurityGroupInput := new(qc.DescribeSecurityGroupsInput)
 	describeSecurityGroupInput.SecurityGroups = []*string{qc.String(d.Id())}
 	describeSecurityGroupInput.Verbose = qc.Int(1)
-	describeSecurityGroupOutput, err := clt.DescribeSecurityGroups(describeSecurityGroupInput)
+	var describeSecurityGroupOutput *qc.DescribeSecurityGroupsOutput
+	var err error
+	simpleRetry(func() error {
+		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
+		if err == nil {
+			if describeSecurityGroupOutput.RetCode != nil && IsServerBusy(*describeSecurityGroupOutput.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
 	}
@@ -111,7 +141,16 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	}
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
-	output, err := clt.DeleteSecurityGroups(input)
+	var output *qc.DeleteSecurityGroupsOutput
+	simpleRetry(func() error {
+		output, err = clt.DeleteSecurityGroups(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error delete security group: %s", err)
 	}
