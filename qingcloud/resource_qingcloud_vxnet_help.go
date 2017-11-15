@@ -67,6 +67,9 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
 		return fmt.Errorf("Error vxnet leave router: %s", *output.Message)
 	}
+	if _, err := VxnetLeaveRouterTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
 	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("vpc_id").(string)); err != nil {
 		return err
 	}
