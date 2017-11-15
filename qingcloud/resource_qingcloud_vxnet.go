@@ -31,11 +31,6 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Optional: true,
 				Description:"The description of vxnet",
 			},
-			// 当第一次创建一个私有网络以后，会首先加入到自己定制的router中，不是 vpc
-			"router_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"vpc_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -138,10 +133,8 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("type", qc.IntValue(vxnet.VxNetType))
 	d.Set("description", qc.StringValue(vxnet.Description))
 	if vxnet.Router != nil {
-		d.Set("router_id", qc.StringValue(vxnet.Router.RouterID))
 		d.Set("ip_network", qc.StringValue(vxnet.Router.IPNetwork))
 	} else {
-		d.Set("router_id", "")
 		d.Set("ip_network", "")
 	}
 	d.Set("vpc_id", qc.StringValue(vxnet.VpcRouterID))
@@ -160,8 +153,6 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 		oldVPC, newVPC := d.GetChange("vpc_id")
 		oldVPCID := oldVPC.(string)
 		newVPCID := newVPC.(string)
-		oldV, _ := d.GetChange("router_id")
-		oldRouterID := oldV.(string)
 		if oldVPCID == "" {
 			// do a join router action
 			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, newVPCID); err != nil {
@@ -187,7 +178,7 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			leaveRouterInput := new(qc.LeaveRouterInput)
-			leaveRouterInput.Router = qc.String(oldRouterID)
+			leaveRouterInput.Router = qc.String(oldVPCID)
 			leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
 			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
@@ -206,7 +197,7 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			leaveRouterInput := new(qc.LeaveRouterInput)
-			leaveRouterInput.Router = qc.String(oldRouterID)
+			leaveRouterInput.Router = qc.String(oldVPCID)
 			leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
 			leaveRouterOutput, err := routerClt.LeaveRouter(leaveRouterInput)
 			if err != nil {
@@ -255,15 +246,14 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 	vpcID := d.Get("vpc_id").(string)
-	routerID := d.Get("router_id").(string)
 	// vxnet leave router
-	if routerID != "" {
+	if vpcID != "" {
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 			return err
 		}
 		routerCtl := meta.(*QingCloudClient).router
 		leaveRouterInput := new(qc.LeaveRouterInput)
-		leaveRouterInput.Router = qc.String(routerID)
+		leaveRouterInput.Router = qc.String(vpcID)
 		leaveRouterInput.VxNets = []*string{qc.String(d.Id())}
 		leaveRouterOutput, err := routerCtl.LeaveRouter(leaveRouterInput)
 		if err != nil {
