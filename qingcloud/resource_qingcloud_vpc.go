@@ -94,7 +94,17 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	input.RouterType = qc.Int(d.Get("type").(int))
 	input.Count = qc.Int(1)
-	output, err := clt.CreateRouters(input)
+	var output *qc.CreateRoutersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateRouters(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error create router: %s", err.Error())
 	}
@@ -114,7 +124,17 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.DescribeRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	output, err := clt.DescribeRouters(input)
+	var output *qc.DescribeRoutersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeRouters(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error describe router: %s", err)
 	}
@@ -178,7 +198,17 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	waitRouterLease(d, meta)
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
-	output, err := clt.DeleteRouters(input)
+	var output *qc.DeleteRoutersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteRouters(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Error delete router: %s", err)
 	}
