@@ -6,7 +6,7 @@ go:
 
 script:
   - npm install -g codeclimate-test-reporter
-  - travis_wait 30 |
+  - travis_wait 30 
     shopt -s globstar;
     rootdir=`pwd`;
 
