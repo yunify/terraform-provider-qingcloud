@@ -6,7 +6,6 @@ go:
 
 script:
   - npm install -g codeclimate-test-reporter
-  - travis_wait 30 make testacc
   - travis_wait 30 |
     shopt -s globstar;
     rootdir=`pwd`;
@@ -14,11 +13,13 @@ script:
     for dir in $(go list ./... |grep -v 'vendor'); do
       cd $GOPATH/src/$dir;
       exec 5>&1;
-      out=$(TF_ACC=1 go test -v -coverprofile=cov_part.out | tee >(cat - >&5))
+      out=$(go test -v -coverprofile=cov_part.out | tee >(cat - >&5))
       if [ $? -eq 1 ] ; then
         if [ $(cat $out | grep -o 'no buildable Go source files') == "" ] ; then
           echo "Tests failed! Exiting..." ; exit 1
         fi
+        if [cat $out | grep -q FAIL] ; then
+          echo "Tests failed! Exiting..." ; exit 1
       fi
       cd $rootdir
     done
