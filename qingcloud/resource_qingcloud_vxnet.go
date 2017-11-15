@@ -17,7 +17,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The name of vxnet",
 			},
 			"type": &schema.Schema{
@@ -64,7 +64,9 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	clt := meta.(*QingCloudClient).vxnet
 	input := new(qc.CreateVxNetsInput)
 	input.Count = qc.Int(1)
-	input.VxNetName = qc.String(d.Get("name").(string))
+	if d.Get("name").(string) != "" {
+		input.VxNetName = qc.String(d.Get("name").(string))
+	}
 	input.VxNetType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVxNetsOutput
 	var err error
