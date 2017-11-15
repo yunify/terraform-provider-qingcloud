@@ -7,89 +7,119 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-// func applyRouterUpdates(meta interface{}, routerID string) error {
-// 	clt := meta.(*QingCloudClient).router
-// 	params := router.UpdateRoutersRequest{}
-// 	params.RoutersN.Add(routerID)
-// 	if _, err := clt.UpdateRouters(params); err != nil {
-// 		return err
-// 	}
-// 	if _, err := RouterTransitionStateRefresh(clt, routerID); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-func modifyRouterAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.ModifyRouterAttributesInput)
 	input.Router = qc.String(d.Id())
-
-	if create {
-		if !d.HasChange("description") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
-			return nil
-		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		if d.HasChange("eip_id") {
-			input.EIP = qc.String(d.Get("eip_id").(string))
-		}
-		if d.HasChange("security_group_id") {
-			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-		}
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("eip_id") && !d.HasChange("security_group_id") {
-			return nil
-		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		if d.HasChange("name") {
+	attributeUpdate := false
+	if d.HasChange("name") && !d.IsNewResource() {
+		if d.Get("name") != "" {
 			input.RouterName = qc.String(d.Get("name").(string))
+		} else {
+			input.RouterName = qc.String(" ")
 		}
-		if d.HasChange("eip_id") {
+		attributeUpdate = true
+	}
+	if d.HasChange("description") {
+		if d.Get("description") != "" {
+			input.Description = qc.String(d.Get("description").(string))
+		} else {
+			input.Description = qc.String(" ")
+		}
+		attributeUpdate = true
+	}
+	if d.HasChange("eip_id") {
+		if d.Get("eip_id") != "" {
 			input.EIP = qc.String(d.Get("eip_id").(string))
+		} else {
+			input.EIP = qc.String(" ")
 		}
-		if d.HasChange("security_group_id") {
+		attributeUpdate = true
+	}
+	if d.HasChange("security_group_id") && !d.IsNewResource() {
+		if d.Get("security_group_id") != "" {
 			input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+		} else {
+			input.SecurityGroup = qc.String(" ")
 		}
+		attributeUpdate = true
 	}
-	output, err := clt.ModifyRouterAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify router attributes: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+
+	if attributeUpdate {
+		var output *qc.ModifyRouterAttributesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ModifyRouterAttributes(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("allocate EIP Server Busy")
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error modify router attributes: %s", err)
+		}
+		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+			return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+		}
+		return nil
 	}
 	return nil
 }
 
-// func modifyRouterVxnets(d *schema.ResourceData, meta interface{}, create bool) error {
-// 	clt := meta.(*QingCloudClient).router
-// 	if create {
-// 		map
-// 	} else {
-// 		if
-// 	}
-// }
+func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.UpdateRoutersInput)
+	input.Routers = []*string{qc.String(d.Id())}
+	var output *qc.UpdateRoutersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.UpdateRouters(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error update router: %s", err.Error())
+	}
+	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
+		return fmt.Errorf("Error update router: %s", *output.Message)
+	}
+	_, err = RouterTransitionStateRefresh(clt, d.Id())
+	if err != nil {
+		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
+	}
 
-// func getEIPInfoMap(data *qc.EIP) map[string]interface{} {
-// 	var a = make(map[string]interface{}, 3)
-// 	a["eip_id"] = qc.EIP.EIPID
-// 	a["eip_name"] = qc.EIP.EIPName
-// 	a["eip_addr"] = qc.EIP.EIPAddr
-// 	return a
-// }
+	return nil
+}
 
-// func getVxnetsMap(data []*qc.VxNet) map[string]interface{} {
-// 	length := len(data)
-// 	if data > 0 {
-// 		var a = make(map[string]interface{}, length)
-// 		for _, vxnet := range data {
-// 			a[vxnet.VxNetID] = vxnet.NICID
-// 		}
-// 		return a
-// 	}
-// 	return nil
-// }
+func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.DescribeRoutersInput)
+	input.Routers = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	var output *qc.DescribeRoutersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeRouters(input)
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("allocate EIP Server Busy")
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error describe router: %s", err)
+	}
+	if *output.RetCode != 0 {
+		return fmt.Errorf("Error describe router: %s", *output.Message)
+	}
+	//wait for lease info
+	WaitForLease(output.RouterSet[0].CreateTime)
+	return nil
+}
