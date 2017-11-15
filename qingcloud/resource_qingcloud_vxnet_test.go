@@ -3,6 +3,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -57,6 +58,68 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 						"qingcloud_vxnet.foo", "description", "vxnet"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_vxnet.foo", "name", "vxnet"),
+				),
+			},
+		},
+	})
+
+}
+
+func TestAccQingcloudVxNet_tag(t *testing.T) {
+	var vxnet qc.DescribeVxNetsOutput
+	vxnetTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vxnet-tag1"
+	vxnetTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vxnet-tag2"
+
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := vxnet.VxNetSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(vxnet.VxNetSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(vxnet.VxNetSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		// module name
+		IDRefreshName: "qingcloud_vxnet.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVxNetDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVxNetConfigTagTemplate, vxnetTag1Name, vxnetTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxNetExists(
+						"qingcloud_vxnet.foo", &vxnet),
+					testTagNameValue(vxnetTag1Name, vxnetTag2Name),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVxNetConfigTagTwoTemplate, vxnetTag1Name, vxnetTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxNetExists(
+						"qingcloud_vxnet.foo", &vxnet),
+					testTagDetach(),
 				),
 			},
 		},
@@ -135,3 +198,31 @@ resource "qingcloud_vxnet" "foo" {
     description = "vxnet"
 	type = 0
 } `
+
+const testAccVxNetConfigTagTemplate = `
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
+
+const testAccVxNetConfigTagTwoTemplate = `
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
