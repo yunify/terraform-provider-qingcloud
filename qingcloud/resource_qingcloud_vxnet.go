@@ -23,6 +23,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 			"type": &schema.Schema{
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
@@ -135,6 +136,8 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 		IPNetwork := d.Get("ip_network").(string)
 		if (vpcID != "" && IPNetwork == "") || (vpcID == "" && IPNetwork != "") {
 			return errors.New("vpc_id and ip_network must both be empty or no empty at the same time")
+		} else if d.Get("type").(int) == 0 {
+			return fmt.Errorf("vpc_id and ip_network can be set in Managed vxnet")
 		}
 		oldVPC, newVPC := d.GetChange("vpc_id")
 		oldVPCID := oldVPC.(string)
