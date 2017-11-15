@@ -16,44 +16,44 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Delete: resourceQingcloudVxnetDelete,
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The name of vxnet",
 			},
 			"type": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-				Description: "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				Description:  "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
 			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Description:"The description of vxnet",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The description of vxnet",
 			},
 			"vpc_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Description:"The vpc id , vxnet want to join.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The vpc id , vxnet want to join.",
 			},
 			"ip_network": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description:"Network segment of Managed vxnet",
+				Description:  "Network segment of Managed vxnet",
 			},
 			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 				Description: "tag ids , vxnet wants to use",
 			},
 			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 				Description: "compute by tag ids",
 			},
 		},
@@ -81,7 +81,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error create vxnet: %s", *output.Message)
 	}
 	d.SetId(qc.StringValue(output.VxNets[0]))
-	if err := modifyVxnetAttributes(d, meta, true); err != nil {
+	if err := modifyVxnetAttributes(d, meta); err != nil {
 		return err
 	}
 	if vpcID != "" {
@@ -229,7 +229,7 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 		}
 	}
-	err := modifyVxnetAttributes(d, meta, false)
+	err := modifyVxnetAttributes(d, meta)
 	if err != nil {
 		return err
 	}
