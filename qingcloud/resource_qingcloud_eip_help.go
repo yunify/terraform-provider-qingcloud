@@ -33,7 +33,7 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyEIPAttributes(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify eip attributes: %s", err)
@@ -62,7 +62,7 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(describeinput)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)

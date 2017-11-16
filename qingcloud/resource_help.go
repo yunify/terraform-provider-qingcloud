@@ -1,9 +1,9 @@
 package qingcloud
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
-	"fmt"
 
 	"github.com/yunify/qingcloud-sdk-go/logger"
 )
@@ -34,9 +34,6 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	}
 	return additions, deletions
 }
-func IsServerBusy(RetCode int) bool {
-	return RetCode == SERVERBUSY
-}
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
 	if err := fn(); err != nil {
@@ -62,7 +59,7 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 func serverBusyError(retCode *int, err error) error {
 	if err == nil {
-		if retCode != nil && IsServerBusy(*retCode) {
+		if retCode != nil && *retCode == SERVERBUSY {
 			return fmt.Errorf("Server Busy")
 		}
 	}
@@ -73,6 +70,7 @@ type stop struct {
 	error
 }
 
+//Stop Retry when fn's return value is nil , or fn's return type is stop struct
 func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }

@@ -73,7 +73,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateVxNets(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create vxnet: %s", err)
@@ -94,7 +94,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeVxNets(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet: %s", err)
@@ -192,7 +192,7 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteVxNets(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet: %s", err)

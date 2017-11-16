@@ -33,7 +33,7 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyTagAttributes(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify tag attributes: %s", err)
@@ -86,7 +86,7 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.DetachTags(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)
@@ -106,7 +106,7 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.AttachTags(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)

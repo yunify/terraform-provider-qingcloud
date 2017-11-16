@@ -51,7 +51,7 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.ModifySecurityGroupRuleAttributes(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return err

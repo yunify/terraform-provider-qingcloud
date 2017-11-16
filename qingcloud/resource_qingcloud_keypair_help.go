@@ -1,9 +1,6 @@
 package qingcloud
 
 import (
-
-	// "github.com/hashicorp/terraform/helper/resource"
-	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -55,7 +52,7 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyKeyPairAttributes(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		return err
 	}

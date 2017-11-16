@@ -40,7 +40,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateTag(input)
-		serverBusyError(output.RetCode,err)
+		serverBusyError(output.RetCode, err)
 		return nil
 	})
 	if err != nil {
@@ -60,7 +60,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeTags(input)
-		serverBusyError(output.RetCode,err)
+		serverBusyError(output.RetCode, err)
 		return nil
 	})
 	if err != nil {
@@ -94,7 +94,7 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteTags(input)
-		serverBusyError(output.RetCode,err)
+		serverBusyError(output.RetCode, err)
 		return nil
 	})
 	if err != nil {

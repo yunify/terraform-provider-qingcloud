@@ -50,7 +50,7 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateSecurityGroup(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create security group: %s", err)
@@ -70,7 +70,7 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeSecurityGroups(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
@@ -113,7 +113,7 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	var err error
 	simpleRetry(func() error {
 		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
-		return serverBusyError(describeSecurityGroupOutput.RetCode,err)
+		return serverBusyError(describeSecurityGroupOutput.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe security group: %s", err)
@@ -129,7 +129,7 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	var output *qc.DeleteSecurityGroupsOutput
 	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroups(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete security group: %s", err)

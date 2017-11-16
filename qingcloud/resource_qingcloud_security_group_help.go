@@ -31,7 +31,7 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifySecurityGroupAttributes(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify security group attributes: %s ", err)
@@ -49,7 +49,7 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.ApplySecurityGroup(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return err

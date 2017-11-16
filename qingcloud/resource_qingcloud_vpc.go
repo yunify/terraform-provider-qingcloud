@@ -98,7 +98,7 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateRouters(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create router: %s", err.Error())
@@ -123,7 +123,7 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe router: %s", err)
@@ -192,7 +192,7 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteRouters(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete router: %s", err)

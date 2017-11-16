@@ -71,7 +71,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateKeyPair(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create keypair: %s", err)
@@ -92,7 +92,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeKeyPairs(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s ", err)
@@ -135,7 +135,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	var err error
 	simpleRetry(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return serverBusyError(describeKeyPairsOutput.RetCode,err)
+		return serverBusyError(describeKeyPairsOutput.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s", err)
@@ -148,7 +148,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	var output *qc.DeleteKeyPairsOutput
 	simpleRetry(func() error {
 		output, err = clt.DeleteKeyPairs(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete keypairs: %s", err)

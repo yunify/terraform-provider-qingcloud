@@ -95,7 +95,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.AllocateEIPs(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create eip: %s", err)
@@ -120,7 +120,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
@@ -163,7 +163,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBandwidth(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
@@ -184,7 +184,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBillingMode(input)
-			return serverBusyError(output.RetCode,err)
+			return serverBusyError(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
@@ -224,7 +224,7 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.ReleaseEIPs(input)
-		return serverBusyError(output.RetCode,err)
+		return serverBusyError(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error release eip: %s", err)
