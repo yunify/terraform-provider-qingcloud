@@ -56,14 +56,17 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
-
-func serverBusyError(retCode *int, err error) error {
-	if err == nil {
-		if retCode != nil && *retCode == SERVERBUSY {
-			return fmt.Errorf("Server Busy")
+func retryServerBusy(f func() (s *int, err error)) error {
+	wraaper := func() error {
+		retCode, err := f()
+		if err == nil {
+			if retCode != nil && *retCode == SERVERBUSY {
+				return fmt.Errorf("Server Busy")
+			}
 		}
+		return nil
 	}
-	return nil
+	return simpleRetry(wraaper)
 }
 
 type stop struct {

@@ -94,9 +94,9 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	input.Rules = []*qc.SecurityGroupRule{rule}
 	var output *qc.AddSecurityGroupRulesOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.AddSecurityGroupRules(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error add security group rule: %s", err)
@@ -119,9 +119,9 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DescribeSecurityGroupRulesOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DescribeSecurityGroupRules(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return err
@@ -164,9 +164,9 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DeleteSecurityGroupRulesOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DeleteSecurityGroupRules(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return err

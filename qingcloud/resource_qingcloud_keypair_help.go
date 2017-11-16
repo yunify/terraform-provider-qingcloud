@@ -50,9 +50,9 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyKeyPairAttributesOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ModifyKeyPairAttributes(input)
-			return serverBusyError(output.RetCode, err)
+			return output.RetCode, err
 		})
 		return err
 	}

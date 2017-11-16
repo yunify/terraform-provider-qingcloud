@@ -31,9 +31,9 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ModifyEIPAttributes(input)
-			return serverBusyError(output.RetCode, err)
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify eip attributes: %s", err)
@@ -55,14 +55,14 @@ func getEIPResourceMap(data *qc.EIP) map[string]interface{} {
 }
 func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
-	describeinput := new(qc.DescribeEIPsInput)
-	describeinput.EIPs = []*string{qc.String(d.Id())}
-	describeinput.Verbose = qc.Int(1)
+	input := new(qc.DescribeEIPsInput)
+	input.EIPs = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	simpleRetry(func() error {
-		output, err = clt.DescribeEIPs(describeinput)
-		return serverBusyError(output.RetCode, err)
+	retryServerBusy(func() (s *int, err error) {
+		output, err = clt.DescribeEIPs(input)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)

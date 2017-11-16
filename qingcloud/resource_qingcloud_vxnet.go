@@ -71,9 +71,9 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	input.VxNetType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVxNetsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.CreateVxNets(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error create vxnet: %s", err)
@@ -92,9 +92,9 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeVxNetsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DescribeVxNets(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet: %s", err)
@@ -190,9 +190,9 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	input.VxNets = []*string{qc.String(d.Id())}
 	var output *qc.DeleteVxNetsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DeleteVxNets(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet: %s", err)

@@ -48,9 +48,9 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyRouterAttributesOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ModifyRouterAttributes(input)
-			return serverBusyError(output.RetCode, err)
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify router attributes: %s", err)
@@ -69,9 +69,9 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.UpdateRoutersOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.UpdateRouters(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error update router: %s", err.Error())
@@ -94,9 +94,9 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DescribeRouters(input)
-		return serverBusyError(output.RetCode, err)
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe router: %s", err)
