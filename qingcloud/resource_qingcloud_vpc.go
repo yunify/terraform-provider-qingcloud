@@ -100,7 +100,7 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.CreateRouters(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -130,7 +130,7 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeRouters(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -204,7 +204,7 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DeleteRouters(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

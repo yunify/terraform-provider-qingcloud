@@ -44,7 +44,7 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 			output, err = clt.DescribeEIPs(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -164,7 +164,7 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 			output, err = clt.DescribeRouters(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -296,7 +296,17 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVxNetsInput)
 		input.VxNets = []*string{qc.String(id)}
-		output, err := clt.DescribeVxNets(input)
+		var output *qc.DescribeVxNetsOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVxNets(input)
+			if err == nil {
+				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+					return fmt.Errorf("Server Busy")
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			return nil, "", err
 		}
@@ -332,7 +342,7 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 			output, err = clt.DescribeSecurityGroups(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil

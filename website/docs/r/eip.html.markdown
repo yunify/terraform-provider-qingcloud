@@ -18,7 +18,8 @@ resource "qingcloud_eip" "init"{
         bandwidth = 2
 }
 ```
-```Create a new EIP with tags.
+```
+# Create a new EIP with tags.
 resource "qingcloud_eip" "foo" {
     name = "eip"
     description = "eip"

@@ -35,7 +35,7 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyTagAttributes(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -93,7 +93,7 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			output, err = clt.DetachTags(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -118,7 +118,7 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			output, err = clt.AttachTags(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil

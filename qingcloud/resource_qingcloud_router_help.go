@@ -52,7 +52,7 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyRouterAttributes(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -78,7 +78,7 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.UpdateRouters(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -108,7 +108,7 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeRouters(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

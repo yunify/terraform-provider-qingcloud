@@ -52,7 +52,7 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 		output, err = clt.CreateSecurityGroup(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -77,7 +77,7 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 		output, err = clt.DescribeSecurityGroups(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -125,7 +125,7 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
 		if err == nil {
 			if describeSecurityGroupOutput.RetCode != nil && IsServerBusy(*describeSecurityGroupOutput.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -146,7 +146,7 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 		output, err = clt.DeleteSecurityGroups(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

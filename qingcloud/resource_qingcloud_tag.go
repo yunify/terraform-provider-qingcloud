@@ -42,7 +42,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.CreateTag(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -66,7 +66,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeTags(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
@@ -104,7 +104,7 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DeleteTags(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil

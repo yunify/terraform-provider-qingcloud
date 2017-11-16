@@ -33,7 +33,7 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 			output, err = clt.ModifySecurityGroupAttributes(input)
 			if err == nil {
 				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("allocate EIP Server Busy")
+					return fmt.Errorf("Server Busy")
 				}
 			}
 			return nil
@@ -56,7 +56,7 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.ApplySecurityGroup(input)
 		if err == nil {
 			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("allocate EIP Server Busy")
+				return fmt.Errorf("Server Busy")
 			}
 		}
 		return nil
