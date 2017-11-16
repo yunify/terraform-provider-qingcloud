@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
