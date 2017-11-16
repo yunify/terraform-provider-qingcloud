@@ -33,8 +33,8 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 			output, err = clt.ModifySecurityGroupAttributes(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error modify security group attributes: %s ", err)
+		if err := getQingCloudErr("modify security group attributes", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -51,7 +51,7 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.ApplySecurityGroup(input)
 		return output.RetCode, err
 	})
-	if err != nil {
+	if err := getQingCloudErr("apply security group", output.RetCode, output.Message, err); err != nil {
 		return err
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,

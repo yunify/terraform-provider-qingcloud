@@ -105,7 +105,7 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
-	if err != nil {
+	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
 	return resourceQingcloudVpcUpdate(d, meta)
@@ -145,7 +145,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	if err := waitRouterLease(d, meta);err!=nil{
+	if err := waitRouterLease(d, meta); err != nil {
 		return err
 	}
 	d.Partial(true)
@@ -155,15 +155,13 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	d.SetPartial("name")
 	d.SetPartial("description")
 	if d.HasChange("eip_id") {
-		err := applyRouterUpdate(d, meta)
-		if err != nil {
+		if err := applyRouterUpdate(d, meta); err != nil {
 			return err
 		}
 	}
 	d.SetPartial("eip_id")
 	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		err := applySecurityGroupRule(d, meta)
-		if err != nil {
+		if err := applySecurityGroupRule(d, meta); err != nil {
 			return err
 		}
 	}
@@ -181,7 +179,7 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	if err := waitRouterLease(d, meta);err!=nil{
+	if err := waitRouterLease(d, meta); err != nil {
 		return err
 	}
 	input := new(qc.DeleteRoutersInput)

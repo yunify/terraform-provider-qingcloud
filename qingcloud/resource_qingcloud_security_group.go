@@ -84,8 +84,7 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 }
 func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
-	err := modifySecurityGroupAttributes(d, meta)
-	if err != nil {
+	if err := modifySecurityGroupAttributes(d, meta); err != nil {
 		return err
 	}
 	d.SetPartial("description")

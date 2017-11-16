@@ -73,7 +73,7 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := getQingCloudErr("update router", output.RetCode, output.Message, err); err != nil {
 		return err
 	}
-	if _, err = RouterTransitionStateRefresh(clt, d.Id());err!=nil{
+	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
 	return nil

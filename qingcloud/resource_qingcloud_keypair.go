@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -107,8 +106,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
-	err := modifyKeypairAttributes(d, meta)
-	if err != nil {
+	if err := modifyKeypairAttributes(d, meta); err != nil {
 		return err
 	}
 	d.SetPartial("description")

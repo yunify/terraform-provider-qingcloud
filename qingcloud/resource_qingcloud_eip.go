@@ -101,7 +101,6 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 	d.SetId(qc.StringValue(output.EIPs[0]))
-
 	if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
 		return nil
 	}
@@ -145,7 +144,7 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	d.Partial(true)
-	if err := waitEipLease(d, meta);err!=nil{
+	if err := waitEipLease(d, meta); err != nil {
 		return err
 	}
 	if d.HasChange("need_icp") && !d.IsNewResource() {
@@ -206,7 +205,7 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	if refreshErr != nil {
 		return refreshErr
 	}
-	if err := waitEipLease(d, meta);err!=nil{
+	if err := waitEipLease(d, meta); err != nil {
 		return err
 	}
 	input := new(qc.ReleaseEIPsInput)

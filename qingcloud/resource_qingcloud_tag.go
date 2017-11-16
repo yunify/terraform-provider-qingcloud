@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -72,8 +70,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := modifyTagAttributes(d, meta)
-	if err != nil {
+	if err := modifyTagAttributes(d, meta); err != nil {
 		return err
 	}
 	return nil

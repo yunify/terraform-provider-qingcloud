@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -103,9 +101,8 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
 	// Lock security group resource for apply security group
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
-		return err
+	if err := applySecurityGroupRule(d, meta); err != nil {
+		return nil
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
 }
@@ -140,13 +137,10 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-
-	err := ModifySecurityGroupRuleAttributes(d, meta)
-	if err != nil {
+	if err := ModifySecurityGroupRuleAttributes(d, meta); err != nil {
 		return err
 	}
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
+	if err := applySecurityGroupRule(d, meta); err != nil {
 		return err
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
@@ -165,9 +159,8 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	if err := getQingCloudErr("delete security group rule", output.RetCode, output.Message, err); err != nil {
 		return err
 	}
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
-		return err
+	if err := applySecurityGroupRule(d, meta); err != nil {
+		return nil
 	}
 	d.SetId("")
 	return nil
