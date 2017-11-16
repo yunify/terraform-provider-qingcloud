@@ -33,12 +33,7 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyVxNetAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return serverBusyError(output.RetCode,err)
 		})
 		return err
 	}
@@ -55,12 +50,7 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.JoinRouter(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return serverBusyError(output.RetCode,err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error vxnet join router: %s", err)
@@ -84,12 +74,7 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.LeaveRouter(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return serverBusyError(output.RetCode,err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error vxnet leave router: %s", err)

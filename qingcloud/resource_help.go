@@ -3,6 +3,7 @@ package qingcloud
 import (
 	"math/rand"
 	"time"
+	"fmt"
 
 	"github.com/yunify/qingcloud-sdk-go/logger"
 )
@@ -56,6 +57,15 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 		return err
 	}
 
+	return nil
+}
+
+func serverBusyError(retCode *int, err error) error {
+	if err == nil {
+		if retCode != nil && IsServerBusy(*retCode) {
+			return fmt.Errorf("Server Busy")
+		}
+	}
 	return nil
 }
 

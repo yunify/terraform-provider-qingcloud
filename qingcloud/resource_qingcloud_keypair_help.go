@@ -55,12 +55,7 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyKeyPairAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return serverBusyError(output.RetCode,err)
 		})
 		return err
 	}
