@@ -29,7 +29,7 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyVxNetAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		retryServerBusy(func() (*int, error) {
 			output, err = clt.ModifyVxNetAttributes(input)
 			return output.RetCode, err
 		})
@@ -48,7 +48,7 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	input.IPNetwork = qc.String(d.Get("ip_network").(string))
 	var output *qc.JoinRouterOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	retryServerBusy(func() (*int, error) {
 		output, err = clt.JoinRouter(input)
 		return output.RetCode, err
 	})
@@ -69,7 +69,7 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	input.Router = qc.String(oldVPC.(string))
 	var output *qc.LeaveRouterOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	retryServerBusy(func() (*int, error) {
 		output, err = clt.LeaveRouter(input)
 		return output.RetCode, err
 	})

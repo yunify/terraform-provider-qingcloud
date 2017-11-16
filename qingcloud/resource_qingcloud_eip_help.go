@@ -29,7 +29,7 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		retryServerBusy(func() (*int, error) {
 			output, err = clt.ModifyEIPAttributes(input)
 			return output.RetCode, err
 		})
@@ -55,7 +55,7 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	retryServerBusy(func() (*int, error) {
 		output, err = clt.DescribeEIPs(input)
 		return output.RetCode, err
 	})

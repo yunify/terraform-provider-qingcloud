@@ -57,7 +57,7 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
-func retryServerBusy(f func() (s *int, err error)) error {
+func retryServerBusy(f func() (*int, error)) error {
 	wraaper := func() error {
 		retCode, err := f()
 		if err == nil {
