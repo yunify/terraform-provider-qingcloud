@@ -1,6 +1,7 @@
 package qingcloud
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -33,9 +34,6 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	}
 	return additions, deletions
 }
-func IsServerBusy(RetCode int) bool {
-	return RetCode == SERVERBUSY
-}
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
 	if err := fn(); err != nil {
@@ -58,11 +56,24 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
+func retryServerBusy(f func() (s *int, err error)) error {
+	wraaper := func() error {
+		retCode, err := f()
+		if err == nil {
+			if retCode != nil && *retCode == SERVERBUSY {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
+	}
+	return simpleRetry(wraaper)
+}
 
 type stop struct {
 	error
 }
 
+//Stop Retry when fn's return value is nil , or fn's return type is stop struct
 func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }

@@ -31,14 +31,9 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ModifyTagAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify tag attributes: %s", err)
@@ -89,14 +84,9 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.DetachTagsOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.DetachTags(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)
@@ -114,14 +104,9 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.AttachTagsOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.AttachTags(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Error detach tag: %s", err)

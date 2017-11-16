@@ -93,14 +93,9 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	var output *qc.AllocateEIPsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.AllocateEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error create eip: %s", err)
@@ -123,14 +118,9 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.DescribeEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
@@ -171,14 +161,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
 		var output *qc.ChangeEIPsBandwidthOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ChangeEIPsBandwidth(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
@@ -197,14 +182,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.BillingMode = qc.String(d.Get("billing_mode").(string))
 		var output *qc.ChangeEIPsBillingModeOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ChangeEIPsBillingMode(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
@@ -242,14 +222,9 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	input.EIPs = []*string{qc.String(d.Id())}
 	var output *qc.ReleaseEIPsOutput
 	var err error
-	simpleRetry(func() error {
+	retryServerBusy(func() (s *int, err error) {
 		output, err = clt.ReleaseEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return output.RetCode, err
 	})
 	if err != nil {
 		return fmt.Errorf("Error release eip: %s", err)

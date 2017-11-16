@@ -1,9 +1,6 @@
 package qingcloud
 
 import (
-
-	// "github.com/hashicorp/terraform/helper/resource"
-	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -53,14 +50,9 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyKeyPairAttributesOutput
 		var err error
-		simpleRetry(func() error {
+		retryServerBusy(func() (s *int, err error) {
 			output, err = clt.ModifyKeyPairAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return output.RetCode, err
 		})
 		return err
 	}
