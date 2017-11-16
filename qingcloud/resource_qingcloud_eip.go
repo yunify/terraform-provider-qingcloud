@@ -93,11 +93,11 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	var output *qc.AllocateEIPsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.AllocateEIPs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("create eip", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	d.SetId(qc.StringValue(output.EIPs[0]))
@@ -114,11 +114,11 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeEIPs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe eip", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if len(output.EIPSet) == 0 || qc.StringValue(output.EIPSet[0].Status) == "ceased" || qc.StringValue(output.EIPSet[0].Status) == "released" {
@@ -156,11 +156,11 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
 		var output *qc.ChangeEIPsBandwidthOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ChangeEIPsBandwidth(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("change eip bandwidth", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -174,11 +174,11 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.BillingMode = qc.String(d.Get("billing_mode").(string))
 		var output *qc.ChangeEIPsBillingModeOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ChangeEIPsBillingMode(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("change eip billing_mode", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -212,11 +212,11 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	input.EIPs = []*string{qc.String(d.Id())}
 	var output *qc.ReleaseEIPsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.ReleaseEIPs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("release eip", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,

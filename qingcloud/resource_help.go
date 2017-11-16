@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/yunify/qingcloud-sdk-go/logger"
+	"github.com/yunify/qingcloud-sdk-go/request/errors"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -57,13 +58,18 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
-func retryServerBusy(f func() (*int, error)) error {
+func retryServerBusy(f func() error) error {
 	wraaper := func() error {
-		retCode, err := f()
-		if err == nil {
-			if retCode != nil && *retCode == SERVERBUSY {
-				return fmt.Errorf("Server Busy")
+		err := f()
+		if err != nil {
+			if err, ok := err.(errors.QingCloudError); ok {
+				if err.RetCode == SERVERBUSY {
+					return err
+				}
+				return stop{err}
+
 			}
+			return stop{err}
 		}
 		return nil
 	}

@@ -68,11 +68,11 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.CreateKeyPair(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("create keypair", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	d.SetId(qc.StringValue(output.KeyPairID))
@@ -86,11 +86,11 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeKeyPairs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe keypair", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if len(output.KeyPairSet) == 0 {
@@ -125,21 +125,21 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
 	var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return describeKeyPairsOutput.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe keypair", describeKeyPairsOutput.RetCode, describeKeyPairsOutput.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DeleteKeyPairsOutput
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DeleteKeyPairs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("delete keypair", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	return nil

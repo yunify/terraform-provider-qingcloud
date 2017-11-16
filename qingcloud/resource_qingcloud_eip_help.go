@@ -29,11 +29,11 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ModifyEIPAttributes(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("modify eip attributes", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -55,11 +55,11 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeEIPs(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe eip", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	//wait for lease info

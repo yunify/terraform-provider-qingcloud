@@ -48,11 +48,11 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyRouterAttributesOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ModifyRouterAttributes(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("modify router attributes", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 		return nil
@@ -66,11 +66,11 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.UpdateRoutersOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.UpdateRouters(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("update router", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -86,11 +86,11 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeRouters(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe router", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	//wait for lease info

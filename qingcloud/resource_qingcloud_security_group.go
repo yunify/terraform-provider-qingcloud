@@ -48,11 +48,11 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	input.SecurityGroupName = qc.String(d.Get("name").(string))
 	var output *qc.CreateSecurityGroupOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.CreateSecurityGroup(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("create security group", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupID))
@@ -65,11 +65,11 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	input.SecurityGroups = []*string{qc.String(d.Id())}
 	var output *qc.DescribeSecurityGroupsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeSecurityGroups(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe security group", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if len(output.SecurityGroupSet) == 0 {
@@ -104,11 +104,11 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	describeSecurityGroupInput.Verbose = qc.Int(1)
 	var describeSecurityGroupOutput *qc.DescribeSecurityGroupsOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
-		return describeSecurityGroupOutput.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe security group", describeSecurityGroupOutput.RetCode, describeSecurityGroupOutput.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if len(describeSecurityGroupOutput.SecurityGroupSet[0].Resources) > 0 {
@@ -117,11 +117,11 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
 	var output *qc.DeleteSecurityGroupsOutput
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DeleteSecurityGroups(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("delete security group", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	d.SetId("")

@@ -96,11 +96,11 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	input.Count = qc.Int(1)
 	var output *qc.CreateRoutersOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.CreateRouters(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("create router", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
@@ -118,11 +118,11 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DescribeRouters(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("describe router", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if len(output.RouterSet) == 0 {
@@ -186,11 +186,11 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.DeleteRoutersOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.DeleteRouters(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("delete router", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {

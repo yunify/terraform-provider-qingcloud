@@ -28,10 +28,13 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	if attributeUpdate {
 		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ModifySecurityGroupAttributes(input)
-			return output.RetCode, err
+			return err
 		})
+		if err != nil {
+			return err
+		}
 		if err := getQingCloudErr("modify security group attributes", output.RetCode, output.Message, err); err != nil {
 			return err
 		}
@@ -46,11 +49,11 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	input.SecurityGroup = qc.String(sgID)
 	var output *qc.ApplySecurityGroupOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.ApplySecurityGroup(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("apply security group", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,

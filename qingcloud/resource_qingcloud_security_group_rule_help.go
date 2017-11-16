@@ -49,11 +49,11 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	}
 	var output *qc.ModifySecurityGroupRuleAttributesOutput
 	var err error
-	retryServerBusy(func() (*int, error) {
+	retryServerBusy(func() error {
 		output, err = clt.ModifySecurityGroupRuleAttributes(input)
-		return output.RetCode, err
+		return err
 	})
-	if err := getQingCloudErr("update security group rule", output.RetCode, output.Message, err); err != nil {
+	if err != nil {
 		return err
 	}
 	return nil

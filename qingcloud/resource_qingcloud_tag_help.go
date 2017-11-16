@@ -29,11 +29,11 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.ModifyTagAttributes(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("modify tag attributes", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -79,11 +79,11 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.DetachTagsOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.DetachTags(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("detach tag", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -99,11 +99,11 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.AttachTagsOutput
 		var err error
-		retryServerBusy(func() (*int, error) {
+		retryServerBusy(func() error {
 			output, err = clt.AttachTags(input)
-			return output.RetCode, err
+			return err
 		})
-		if err := getQingCloudErr("attach tag", output.RetCode, output.Message, err); err != nil {
+		if err != nil {
 			return err
 		}
 	}
