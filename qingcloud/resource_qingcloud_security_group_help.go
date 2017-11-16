@@ -35,9 +35,6 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return err
 		}
-		if err := getQingCloudErr("modify security group attributes", output.RetCode, output.Message, err); err != nil {
-			return err
-		}
 	}
 	return nil
 }
