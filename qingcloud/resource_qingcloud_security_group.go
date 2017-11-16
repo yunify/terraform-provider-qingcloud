@@ -52,11 +52,8 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 		output, err = clt.CreateSecurityGroup(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create security group: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create security group: %s", *output.Message)
+	if err := getQingCloudErr("create security group", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupID))
 	return resourceQingcloudSecurityGroupUpdate(d, meta)
@@ -72,11 +69,8 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 		output, err = clt.DescribeSecurityGroups(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe security group: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe security group: %s", *output.Message)
+	if err := getQingCloudErr("describe security group", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.SecurityGroupSet) == 0 {
 		d.SetId("")
@@ -115,11 +109,8 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
 		return describeSecurityGroupOutput.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe security group: %s", err)
-	}
-	if describeSecurityGroupOutput.RetCode != nil && qc.IntValue(describeSecurityGroupOutput.RetCode) != 0 {
-		return fmt.Errorf("Error describe security group: %s", err)
+	if err := getQingCloudErr("describe security group", describeSecurityGroupOutput.RetCode, describeSecurityGroupOutput.Message, err); err != nil {
+		return err
 	}
 	if len(describeSecurityGroupOutput.SecurityGroupSet[0].Resources) > 0 {
 		return fmt.Errorf("Error security group %s is using, can't delete", d.Id())
@@ -131,11 +122,8 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 		output, err = clt.DeleteSecurityGroups(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error delete security group: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete security group: %s", *output.Message)
+	if err := getQingCloudErr("delete security group", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId("")
 	return nil

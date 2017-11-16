@@ -35,11 +35,8 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyEIPAttributes(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error modify eip attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify eip attributes: %s", *output.Message)
+		if err := getQingCloudErr("modify eip attributes", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 	}
 
@@ -64,11 +61,8 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeEIPs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", *output.Message)
+	if err := getQingCloudErr("describe eip", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	//wait for lease info
 	WaitForLease(output.EIPSet[0].CreateTime)

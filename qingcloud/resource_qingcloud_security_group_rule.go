@@ -98,11 +98,8 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 		output, err = clt.AddSecurityGroupRules(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error add security group rule: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error add security group rule: %s", err)
+	if err := getQingCloudErr("add security group rule", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
 	// Lock security group resource for apply security group
@@ -123,11 +120,8 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 		output, err = clt.DescribeSecurityGroupRules(input)
 		return output.RetCode, err
 	})
-	if err != nil {
+	if err := getQingCloudErr("describe security group rule", output.RetCode, output.Message, err); err != nil {
 		return err
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe security group rule: %s ", *output.Message)
 	}
 	if len(output.SecurityGroupRuleSet) == 0 {
 		d.SetId("")
@@ -168,7 +162,7 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 		output, err = clt.DeleteSecurityGroupRules(input)
 		return output.RetCode, err
 	})
-	if err != nil {
+	if err := getQingCloudErr("delete security group rule", output.RetCode, output.Message, err); err != nil {
 		return err
 	}
 	err = applySecurityGroupRule(d, meta)

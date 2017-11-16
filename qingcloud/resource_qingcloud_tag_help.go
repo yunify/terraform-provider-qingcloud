@@ -35,11 +35,8 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyTagAttributes(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error modify tag attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify tag attributes: %s", *output.Message)
+		if err := getQingCloudErr("modify tag attributes", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -88,8 +85,8 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			output, err = clt.DetachTags(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error detach tag: %s", err)
+		if err := getQingCloudErr("detach tag", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 	}
 	if len(attachTags) > 0 {
@@ -108,8 +105,8 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			output, err = clt.AttachTags(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error detach tag: %s", err)
+		if err := getQingCloudErr("attach tag", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -100,11 +100,8 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.CreateRouters(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create router: %s", err.Error())
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create router: %s", *output.Message)
+	if err := getQingCloudErr("create router", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
@@ -125,11 +122,8 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeRouters(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe router: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe router: %s", *output.Message)
+	if err := getQingCloudErr("describe router", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.RouterSet) == 0 {
 		d.SetId("")
@@ -151,7 +145,9 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d, meta)
+	if err := waitRouterLease(d, meta);err!=nil{
+		return err
+	}
 	d.Partial(true)
 	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
@@ -185,7 +181,9 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d, meta)
+	if err := waitRouterLease(d, meta);err!=nil{
+		return err
+	}
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.DeleteRoutersOutput
@@ -194,11 +192,8 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DeleteRouters(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error delete router: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete router: %s", *output.Message)
+	if err := getQingCloudErr("delete router", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err

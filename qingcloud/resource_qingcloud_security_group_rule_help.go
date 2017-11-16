@@ -53,11 +53,8 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 		output, err = clt.ModifySecurityGroupRuleAttributes(input)
 		return output.RetCode, err
 	})
-	if err != nil {
+	if err := getQingCloudErr("update security group rule", output.RetCode, output.Message, err); err != nil {
 		return err
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error update security group rule: %s", err)
 	}
 	return nil
 }

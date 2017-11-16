@@ -75,11 +75,8 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.CreateVxNets(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create vxnet: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create vxnet: %s", *output.Message)
+	if err := getQingCloudErr("create vxnet", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.VxNets[0]))
 	return resourceQingcloudVxnetUpdate(d, meta)
@@ -96,11 +93,8 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DescribeVxNets(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe vxnet: %s", err)
-	}
-	if output.RetCode == nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe vxnet: %s", *output.Message)
+	if err := getQingCloudErr("describe vxnet", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.VxNetSet) == 0 {
 		d.SetId("")
@@ -194,11 +188,8 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.DeleteVxNets(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error delete vxnet: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete vxnet: %s", *output.Message)
+	if err := getQingCloudErr("delete vxnet", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 		return err

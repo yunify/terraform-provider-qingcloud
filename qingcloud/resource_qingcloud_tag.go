@@ -42,11 +42,8 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.CreateTag(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create tag: %s", *output.Message)
+	if err := getQingCloudErr("create tag", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.TagID))
 	return resourceQingcloudTagUpdate(d, meta)
@@ -61,11 +58,8 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeTags(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create tag: %s", *output.Message)
+	if err := getQingCloudErr("describe tag", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.TagSet) == 0 {
 		d.SetId("")
@@ -94,11 +88,8 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.DeleteTags(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error delete tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete tag: %s", *output.Message)
+	if err := getQingCloudErr("delete tag", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId("")
 	return nil

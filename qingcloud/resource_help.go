@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/yunify/qingcloud-sdk-go/logger"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
@@ -76,4 +77,14 @@ type stop struct {
 //Stop Retry when fn's return value is nil , or fn's return type is stop struct
 func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
+}
+
+func getQingCloudErr(opration string, retCode *int, message *string, err error) error {
+	if err != nil {
+		return fmt.Errorf("Error %s : %s ", opration, err)
+	}
+	if retCode != nil && qc.IntValue(retCode) != 0 {
+		return fmt.Errorf("Error %s : %s ", opration, *message)
+	}
+	return nil
 }

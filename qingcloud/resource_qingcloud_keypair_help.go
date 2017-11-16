@@ -54,7 +54,9 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyKeyPairAttributes(input)
 			return output.RetCode, err
 		})
-		return err
+		if err := getQingCloudErr("modify keypair attributes", output.RetCode, output.Message, err); err != nil {
+			return err
+		}
 	}
 	return nil
 }

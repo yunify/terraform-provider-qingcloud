@@ -97,11 +97,8 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.AllocateEIPs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error create eip: %s", *output.Message)
+	if err := getQingCloudErr("create eip", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.EIPs[0]))
 
@@ -122,11 +119,8 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeEIPs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", *output.Message)
+	if err := getQingCloudErr("describe eip", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.EIPSet) == 0 || qc.StringValue(output.EIPSet[0].Status) == "ceased" || qc.StringValue(output.EIPSet[0].Status) == "released" {
 		d.SetId("")
@@ -151,7 +145,9 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	d.Partial(true)
-	waitEipLease(d, meta)
+	if err := waitEipLease(d, meta);err!=nil{
+		return err
+	}
 	if d.HasChange("need_icp") && !d.IsNewResource() {
 		return fmt.Errorf("Errorf EIP need_icp could not be updated")
 	}
@@ -165,11 +161,8 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 			output, err = clt.ChangeEIPsBandwidth(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
-		}
-		if *output.RetCode != 0 {
-			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
+		if err := getQingCloudErr("change eip bandwidth", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
 			return nil
@@ -186,11 +179,8 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 			output, err = clt.ChangeEIPsBillingMode(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
-		}
-		if *output.RetCode != 0 {
-			return fmt.Errorf("Errorf Change EIP billing_mode %s", *output.Message)
+		if err := getQingCloudErr("change eip billing_mode", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
 			return nil
@@ -216,8 +206,9 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	if refreshErr != nil {
 		return refreshErr
 	}
-	waitEipLease(d, meta)
-
+	if err := waitEipLease(d, meta);err!=nil{
+		return err
+	}
 	input := new(qc.ReleaseEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
 	var output *qc.ReleaseEIPsOutput
@@ -226,11 +217,8 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = clt.ReleaseEIPs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error release eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", *output.Message)
+	if err := getQingCloudErr("release eip", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,
 		qc.StringValue(output.JobID),

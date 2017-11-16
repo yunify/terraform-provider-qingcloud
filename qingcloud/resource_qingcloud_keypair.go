@@ -73,11 +73,8 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 		output, err = clt.CreateKeyPair(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error create keypair: %s", err)
-	}
-	if qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create keypair: %s", *output.Message)
+	if err := getQingCloudErr("create keypair", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	d.SetId(qc.StringValue(output.KeyPairID))
 
@@ -94,11 +91,8 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 		output, err = clt.DescribeKeyPairs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe keypair: %s ", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe keypair: %s ", *output.Message)
+	if err := getQingCloudErr("describe keypair", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	if len(output.KeyPairSet) == 0 {
 		d.SetId("")
@@ -137,11 +131,8 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
 		return describeKeyPairsOutput.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe keypair: %s", err)
-	}
-	if describeKeyPairsOutput.RetCode != nil && qc.IntValue(describeKeyPairsOutput.RetCode) != 0 {
-		return fmt.Errorf("Error describe keypair: %s", *describeKeyPairsOutput.Message)
+	if err := getQingCloudErr("describe keypair", describeKeyPairsOutput.RetCode, describeKeyPairsOutput.Message, err); err != nil {
+		return err
 	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
@@ -150,11 +141,8 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		output, err = clt.DeleteKeyPairs(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error delete keypairs: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete keypairs: %s", *output.Message)
+	if err := getQingCloudErr("delete keypair", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	return nil
 }

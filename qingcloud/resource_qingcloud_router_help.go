@@ -52,11 +52,8 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 			output, err = clt.ModifyRouterAttributes(input)
 			return output.RetCode, err
 		})
-		if err != nil {
-			return fmt.Errorf("Error modify router attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+		if err := getQingCloudErr("modify router attributes", output.RetCode, output.Message, err); err != nil {
+			return err
 		}
 		return nil
 	}
@@ -73,17 +70,12 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.UpdateRouters(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error update router: %s", err.Error())
+	if err := getQingCloudErr("update router", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error update router: %s", *output.Message)
-	}
-	_, err = RouterTransitionStateRefresh(clt, d.Id())
-	if err != nil {
+	if _, err = RouterTransitionStateRefresh(clt, d.Id());err!=nil{
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
-
 	return nil
 }
 
@@ -98,11 +90,8 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 		output, err = clt.DescribeRouters(input)
 		return output.RetCode, err
 	})
-	if err != nil {
-		return fmt.Errorf("Error describe router: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe router: %s", *output.Message)
+	if err := getQingCloudErr("describe router", output.RetCode, output.Message, err); err != nil {
+		return err
 	}
 	//wait for lease info
 	WaitForLease(output.RouterSet[0].CreateTime)
