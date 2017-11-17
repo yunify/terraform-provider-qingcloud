@@ -115,6 +115,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) error {
+	d.Partial(true)
 	if d.HasChange("vpc_id") || d.HasChange("ip_network") {
 		vpcID := d.Get("vpc_id").(string)
 		IPNetwork := d.Get("ip_network").(string)
@@ -156,12 +157,18 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		}
 	}
+	d.SetPartial("vpc_id")
+	d.SetPartial("ip_network")
 	if err := modifyVxnetAttributes(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("name")
+	d.SetPartial("description")
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVxNet); err != nil {
 		return err
 	}
+	d.SetPartial("tag_ids")
+	d.Partial(false)
 	return resourceQingcloudVxnetRead(d, meta)
 }
 
