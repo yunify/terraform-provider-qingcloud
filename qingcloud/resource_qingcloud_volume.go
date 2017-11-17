@@ -67,7 +67,12 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
 	input.VolumeType = qc.Int(d.Get("type").(int))
-	output, err := clt.CreateVolumes(input)
+	var output *qc.CreateVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateVolumes(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -82,7 +87,12 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.DescribeVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
-	output, err := clt.DescribeVolumes(input)
+	var output *qc.DescribeVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeVolumes(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -131,13 +141,18 @@ func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	input := new(qc.DeleteVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
-	if output, err := clt.DeleteVolumes(input); err != nil {
+	var output *qc.DeleteVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteVolumes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
 		return err
-	} else {
-		client.WaitJob(meta.(*QingCloudClient).job,
-			qc.StringValue(output.JobID),
-			time.Duration(10)*time.Second, time.Duration(1)*time.Second)
 	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
 
 	d.SetId("")
 	return nil

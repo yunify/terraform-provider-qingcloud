@@ -30,7 +30,11 @@ func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate {
-		_, err := clt.ModifyVolumeAttributes(input)
+		var err error
+		simpleRetry(func() error {
+			_, err := clt.ModifyVolumeAttributes(input)
+			return isServerBusy(err)
+		})
 		return err
 	}
 	return nil
@@ -50,7 +54,12 @@ func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
 	}
 	describeInput := new(qc.DescribeVolumesInput)
 	describeInput.Volumes = []*string{qc.String(d.Id())}
-	describeOutput, err := clt.DescribeVolumes(describeInput)
+	var describeOutput *qc.DescribeVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		describeOutput, err = clt.DescribeVolumes(describeInput)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -61,7 +70,11 @@ func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ResizeVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
 	input.Size = qc.Int(newSize)
-	if _, err := clt.ResizeVolumes(input); err != nil {
+	simpleRetry(func() error {
+		_, err = clt.ResizeVolumes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
 		return err
 	}
 	if _, err := VolumeTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -77,7 +90,10 @@ func waitVolumeLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeVolumesOutput
 	var err error
-	output, err = clt.DescribeVolumes(input)
+	simpleRetry(func() error {
+		output, err = clt.DescribeVolumes(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
