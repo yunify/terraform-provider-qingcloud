@@ -3,6 +3,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -39,6 +40,64 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 						"qingcloud_volume.foo", "description", "volume"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_volume.foo", "size", "20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQingcloudVolume_tag(t *testing.T) {
+	var volume qc.DescribeVolumesOutput
+	volumeTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-volume-tag1"
+	volumeTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-volume-tag2"
+
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := volume.VolumeSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(volume.VolumeSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(volume.VolumeSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_volume.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVolumeConfigTagTemplate, volumeTag1Name, volumeTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
+					testTagNameValue(volumeTag1Name, volumeTag1Name),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccVolmeConfigTagTwoTemplate, volumeTag1Name, volumeTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
+					testTagDetach(),
 				),
 			},
 		},
@@ -89,7 +148,7 @@ func testAccCheckVolumeDestroyWithProvider(s *terraform.State, provider *schema.
 		input.Volumes = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.volume.DescribeVolumes(input)
 		if err == nil {
-			if len(output.VolumeSet) != 0 && qc.StringValue(output.VolumeSet[0].Status)!="deleted" {
+			if len(output.VolumeSet) != 0 && qc.StringValue(output.VolumeSet[0].Status) != "deleted" {
 				return fmt.Errorf("Found  volume: %s", rs.Primary.ID)
 			}
 		}
@@ -107,5 +166,29 @@ resource "qingcloud_volume" "foo"{
 	size = 20
 	name = "volume"
 	description = "volume"
+}
+`
+const testAccVolumeConfigTagTemplate = `
+resource "qingcloud_volume" "foo"{
+	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
+const testAccVolmeConfigTagTwoTemplate = `
+resource "qingcloud_volume" "foo"{
+	size = 10
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
 }
 `
