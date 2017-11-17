@@ -3,7 +3,6 @@ package qingcloud
 import (
 	"fmt"
 	"net"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"regexp"
