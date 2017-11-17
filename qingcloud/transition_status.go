@@ -99,7 +99,12 @@ func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVolumesInput)
 		input.Volumes = []*string{qc.String(id)}
-		output, err := clt.DescribeVolumes(input)
+		var output *qc.DescribeVolumesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVolumes(input)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return nil, "", err
 		}
@@ -125,7 +130,12 @@ func VolumeDeleteTransitionStateRefresh(clt *qc.VolumeService, id string) (inter
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVolumesInput)
 		input.Volumes = []*string{qc.String(id)}
-		output, err := clt.DescribeVolumes(input)
+		var output *qc.DescribeVolumesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVolumes(input)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return nil, "", err
 		}
@@ -252,7 +262,7 @@ func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (
 	return stateConf.WaitForState()
 }
 
-func VxnetTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
+func VxnetInstanceStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
 	if id == "" {
 		return nil, nil
 	}

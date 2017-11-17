@@ -174,9 +174,6 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
-	if _, err := VxnetTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
-	}
 	vpcID := d.Get("vpc_id").(string)
 	// vxnet leave router
 	if vpcID != "" {
