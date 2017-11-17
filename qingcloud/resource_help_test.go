@@ -38,3 +38,21 @@ func TestStringSliceDiff(t *testing.T) {
 		}
 	}
 }
+
+func TestIsServerBusy(t *testing.T) {
+	exceptValues := []int{5200, 132, 356}
+	validValues := []int{5100}
+	for _, v := range validValues {
+		result := IsServerBusy(v)
+		if !result {
+			t.Fatalf("%q should be a vaild value in %#v", v, validValues)
+		}
+	}
+	for _, v := range exceptValues {
+		result := IsServerBusy(v)
+		if result {
+			t.Fatalf("%q should be a except value in %#v", v, exceptValues)
+		}
+	}
+
+}

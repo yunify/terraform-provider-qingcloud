@@ -69,9 +69,14 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.CreateKeyPair(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error create keypair: %s", err)
@@ -90,9 +95,14 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeKeyPairs(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s ", err)
@@ -133,9 +143,14 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
 	var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return describeKeyPairsOutput.RetCode, err
+		if err == nil {
+			if describeKeyPairsOutput.RetCode != nil && IsServerBusy(*describeKeyPairsOutput.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe keypair: %s", err)
@@ -146,9 +161,14 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DeleteKeyPairsOutput
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteKeyPairs(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete keypairs: %s", err)

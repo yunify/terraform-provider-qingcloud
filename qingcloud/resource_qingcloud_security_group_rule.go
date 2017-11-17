@@ -94,9 +94,14 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	input.Rules = []*qc.SecurityGroupRule{rule}
 	var output *qc.AddSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.AddSecurityGroupRules(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("Error add security group rule: %s", err)
@@ -119,9 +124,14 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DescribeSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeSecurityGroupRules(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return err
@@ -164,9 +174,14 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DeleteSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroupRules(input)
-		return output.RetCode, err
+		if err == nil {
+			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
+				return fmt.Errorf("Server Busy")
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return err
