@@ -1,7 +1,10 @@
 package qingcloud
 
 import (
+	"time"
+
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/yunify/qingcloud-sdk-go/client"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -97,6 +100,9 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+	if err := waitVolumeLease(d, meta); err != nil {
+		return err
+	}
 	if err := motifyVolumeAttributes(d, meta); err != nil {
 		return err
 	}
@@ -110,15 +116,23 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
+	if err := waitVolumeLease(d, meta); err != nil {
+		return err
+	}
 	clt := meta.(*QingCloudClient).volume
 	if _, err := VolumeDeleteTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	input := new(qc.DeleteVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
-	if _, err := clt.DeleteVolumes(input); err != nil {
+	if output, err := clt.DeleteVolumes(input); err != nil {
 		return err
+	} else {
+		client.WaitJob(meta.(*QingCloudClient).job,
+			qc.StringValue(output.JobID),
+			time.Duration(10)*time.Second, time.Duration(1)*time.Second)
 	}
+
 	d.SetId("")
 	return nil
 }
