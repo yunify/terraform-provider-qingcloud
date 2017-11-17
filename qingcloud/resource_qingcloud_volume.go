@@ -15,7 +15,7 @@ func resourceQingcloudVolume() *schema.Resource {
 			"size": &schema.Schema{
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "size of volume,min 10g ,multiples of ten",
+				Description: "size of volume ,min 10 ,max 5000 ,multiples of 10",
 			},
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
@@ -38,16 +38,16 @@ func resourceQingcloudVolume() *schema.Resource {
 					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
 			},
 			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"tag_names": &schema.Schema{
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
