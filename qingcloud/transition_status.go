@@ -42,12 +42,7 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.DescribeEIPs(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return nil, "", err
@@ -162,12 +157,7 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.DescribeRouters(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
@@ -300,12 +290,7 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.DescribeVxNets(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return nil, "", err
@@ -340,12 +325,7 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.DescribeSecurityGroups(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return nil, "not_updated", err

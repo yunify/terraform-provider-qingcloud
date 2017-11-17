@@ -96,12 +96,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.AddSecurityGroupRules(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error add security group rule: %s", err)
@@ -126,12 +121,7 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeSecurityGroupRules(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return err
@@ -176,12 +166,6 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroupRules(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
 	})
 	if err != nil {
 		return err

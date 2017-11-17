@@ -73,12 +73,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateVxNets(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create vxnet: %s", err)
@@ -99,12 +94,7 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeVxNets(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe vxnet: %s", err)
@@ -202,12 +192,7 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteVxNets(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete vxnet: %s", err)

@@ -33,12 +33,7 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyEIPAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify eip attributes: %s", err)
@@ -67,12 +62,7 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(describeinput)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)

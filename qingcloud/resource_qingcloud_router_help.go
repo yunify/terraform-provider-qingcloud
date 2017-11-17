@@ -50,12 +50,7 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ModifyRouterAttributes(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Error modify router attributes: %s", err)
@@ -76,12 +71,7 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.UpdateRouters(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error update router: %s", err.Error())
@@ -106,12 +96,7 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe router: %s", err)

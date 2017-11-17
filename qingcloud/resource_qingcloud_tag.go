@@ -40,12 +40,7 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.CreateTag(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create tag: %s", err)
@@ -64,12 +59,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeTags(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe tag: %s", err)
@@ -102,12 +92,7 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DeleteTags(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error delete tag: %s", err)

@@ -1,6 +1,7 @@
 package qingcloud
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -33,8 +34,14 @@ func stringSliceDiff(nl, ol []string) ([]string, []string) {
 	}
 	return additions, deletions
 }
-func IsServerBusy(RetCode int) bool {
-	return RetCode == SERVERBUSY
+
+func IsIaasAPIServerBusy(retCode *int, err error) error {
+	if err == nil {
+		if retCode != nil && *retCode == SERVERBUSY {
+			return fmt.Errorf("Server Busy")
+		}
+	}
+	return nil
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {

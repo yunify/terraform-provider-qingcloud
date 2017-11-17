@@ -3,10 +3,11 @@ package qingcloud
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/yunify/qingcloud-sdk-go/client"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
-	"time"
 )
 
 func resourceQingcloudEip() *schema.Resource {
@@ -95,12 +96,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.AllocateEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error create eip: %s", err)
@@ -125,12 +121,8 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
+
 	})
 	if err != nil {
 		return fmt.Errorf("Error describe eip: %s", err)
@@ -173,12 +165,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBandwidth(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIP bandwidth input: %s", err)
@@ -199,12 +186,7 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBillingMode(input)
-			if err == nil {
-				if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-					return fmt.Errorf("Server Busy")
-				}
-			}
-			return nil
+			return IsIaasAPIServerBusy(output.RetCode, err)
 		})
 		if err != nil {
 			return fmt.Errorf("Errorf Change EIPs billing_mode %s", err)
@@ -244,12 +226,7 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.ReleaseEIPs(input)
-		if err == nil {
-			if output.RetCode != nil && IsServerBusy(*output.RetCode) {
-				return fmt.Errorf("Server Busy")
-			}
-		}
-		return nil
+		return IsIaasAPIServerBusy(output.RetCode, err)
 	})
 	if err != nil {
 		return fmt.Errorf("Error release eip: %s", err)
