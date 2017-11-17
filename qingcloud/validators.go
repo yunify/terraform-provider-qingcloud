@@ -13,8 +13,7 @@ var PortRegex = regexp.MustCompile("^0*(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2
 
 func validateNetworkCIDR(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, _, err := net.ParseCIDR(value)
-	if err != nil {
+	if _, _, err := net.ParseCIDR(value); err != nil {
 		errors = append(errors, fmt.Errorf(
 			"%q must a valid CIDR, got error parsing: %s", value, err))
 		return

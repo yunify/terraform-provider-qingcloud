@@ -48,15 +48,12 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyRouterAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.ModifyRouterAttributes(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error modify router attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify router attrubites: %s", *output.Message)
+			return err
 		}
 		return nil
 	}
@@ -69,21 +66,16 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.UpdateRoutersOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.UpdateRouters(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error update router: %s", err.Error())
+		return err
 	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error update router: %s", *output.Message)
-	}
-	_, err = RouterTransitionStateRefresh(clt, d.Id())
-	if err != nil {
+	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
-
 	return nil
 }
 
@@ -94,15 +86,12 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe router: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe router: %s", *output.Message)
+		return err
 	}
 	//wait for lease info
 	WaitForLease(output.RouterSet[0].CreateTime)

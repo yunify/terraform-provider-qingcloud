@@ -49,15 +49,12 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	}
 	var output *qc.ModifySecurityGroupRuleAttributesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.ModifySecurityGroupRuleAttributes(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error update security group rule: %s", err)
 	}
 	return nil
 }
