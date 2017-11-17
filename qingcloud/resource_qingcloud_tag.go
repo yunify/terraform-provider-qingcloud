@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -38,15 +36,12 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	input.TagName = qc.String(d.Get("name").(string))
 	var output *qc.CreateTagOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.CreateTag(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error create tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create tag: %s", *output.Message)
+		return err
 	}
 	d.SetId(qc.StringValue(output.TagID))
 	return resourceQingcloudTagUpdate(d, meta)
@@ -57,15 +52,12 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	input.Tags = []*string{qc.String(d.Id())}
 	var output *qc.DescribeTagsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeTags(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create tag: %s", *output.Message)
+		return err
 	}
 	if len(output.TagSet) == 0 {
 		d.SetId("")
@@ -78,8 +70,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := modifyTagAttributes(d, meta)
-	if err != nil {
+	if err := modifyTagAttributes(d, meta); err != nil {
 		return err
 	}
 	return nil
@@ -90,15 +81,12 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	input.Tags = []*string{qc.String(d.Id())}
 	var output *qc.DeleteTagsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteTags(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error delete tag: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete tag: %s", *output.Message)
+		return err
 	}
 	d.SetId("")
 	return nil

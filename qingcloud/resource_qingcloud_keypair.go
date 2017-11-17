@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -69,15 +68,12 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.CreateKeyPair(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error create keypair: %s", err)
-	}
-	if qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create keypair: %s", *output.Message)
+		return err
 	}
 	d.SetId(qc.StringValue(output.KeyPairID))
 
@@ -90,15 +86,12 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeKeyPairs(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe keypair: %s ", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe keypair: %s ", *output.Message)
+		return err
 	}
 	if len(output.KeyPairSet) == 0 {
 		d.SetId("")
@@ -113,8 +106,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
-	err := modifyKeypairAttributes(d, meta)
-	if err != nil {
+	if err := modifyKeypairAttributes(d, meta); err != nil {
 		return err
 	}
 	d.SetPartial("description")
@@ -133,28 +125,22 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
 	var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return describeKeyPairsOutput.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe keypair: %s", err)
-	}
-	if describeKeyPairsOutput.RetCode != nil && qc.IntValue(describeKeyPairsOutput.RetCode) != 0 {
-		return fmt.Errorf("Error describe keypair: %s", *describeKeyPairsOutput.Message)
+		return err
 	}
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DeleteKeyPairsOutput
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteKeyPairs(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error delete keypairs: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete keypairs: %s", *output.Message)
+		return err
 	}
 	return nil
 }

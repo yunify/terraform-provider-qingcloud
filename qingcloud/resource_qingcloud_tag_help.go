@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -31,15 +29,12 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.ModifyTagAttributes(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error modify tag attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify tag attributes: %s", *output.Message)
+			return err
 		}
 	}
 	return nil
@@ -84,12 +79,12 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.DetachTagsOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.DetachTags(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error detach tag: %s", err)
+			return err
 		}
 	}
 	if len(attachTags) > 0 {
@@ -104,12 +99,12 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 		var output *qc.AttachTagsOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.AttachTags(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error detach tag: %s", err)
+			return err
 		}
 	}
 	return nil

@@ -71,15 +71,12 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	input.VxNetType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVxNetsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.CreateVxNets(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error create vxnet: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create vxnet: %s", *output.Message)
+		return err
 	}
 	d.SetId(qc.StringValue(output.VxNets[0]))
 	return resourceQingcloudVxnetUpdate(d, meta)
@@ -92,15 +89,12 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeVxNetsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeVxNets(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe vxnet: %s", err)
-	}
-	if output.RetCode == nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe vxnet: %s", *output.Message)
+		return err
 	}
 	if len(output.VxNetSet) == 0 {
 		d.SetId("")
@@ -190,15 +184,12 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	input.VxNets = []*string{qc.String(d.Id())}
 	var output *qc.DeleteVxNetsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteVxNets(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error delete vxnet: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete vxnet: %s", *output.Message)
+		return err
 	}
 	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
 		return err

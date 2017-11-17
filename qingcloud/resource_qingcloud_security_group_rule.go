@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -94,21 +92,17 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	input.Rules = []*qc.SecurityGroupRule{rule}
 	var output *qc.AddSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.AddSecurityGroupRules(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error add security group rule: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error add security group rule: %s", err)
+		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
 	// Lock security group resource for apply security group
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
-		return err
+	if err := applySecurityGroupRule(d, meta); err != nil {
+		return nil
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
 }
@@ -119,15 +113,12 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DescribeSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeSecurityGroupRules(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe security group rule: %s ", *output.Message)
 	}
 	if len(output.SecurityGroupRuleSet) == 0 {
 		d.SetId("")
@@ -146,13 +137,10 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-
-	err := ModifySecurityGroupRuleAttributes(d, meta)
-	if err != nil {
+	if err := ModifySecurityGroupRuleAttributes(d, meta); err != nil {
 		return err
 	}
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
+	if err := applySecurityGroupRule(d, meta); err != nil {
 		return err
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
@@ -164,16 +152,15 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
 	var output *qc.DeleteSecurityGroupRulesOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroupRules(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
 	}
-	err = applySecurityGroupRule(d, meta)
-	if err != nil {
-		return err
+	if err := applySecurityGroupRule(d, meta); err != nil {
+		return nil
 	}
 	d.SetId("")
 	return nil

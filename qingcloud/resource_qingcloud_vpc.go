@@ -96,19 +96,16 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	input.Count = qc.Int(1)
 	var output *qc.CreateRoutersOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.CreateRouters(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error create router: %s", err.Error())
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create router: %s", *output.Message)
+		return err
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
 	_, err = RouterTransitionStateRefresh(clt, d.Id())
-	if err != nil {
+	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}
 	return resourceQingcloudVpcUpdate(d, meta)
@@ -121,15 +118,12 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe router: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe router: %s", *output.Message)
+		return err
 	}
 	if len(output.RouterSet) == 0 {
 		d.SetId("")
@@ -151,7 +145,9 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d, meta)
+	if err := waitRouterLease(d, meta); err != nil {
+		return err
+	}
 	d.Partial(true)
 	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
@@ -159,15 +155,13 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	d.SetPartial("name")
 	d.SetPartial("description")
 	if d.HasChange("eip_id") {
-		err := applyRouterUpdate(d, meta)
-		if err != nil {
+		if err := applyRouterUpdate(d, meta); err != nil {
 			return err
 		}
 	}
 	d.SetPartial("eip_id")
 	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		err := applySecurityGroupRule(d, meta)
-		if err != nil {
+		if err := applySecurityGroupRule(d, meta); err != nil {
 			return err
 		}
 	}
@@ -185,20 +179,19 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	waitRouterLease(d, meta)
+	if err := waitRouterLease(d, meta); err != nil {
+		return err
+	}
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.DeleteRoutersOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DeleteRouters(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error delete router: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error delete router: %s", *output.Message)
+		return err
 	}
 	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err

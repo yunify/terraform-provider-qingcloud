@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -31,15 +29,12 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.ModifyEIPAttributes(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error modify eip attributes: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error modify eip attributes: %s", *output.Message)
+			return err
 		}
 	}
 
@@ -60,15 +55,12 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe eip: %s", err)
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe eip: %s", *output.Message)
+		return err
 	}
 	//wait for lease info
 	WaitForLease(output.EIPSet[0].CreateTime)

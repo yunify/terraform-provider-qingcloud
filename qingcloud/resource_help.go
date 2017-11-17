@@ -1,11 +1,11 @@
 package qingcloud
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/yunify/qingcloud-sdk-go/logger"
+	"github.com/yunify/qingcloud-sdk-go/request/errors"
 )
 
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
@@ -56,17 +56,19 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
-func retryServerBusy(f func() (s *int, err error)) error {
-	wraaper := func() error {
-		retCode, err := f()
-		if err == nil {
-			if retCode != nil && *retCode == SERVERBUSY {
-				return fmt.Errorf("Server Busy")
+
+func isServerBusy(err error) error {
+	if err != nil {
+		if err, ok := err.(errors.QingCloudError); ok {
+			if err.RetCode == SERVERBUSY {
+				return err
 			}
+			return stop{err}
+
 		}
-		return nil
+		return stop{err}
 	}
-	return simpleRetry(wraaper)
+	return nil
 }
 
 type stop struct {

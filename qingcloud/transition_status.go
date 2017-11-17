@@ -40,9 +40,9 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		input.EIPs = []*string{qc.String(id)}
 		var output *qc.DescribeEIPsOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.DescribeEIPs(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return nil, "", err
@@ -155,9 +155,9 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		input.Verbose = qc.Int(1)
 		var output *qc.DescribeRoutersOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.DescribeRouters(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
@@ -288,9 +288,9 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 		input.VxNets = []*string{qc.String(id)}
 		var output *qc.DescribeVxNetsOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.DescribeVxNets(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return nil, "", err
@@ -323,9 +323,9 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 		input.SecurityGroups = []*string{qc.String(id)}
 		var output *qc.DescribeSecurityGroupsOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.DescribeSecurityGroups(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return nil, "not_updated", err

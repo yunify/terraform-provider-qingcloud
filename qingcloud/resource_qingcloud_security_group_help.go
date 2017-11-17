@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -29,12 +28,12 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	if attributeUpdate {
 		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
-		retryServerBusy(func() (s *int, err error) {
+		simpleRetry(func() error {
 			output, err = clt.ModifySecurityGroupAttributes(input)
-			return output.RetCode, err
+			return isServerBusy(err)
 		})
 		if err != nil {
-			return fmt.Errorf("Error modify security group attributes: %s ", err)
+			return err
 		}
 	}
 	return nil
@@ -47,9 +46,9 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	input.SecurityGroup = qc.String(sgID)
 	var output *qc.ApplySecurityGroupOutput
 	var err error
-	retryServerBusy(func() (s *int, err error) {
+	simpleRetry(func() error {
 		output, err = clt.ApplySecurityGroup(input)
-		return output.RetCode, err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
