@@ -68,9 +68,9 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.CreateKeyPair(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -86,9 +86,9 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeKeyPairs(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -125,9 +125,9 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
 	var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -135,9 +135,9 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 	input := new(qc.DeleteKeyPairsInput)
 	input.KeyPairs = []*string{qc.String(d.Id())}
 	var output *qc.DeleteKeyPairsOutput
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DeleteKeyPairs(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

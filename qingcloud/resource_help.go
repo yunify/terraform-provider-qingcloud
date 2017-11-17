@@ -56,22 +56,19 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 
 	return nil
 }
-func retryServerBusy(f func() error) error {
-	wraaper := func() error {
-		err := f()
-		if err != nil {
-			if err, ok := err.(errors.QingCloudError); ok {
-				if err.RetCode == SERVERBUSY {
-					return err
-				}
-				return stop{err}
 
+func isServerBusy(err error) error {
+	if err != nil {
+		if err, ok := err.(errors.QingCloudError); ok {
+			if err.RetCode == SERVERBUSY {
+				return err
 			}
 			return stop{err}
+
 		}
-		return nil
+		return stop{err}
 	}
-	return simpleRetry(wraaper)
+	return nil
 }
 
 type stop struct {
@@ -82,4 +79,3 @@ type stop struct {
 func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }
-

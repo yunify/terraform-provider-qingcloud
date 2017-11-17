@@ -96,9 +96,9 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	input.Count = qc.Int(1)
 	var output *qc.CreateRoutersOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.CreateRouters(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -118,9 +118,9 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -186,9 +186,9 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.DeleteRoutersOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DeleteRouters(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

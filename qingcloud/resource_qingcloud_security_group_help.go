@@ -28,9 +28,9 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	if attributeUpdate {
 		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
-		retryServerBusy(func() error {
+		simpleRetry(func() error {
 			output, err = clt.ModifySecurityGroupAttributes(input)
-			return err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return err
@@ -46,9 +46,9 @@ func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
 	input.SecurityGroup = qc.String(sgID)
 	var output *qc.ApplySecurityGroupOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.ApplySecurityGroup(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

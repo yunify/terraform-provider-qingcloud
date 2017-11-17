@@ -93,9 +93,9 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	var output *qc.AllocateEIPsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.AllocateEIPs(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -114,9 +114,9 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeEIPsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeEIPs(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -156,9 +156,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
 		var output *qc.ChangeEIPsBandwidthOutput
 		var err error
-		retryServerBusy(func() error {
+		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBandwidth(input)
-			return err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return err
@@ -174,9 +174,9 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.BillingMode = qc.String(d.Get("billing_mode").(string))
 		var output *qc.ChangeEIPsBillingModeOutput
 		var err error
-		retryServerBusy(func() error {
+		simpleRetry(func() error {
 			output, err = clt.ChangeEIPsBillingMode(input)
-			return err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return err
@@ -212,9 +212,9 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	input.EIPs = []*string{qc.String(d.Id())}
 	var output *qc.ReleaseEIPsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.ReleaseEIPs(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

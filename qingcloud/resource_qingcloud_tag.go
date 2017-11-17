@@ -36,9 +36,9 @@ func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error 
 	input.TagName = qc.String(d.Get("name").(string))
 	var output *qc.CreateTagOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.CreateTag(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -52,9 +52,9 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	input.Tags = []*string{qc.String(d.Id())}
 	var output *qc.DescribeTagsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeTags(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -81,9 +81,9 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	input.Tags = []*string{qc.String(d.Id())}
 	var output *qc.DeleteTagsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DeleteTags(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

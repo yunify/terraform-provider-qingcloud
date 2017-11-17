@@ -48,9 +48,9 @@ func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface
 	input.SecurityGroupName = qc.String(d.Get("name").(string))
 	var output *qc.CreateSecurityGroupOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.CreateSecurityGroup(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -65,9 +65,9 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	input.SecurityGroups = []*string{qc.String(d.Id())}
 	var output *qc.DescribeSecurityGroupsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeSecurityGroups(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -104,9 +104,9 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	describeSecurityGroupInput.Verbose = qc.Int(1)
 	var describeSecurityGroupOutput *qc.DescribeSecurityGroupsOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -117,9 +117,9 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
 	var output *qc.DeleteSecurityGroupsOutput
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroups(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err

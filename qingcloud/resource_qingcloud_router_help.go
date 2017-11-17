@@ -48,9 +48,9 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	if attributeUpdate {
 		var output *qc.ModifyRouterAttributesOutput
 		var err error
-		retryServerBusy(func() error {
+		simpleRetry(func() error {
 			output, err = clt.ModifyRouterAttributes(input)
-			return err
+			return isServerBusy(err)
 		})
 		if err != nil {
 			return err
@@ -66,9 +66,9 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	input.Routers = []*string{qc.String(d.Id())}
 	var output *qc.UpdateRoutersOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.UpdateRouters(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
@@ -86,9 +86,9 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	input.Verbose = qc.Int(1)
 	var output *qc.DescribeRoutersOutput
 	var err error
-	retryServerBusy(func() error {
+	simpleRetry(func() error {
 		output, err = clt.DescribeRouters(input)
-		return err
+		return isServerBusy(err)
 	})
 	if err != nil {
 		return err
