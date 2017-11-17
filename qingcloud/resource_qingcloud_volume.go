@@ -100,18 +100,24 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+	d.Partial(true)
 	if err := waitVolumeLease(d, meta); err != nil {
 		return err
 	}
 	if err := motifyVolumeAttributes(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("name")
+	d.SetPartial("description")
 	if err := changeVolumeSize(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("size")
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVolume); err != nil {
 		return err
 	}
+	d.SetPartial("tag_ids")
+	d.Partial(false)
 	return resourceQingcloudVolumeRead(d, meta)
 }
 
