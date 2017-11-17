@@ -35,7 +35,19 @@ func resourceQingcloudVolume() *schema.Resource {
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
 				Description: `performance type volume 0
 					Ultra high performance type volume is 3 (only attach to ultra high performance type instance)，
-					Capacity type,The values vary from region to region , Some region are 1 and some are 2.`,
+					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
+			},
+			"tag_ids": &schema.Schema{
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+			},
+			"tag_names": &schema.Schema{
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
 			},
 		},
 	}
@@ -80,6 +92,7 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", qc.StringValue(volume.Description))
 	d.Set("size", qc.IntValue(volume.Size))
 	d.Set("type", qc.IntValue(volume.VolumeType))
+	resourceSetTag(d, volume.Tags)
 	return nil
 }
 
@@ -88,6 +101,9 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	if err := changeVolumeSize(d, meta); err != nil {
+		return err
+	}
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVolume); err != nil {
 		return err
 	}
 	return resourceQingcloudVolumeRead(d, meta)
