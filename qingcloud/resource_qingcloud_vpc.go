@@ -36,20 +36,8 @@ func resourceQingcloudVpc() *schema.Resource {
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
 				Description: "Network address range of vpc.",
 			},
-			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "The tag ids' id used by the vpc",
-			},
-			"tag_names": &schema.Schema{
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "compute by tag ids ",
-			},
+			"tag_ids":   tagIdsSchema(),
+			"tag_names": tagNamesSchema(),
 			"eip_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,

@@ -43,20 +43,8 @@ func resourceQingcloudVxnet() *schema.Resource {
 				ValidateFunc: validateNetworkCIDR,
 				Description:  "Network segment of Managed vxnet",
 			},
-			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "tag ids , vxnet wants to use",
-			},
-			"tag_names": &schema.Schema{
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "compute by tag ids",
-			},
+			"tag_ids":   tagIdsSchema(),
+			"tag_names": tagNamesSchema(),
 		},
 	}
 }

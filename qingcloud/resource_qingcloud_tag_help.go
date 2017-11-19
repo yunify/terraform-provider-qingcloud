@@ -109,3 +109,21 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 	}
 	return nil
 }
+
+func tagIdsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
+}
+
+func tagNamesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
+}

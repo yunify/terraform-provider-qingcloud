@@ -25,19 +25,8 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 				Optional:    true,
 				Description: "The description of SecurityGroup",
 			},
-			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "tag ids , SecurityGroup wants to use",
-			},
-			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
+			"tag_ids":   tagIdsSchema(),
+			"tag_names": tagNamesSchema(),
 		},
 	}
 }

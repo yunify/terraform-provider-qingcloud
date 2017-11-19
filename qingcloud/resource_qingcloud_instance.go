@@ -95,18 +95,8 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
+			"tag_ids":   tagIdsSchema(),
+			"tag_names": tagNamesSchema(),
 		},
 	}
 }
