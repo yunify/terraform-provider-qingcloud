@@ -12,7 +12,7 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	attributeUpdate := false
 	attributeUpdate2 := false
 	input.EIPName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getNamePointer(d)
+	input.Description, attributeUpdate2 = getDescriptionPointer(d)
 	if attributeUpdate || attributeUpdate2 {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
