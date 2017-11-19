@@ -13,19 +13,10 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.ModifySecurityGroupAttributesInput)
 	input.SecurityGroup = qc.String(d.Id())
 	attributeUpdate := false
-	if d.HasChange("description") {
-		if d.Get("description") == "" {
-			input.Description = qc.String(" ")
-		} else {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		attributeUpdate = true
-	}
-	if d.HasChange("name") && !d.IsNewResource() {
-		input.SecurityGroupName = qc.String(d.Get("name").(string))
-		attributeUpdate = true
-	}
-	if attributeUpdate {
+	attributeUpdate2 := false
+	input.SecurityGroupName, attributeUpdate = getNamePointer(d)
+	input.Description, attributeUpdate2 = getDescriptionPointer(d)
+	if attributeUpdate || attributeUpdate2 {
 		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
 		simpleRetry(func() error {

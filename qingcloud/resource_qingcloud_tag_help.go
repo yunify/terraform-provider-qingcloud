@@ -10,23 +10,15 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
 	attributeUpdate := false
+	attributeUpdate2 := false
 	if d.HasChange("color") {
 		input.Color = qc.String(d.Get("color").(string))
 		attributeUpdate = true
 	}
-	if d.HasChange("description") {
-		if d.Get("description").(string) == "" {
-			input.Description = qc.String(" ")
-		} else {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		attributeUpdate = true
-	}
-	if d.HasChange("name") && !d.IsNewResource() {
-		input.TagName = qc.String(d.Get("name").(string))
-		attributeUpdate = true
-	}
-	if attributeUpdate {
+
+	input.TagName, attributeUpdate = getNamePointer(d)
+	input.Description, attributeUpdate2 = getDescriptionPointer(d)
+	if attributeUpdate || attributeUpdate2 {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
 		simpleRetry(func() error {

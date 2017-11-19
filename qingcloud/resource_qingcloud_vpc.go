@@ -71,9 +71,7 @@ func resourceQingcloudVpc() *schema.Resource {
 func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.CreateRoutersInput)
-	if d.Get("name").(string) != "" {
-		input.RouterName = qc.String(d.Get("name").(string))
-	}
+	input.RouterName, _ = getNamePointer(d)
 	if d.Get("vpc_network").(string) != "" {
 		input.VpcNetwork = qc.String(d.Get("vpc_network").(string))
 	}

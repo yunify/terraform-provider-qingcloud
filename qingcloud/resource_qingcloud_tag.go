@@ -33,7 +33,7 @@ func resourceQingcloudTag() *schema.Resource {
 func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.CreateTagInput)
-	input.TagName = qc.String(d.Get("name").(string))
+	input.TagName, _ = getNamePointer(d)
 	var output *qc.CreateTagOutput
 	var err error
 	simpleRetry(func() error {

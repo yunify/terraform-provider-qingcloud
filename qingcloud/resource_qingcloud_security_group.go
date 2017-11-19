@@ -34,7 +34,7 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 func resourceQingcloudSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.CreateSecurityGroupInput)
-	input.SecurityGroupName = qc.String(d.Get("name").(string))
+	input.SecurityGroupName, _ = getNamePointer(d)
 	var output *qc.CreateSecurityGroupOutput
 	var err error
 	simpleRetry(func() error {

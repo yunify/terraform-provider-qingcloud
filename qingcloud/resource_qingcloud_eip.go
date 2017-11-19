@@ -74,11 +74,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	input.BillingMode = qc.String(d.Get("billing_mode").(string))
 	input.NeedICP = qc.Int(d.Get("need_icp").(int))
 	input.Count = qc.Int(1)
-	if d.Get("name") != "" {
-		input.EIPName = qc.String(d.Get("name").(string))
-	} else {
-		input.EIPName = nil
-	}
+	input.EIPName, _ = getNamePointer(d)
 	var output *qc.AllocateEIPsOutput
 	var err error
 	simpleRetry(func() error {

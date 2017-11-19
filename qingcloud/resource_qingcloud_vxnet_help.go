@@ -10,23 +10,10 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyVxNetAttributesInput)
 	input.VxNet = qc.String(d.Id())
 	attributeUpdate := false
-	if d.HasChange("description") {
-		if d.Get("description").(string) != "" {
-			input.Description = qc.String(d.Get("description").(string))
-		} else {
-			input.Description = qc.String(" ")
-		}
-		attributeUpdate = true
-	}
-	if d.HasChange("name") && !d.IsNewResource() {
-		if d.Get("name").(string) != "" {
-			input.VxNetName = qc.String(d.Get("description").(string))
-		} else {
-			input.VxNetName = qc.String(" ")
-		}
-		attributeUpdate = true
-	}
-	if attributeUpdate {
+	attributeUpdate2 := false
+	input.VxNetName, attributeUpdate = getNamePointer(d)
+	input.Description, attributeUpdate2 = getDescriptionPointer(d)
+	if attributeUpdate || attributeUpdate2 {
 		var output *qc.ModifyVxNetAttributesOutput
 		var err error
 		simpleRetry(func() error {

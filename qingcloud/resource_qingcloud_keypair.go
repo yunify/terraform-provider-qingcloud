@@ -47,11 +47,7 @@ func resourceQingcloudKeypair() *schema.Resource {
 func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.CreateKeyPairInput)
-	if d.Get("name").(string) != "" {
-		input.KeyPairName = qc.String(d.Get("name").(string))
-	} else {
-		input.KeyPairName = nil
-	}
+	input.KeyPairName, _ = getNamePointer(d)
 	input.Mode = qc.String("user")
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput

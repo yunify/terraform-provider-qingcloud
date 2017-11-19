@@ -77,9 +77,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Protocol = qc.String(d.Get("protocol").(string))
 	rule.Action = qc.String(d.Get("action").(string))
 	rule.Direction = qc.Int(d.Get("direction").(int))
-	if d.Get("name").(string) != "" {
-		rule.SecurityGroupRuleName = qc.String(d.Get("name").(string))
-	}
+	rule.SecurityGroupRuleName, _ = getNamePointer(d)
 	if d.Get("from_port").(string) != "" {
 		rule.Val1 = qc.String(d.Get("from_port").(string))
 	}
@@ -100,7 +98,6 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
-	// Lock security group resource for apply security group
 	if err := applySecurityGroupRule(d, meta); err != nil {
 		return nil
 	}

@@ -53,9 +53,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	clt := meta.(*QingCloudClient).vxnet
 	input := new(qc.CreateVxNetsInput)
 	input.Count = qc.Int(1)
-	if d.Get("name").(string) != "" {
-		input.VxNetName = qc.String(d.Get("name").(string))
-	}
+	input.VxNetName, _ = getNamePointer(d)
 	input.VxNetType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVxNetsOutput
 	var err error
