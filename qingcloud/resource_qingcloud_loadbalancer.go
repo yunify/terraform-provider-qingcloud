@@ -13,7 +13,7 @@ package qingcloud
 // 		Update: resourceQingcloudLoadbalancerUpdate,
 // 		Delete: nil,
 // 		Schema: map[string]*schema.Schema{
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:     schema.TypeString,
 // 				Optional: true,
 // 			},
@@ -56,7 +56,7 @@ package qingcloud
 // 	params.Vxnet.Set(d.Get("vxnet").(string))
 // 	params.PrivateIp.Set(d.Get("private_ip").(string))
 // 	params.LoadbalancerType.Set(d.Get("type").(int))
-// 	params.LoadbalancerName.Set(d.Get("name").(string))
+// 	params.LoadbalancerName.Set(d.Get(resourceName).(string))
 // 	params.SecurityGroup.Set(d.Get("securitygroup").(string))
 // 	resp, err := clt.CreateLoadBalancer(params)
 // 	if err != nil {

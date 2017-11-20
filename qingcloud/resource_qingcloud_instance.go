@@ -14,11 +14,11 @@ func resourceQingcloudInstance() *schema.Resource {
 		Update: resourceQingcloudInstanceUpdate,
 		Delete: resourceQingcloudInstanceDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -95,18 +95,8 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 		},
 	}
 }
@@ -115,7 +105,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.RunInstancesInput)
 	input.Count = qc.Int(1)
-	input.InstanceName = qc.String(d.Get("name").(string))
+	input.InstanceName = qc.String(d.Get(resourceName).(string))
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
 	// input.InstanceType = qc.String(d.Get("instance_type").(string))
@@ -201,9 +191,9 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	instance := output.InstanceSet[0]
-	d.Set("name", qc.StringValue(instance.InstanceName))
+	d.Set(resourceName, qc.StringValue(instance.InstanceName))
 	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
-	d.Set("description", qc.StringValue(instance.Description))
+	d.Set(resourceDescription, qc.StringValue(instance.Description))
 	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
 	d.Set("instance_state", qc.StringValue(instance.Status))
 	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))

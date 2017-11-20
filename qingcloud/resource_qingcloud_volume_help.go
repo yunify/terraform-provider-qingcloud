@@ -12,6 +12,7 @@ func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.ModifyVolumeAttributesInput)
 	input.Volume = qc.String(d.Id())
+
 	attributeUpdate := false
 	if d.HasChange("description") {
 		if d.Get("description").(string) != "" {

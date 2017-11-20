@@ -9,24 +9,11 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	input := new(qc.ModifyEIPAttributesInput)
 	input.EIP = qc.String(d.Id())
-	attributeUpdate := false
-	if d.HasChange("description") {
-		if d.Get("description") == "" {
-			input.Description = qc.String(" ")
-		} else {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		attributeUpdate = true
-	}
-	if d.HasChange("name") && !d.IsNewResource() {
-		if d.Get("name") == "" {
-			input.EIPName = qc.String(" ")
-		} else {
-			input.EIPName = qc.String(d.Get("name").(string))
-		}
-		attributeUpdate = true
-	}
-	if attributeUpdate {
+	nameUpdate := false
+	descriptionUpdate := false
+	input.EIPName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		var output *qc.ModifyEIPAttributesOutput
 		var err error
 		simpleRetry(func() error {
@@ -37,7 +24,6 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-
 	return nil
 }
 

@@ -35,9 +35,9 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_eip.foo", "billing_mode", "traffic"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_eip.foo", "description", "first"),
+						"qingcloud_eip.foo", resourceDescription, "first"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_eip.foo", "name", "first_eip"),
+						"qingcloud_eip.foo", resourceName, "first_eip"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_eip.foo", "need_icp", "0"),
 				),
@@ -52,9 +52,9 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_eip.foo", "billing_mode", "bandwidth"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_eip.foo", "description", "eip"),
+						"qingcloud_eip.foo", resourceDescription, "eip"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_eip.foo", "name", "eip"),
+						"qingcloud_eip.foo", resourceName, "eip"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_eip.foo", "need_icp", "0"),
 				),

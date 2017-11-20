@@ -42,9 +42,9 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_vxnet.foo", "type", "1"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vxnet.foo", "description", "vxnet"),
+						"qingcloud_vxnet.foo", resourceDescription, "vxnet"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vxnet.foo", "name", "vxnet"),
+						"qingcloud_vxnet.foo", resourceName, "vxnet"),
 				),
 			},
 			resource.TestStep{
@@ -55,9 +55,9 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_vxnet.foo", "type", "0"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vxnet.foo", "description", "vxnet"),
+						"qingcloud_vxnet.foo", resourceDescription, "vxnet"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vxnet.foo", "name", "vxnet"),
+						"qingcloud_vxnet.foo", resourceName, "vxnet"),
 				),
 			},
 		},

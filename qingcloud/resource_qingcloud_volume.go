@@ -20,15 +20,13 @@ func resourceQingcloudVolume() *schema.Resource {
 				Required:    true,
 				Description: "size of volume ,min 10 ,max 5000 ,multiples of 10",
 			},
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "name of volume",
+			resourceName: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"description": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "description of volume",
+			resourceDescription: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"type": &schema.Schema{
 				Type:         schema.TypeInt,
@@ -59,13 +57,9 @@ func resourceQingcloudVolume() *schema.Resource {
 func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.CreateVolumesInput)
-	if d.Get("name").(string) != "" {
-		input.VolumeName = qc.String(d.Get("name").(string))
-	} else {
-		input.VolumeName = qc.String(" ")
-	}
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
+	input.VolumeName = qc.String(d.Get(resourceName).(string))
 	input.VolumeType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVolumesOutput
 	var err error
@@ -101,8 +95,8 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	volume := output.VolumeSet[0]
-	d.Set("name", qc.StringValue(volume.VolumeName))
-	d.Set("description", qc.StringValue(volume.Description))
+	d.Set(resourceName, qc.StringValue(volume.VolumeName))
+	d.Set(resourceDescription, qc.StringValue(volume.Description))
 	d.Set("size", qc.IntValue(volume.Size))
 	d.Set("type", qc.IntValue(volume.VolumeType))
 	resourceSetTag(d, volume.Tags)

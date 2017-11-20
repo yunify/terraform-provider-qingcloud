@@ -19,4 +19,9 @@ const (
 	qingcloudResourceTypeSpark         = "spark"
 
 	DEFAULT_ZONE = "pek3a"
+
+	resourceName        = "name"
+	resourceDescription = "description"
+	resourceTagIds      = "tag_ids"
+	resourceTagNames    = "tag_names"
 )

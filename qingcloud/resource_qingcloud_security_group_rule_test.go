@@ -44,7 +44,7 @@ func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("qingcloud_security_group_rule.foo", &sgr),
 					resource.TestCheckResourceAttr(
-						"qingcloud_security_group_rule.foo", "name", "first_sgr"),
+						"qingcloud_security_group_rule.foo", resourceName, "first_sgr"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_security_group_rule.foo", "protocol", "udp"),
 					resource.TestCheckResourceAttr(

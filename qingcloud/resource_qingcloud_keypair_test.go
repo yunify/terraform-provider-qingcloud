@@ -33,9 +33,9 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
 					resource.TestCheckResourceAttr(
-						"qingcloud_keypair.foo", "name", "keypair1"),
+						"qingcloud_keypair.foo", resourceName, "keypair1"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_keypair.foo", "description", "test"),
+						"qingcloud_keypair.foo", resourceDescription, "test"),
 				),
 			},
 		},
