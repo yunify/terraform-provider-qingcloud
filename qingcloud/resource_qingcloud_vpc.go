@@ -14,7 +14,7 @@ func resourceQingcloudVpc() *schema.Resource {
 		Update: resourceQingcloudVpcUpdate,
 		Delete: resourceQingcloudVpcDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The name of Vpc",
@@ -36,8 +36,8 @@ func resourceQingcloudVpc() *schema.Resource {
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
 				Description: "Network address range of vpc.",
 			},
-			"tag_ids":   tagIdsSchema(),
-			"tag_names": tagNamesSchema(),
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 			"eip_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -48,7 +48,7 @@ func resourceQingcloudVpc() *schema.Resource {
 				Required:    true,
 				Description: "The security group's id used by the vpc",
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of vpc",
@@ -116,10 +116,10 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	rtr := output.RouterSet[0]
-	d.Set("name", qc.StringValue(rtr.RouterName))
+	d.Set(resourceName, qc.StringValue(rtr.RouterName))
 	d.Set("type", qc.IntValue(rtr.RouterType))
 	d.Set("security_group_id", qc.StringValue(rtr.SecurityGroupID))
-	d.Set("description", qc.StringValue(rtr.Description))
+	d.Set(resourceDescription, qc.StringValue(rtr.Description))
 	d.Set("private_ip", qc.StringValue(rtr.PrivateIP))
 	d.Set("eip_id", qc.StringValue(rtr.EIP.EIPID))
 	d.Set("public_ip", qc.StringValue(rtr.EIP.EIPAddr))
@@ -138,8 +138,8 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if err := modifyRouterAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("name")
-	d.SetPartial("description")
+	d.SetPartial(resourceName)
+	d.SetPartial(resourceDescription)
 	if d.HasChange("eip_id") {
 		if err := applyRouterUpdate(d, meta); err != nil {
 			return err
@@ -155,7 +155,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeRouter); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudRouterRead(d, meta)
 }

@@ -12,7 +12,7 @@ package qingcloud
 // 		Update: resourceQingcloudRouterStaticUpdate,
 // 		Delete: resourceQingcloudRouterStaticDelete,
 // 		Schema: map[string]*schema.Schema{
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:     schema.TypeString,
 // 				Required: true,
 // 			},
@@ -95,7 +95,7 @@ package qingcloud
 
 // 	params := router.AddRouterStaticsRequest{}
 // 	params.Router.Set(d.Get("router").(string))
-// 	params.StaticsNRouterStaticName.Add(d.Get("name").(string))
+// 	params.StaticsNRouterStaticName.Add(d.Get(resourceName).(string))
 // 	params.StaticsNStaticType.Add(int64(d.Get("type").(int)))
 // 	params.StaticsNVal1.Add(d.Get("val1").(string))
 // 	params.StaticsNVal2.Add(d.Get("val2").(string))
@@ -135,7 +135,7 @@ package qingcloud
 // 	}
 // 	params := router.ModifyRouterStaticAttributesRequest{}
 // 	params.RouterStatic.Set(d.Id())
-// 	params.RouterStaticName.Set(d.Get("name").(string))
+// 	params.RouterStaticName.Set(d.Get(resourceName).(string))
 // 	params.Val1.Set(d.Get("val1").(string))
 // 	params.Val2.Set(d.Get("val2").(string))
 // 	params.Val3.Set(d.Get("val3").(string))

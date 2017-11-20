@@ -39,16 +39,16 @@ func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) {
 		tagIDs = append(tagIDs, qc.StringValue(tag.TagID))
 		tagNames = append(tagNames, qc.StringValue(tag.TagName))
 	}
-	d.Set("tag_ids", tagIDs)
-	d.Set("tag_names", tagNames)
+	d.Set(resourceTagIds, tagIDs)
+	d.Set(resourceTagNames, tagNames)
 }
 
 func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType string) error {
-	if !d.HasChange("tag_ids") {
+	if !d.HasChange(resourceTagIds) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).tag
-	oldV, newV := d.GetChange("tag_ids")
+	oldV, newV := d.GetChange(resourceTagIds)
 	var oldTags []string
 	var newTags []string
 	for _, v := range oldV.(*schema.Set).List() {

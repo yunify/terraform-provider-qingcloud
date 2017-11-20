@@ -12,7 +12,7 @@ package qingcloud
 // 		Update: resourceQingcloudLoadbalancerListenerUpdate,
 // 		Delete: resourceQingcloudLoadbalancerListenerDelete,
 // 		Schema: map[string]*schema.Schema{
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:     schema.TypeString,
 // 				Required: true,
 // 			},
@@ -88,7 +88,7 @@ package qingcloud
 // 	params.ListenersNListenerProtocol.Add(d.Get("protocol").(string))
 // 	params.ListenersNServerCertificateId.Add(d.Get("certificate").(string))
 // 	params.ListenersNBackendProtocol.Add(d.Get("protocol").(string))
-// 	params.ListenersNLoadbalancerListenerName.Add(d.Get("name").(string))
+// 	params.ListenersNLoadbalancerListenerName.Add(d.Get(resourceName).(string))
 // 	params.ListenersNBalanceMode.Add(d.Get("mode").(string))
 // 	params.ListenersNSessionSticky.Add(d.Get("session_sticky").(string))
 // 	params.ListenersNForwardfor.Add(int64(d.Get("forwardfor").(int)))
@@ -115,7 +115,7 @@ package qingcloud
 // 	d.Set("loadbalancer", lb.LoadbalancerID)
 // 	d.Set("port", lb.ListenerPort)
 // 	d.Set("protocol", lb.ListenerProtocol)
-// 	d.Set("name", lb.LoadbalancerListenerName)
+// 	d.Set(resourceName, lb.LoadbalancerListenerName)
 // 	d.Set("mode", lb.BalanceMode)
 // 	d.Set("session_sticky", lb.SessionSticky)
 // 	d.Set("forwardfor", lb.Forwardfor)

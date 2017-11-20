@@ -18,7 +18,7 @@ package qingcloud
 // 				ForceNew:    true,
 // 				Description: "要添加规则的转发策略ID",
 // 			},
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:        schema.TypeString,
 // 				Required:    true,
 // 				Description: "规则名称",
@@ -42,7 +42,7 @@ package qingcloud
 // 	clt := meta.(*QingCloudClient).loadbalancer
 // 	params := loadbalancer.AddLoadBalancerPolicyRulesRequest{}
 // 	params.LoadbalancerPolicy.Set(d.Get("policy").(string))
-// 	params.RulesNLoadbalancerPolicyRuleName.Add(d.Get("name").(string))
+// 	params.RulesNLoadbalancerPolicyRuleName.Add(d.Get(resourceName).(string))
 // 	params.RulesNRuleType.Add(d.Get("type").(string))
 // 	params.RulesNVal.Add(d.Get("val").(string))
 // 	resp, err := clt.AddLoadBalancerPolicyRules(params)

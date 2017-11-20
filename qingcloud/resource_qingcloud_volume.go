@@ -19,11 +19,11 @@ func resourceQingcloudVolume() *schema.Resource {
 				Required: true,
 				Description: "硬盘容量，目前可创建最小 10G，最大 500G 的硬盘， 在此范围内的容量值必须是 10 的倍数	",
 			},
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -60,7 +60,7 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.CreateVolumesInput)
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
-	input.VolumeName = qc.String(d.Get("name").(string))
+	input.VolumeName = qc.String(d.Get(resourceName).(string))
 	input.VolumeType = qc.Int(d.Get("type").(int))
 	output, err := clt.CreateVolumes(input)
 	if err != nil {
@@ -92,8 +92,8 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	volume := output.VolumeSet[0]
-	d.Set("name", qc.StringValue(volume.VolumeName))
-	d.Set("description", qc.StringValue(volume.Description))
+	d.Set(resourceName, qc.StringValue(volume.VolumeName))
+	d.Set(resourceDescription, qc.StringValue(volume.Description))
 	d.Set("size", qc.IntValue(volume.Size))
 	d.Set("type", qc.IntValue(volume.VolumeType))
 	d.Set("status", qc.StringValue(volume.Status))

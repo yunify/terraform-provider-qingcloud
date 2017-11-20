@@ -30,12 +30,12 @@ func resourceQingcloudCache() *schema.Resource {
 				Required:     true,
 				ValidateFunc: withinArrayString("redis3.0.5", "redis2.8.17", "memcached1.4.13"),
 			},
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "缓存名称",
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -70,7 +70,7 @@ func resourceQingcloudCacheCreate(d *schema.ResourceData, meta interface{}) erro
 	input.VxNet = qc.String(d.Get("vxnet_id").(string))
 	input.CacheSize = qc.Int(d.Get("size").(int))
 	input.CacheType = qc.String(d.Get("type").(string))
-	input.CacheName = qc.String(d.Get("name").(string))
+	input.CacheName = qc.String(d.Get(resourceName).(string))
 	input.CacheParameterGroup = qc.String(d.Get("cache_parameter_group_id").(string))
 	input.AutoBackupTime = qc.Int(d.Get("auto_backup_time").(int))
 	input.CacheClass = qc.Int(d.Get("cache_class").(int))
@@ -111,8 +111,8 @@ func resourceQingcloudCacheRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("vxnet_id", qc.StringValue(cache.VxNet.VxNetID))
 	d.Set("size", qc.IntValue(cache.CacheSize))
 	d.Set("type", qc.StringValue(cache.CacheType))
-	d.Set("name", qc.StringValue(cache.CacheName))
-	d.Set("description", qc.StringValue(cache.Description))
+	d.Set(resourceName, qc.StringValue(cache.CacheName))
+	d.Set(resourceDescription, qc.StringValue(cache.Description))
 	d.Set("cache_parameter_group_id", qc.StringValue(cache.CacheParameterGroupID))
 	d.Set("auto_backup_time", qc.IntValue(cache.AutoBackupTime))
 	d.Set("cache_class", qc.IntValue(cache.CacheClass))

@@ -15,7 +15,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Update: resourceQingcloudVxnetUpdate,
 		Delete: resourceQingcloudVxnetDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The name of vxnet",
@@ -27,7 +27,7 @@ func resourceQingcloudVxnet() *schema.Resource {
 				Description:  "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of vxnet",
@@ -43,8 +43,8 @@ func resourceQingcloudVxnet() *schema.Resource {
 				ValidateFunc: validateNetworkCIDR,
 				Description:  "Network segment of Managed vxnet",
 			},
-			"tag_ids":   tagIdsSchema(),
-			"tag_names": tagNamesSchema(),
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 		},
 	}
 }
@@ -87,9 +87,9 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 	vxnet := output.VxNetSet[0]
-	d.Set("name", qc.StringValue(vxnet.VxNetName))
+	d.Set(resourceName, qc.StringValue(vxnet.VxNetName))
 	d.Set("type", qc.IntValue(vxnet.VxNetType))
-	d.Set("description", qc.StringValue(vxnet.Description))
+	d.Set(resourceDescription, qc.StringValue(vxnet.Description))
 	if vxnet.Router != nil {
 		d.Set("ip_network", qc.StringValue(vxnet.Router.IPNetwork))
 	} else {

@@ -12,19 +12,19 @@ func modifyCacheParameterGroupAttributes(d *schema.ResourceData, meta interface{
 	input := new(qc.ModifyCacheParameterGroupAttributesInput)
 	input.CacheParameterGroup = qc.String(d.Id())
 	if create {
-		if description := d.Get("description").(string); description == "" {
+		if description := d.Get(resourceDescription).(string); description == "" {
 			return nil
 		}
-		input.Description = qc.String(d.Get("description").(string))
+		input.Description = qc.String(d.Get(resourceDescription).(string))
 	} else {
-		if !d.HasChange("description") && !d.HasChange("name") {
+		if !d.HasChange(resourceDescription) && !d.HasChange(resourceName) {
 			return nil
 		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
+		if d.HasChange(resourceDescription) {
+			input.Description = qc.String(d.Get(resourceDescription).(string))
 		}
-		if d.HasChange("name") {
-			input.CacheParameterGroupName = qc.String(d.Get("name").(string))
+		if d.HasChange(resourceName) {
+			input.CacheParameterGroupName = qc.String(d.Get(resourceName).(string))
 		}
 	}
 	_, err := clt.ModifyCacheParameterGroupAttributes(input)

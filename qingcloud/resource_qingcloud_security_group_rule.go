@@ -16,7 +16,7 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -129,7 +129,7 @@ func resourceQingcloudSecurityGroupRuleRead(d *schema.ResourceData, meta interfa
 	d.Set("from_port", qc.StringValue(sgRule.Val1))
 	d.Set("to_port", qc.StringValue(sgRule.Val2))
 	d.Set("cidr_block", qc.StringValue(sgRule.Val3))
-	d.Set("name", qc.StringValue(sgRule.SecurityGroupRuleName))
+	d.Set(resourceName, qc.StringValue(sgRule.SecurityGroupRuleName))
 	return nil
 }
 

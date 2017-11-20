@@ -15,18 +15,18 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 		Update: resourceQingcloudSecurityGroupUpdate,
 		Delete: resourceQingcloudSecurityGroupDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name of SecurityGroup ",
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of SecurityGroup",
 			},
-			"tag_ids":   tagIdsSchema(),
-			"tag_names": tagNamesSchema(),
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 		},
 	}
 }
@@ -66,8 +66,8 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 	sg := output.SecurityGroupSet[0]
-	d.Set("name", qc.StringValue(sg.SecurityGroupName))
-	d.Set("description", qc.StringValue(sg.Description))
+	d.Set(resourceName, qc.StringValue(sg.SecurityGroupName))
+	d.Set(resourceDescription, qc.StringValue(sg.Description))
 	resourceSetTag(d, sg.Tags)
 	return nil
 }
@@ -76,12 +76,12 @@ func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface
 	if err := modifySecurityGroupAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("description")
-	d.SetPartial("name")
+	d.SetPartial(resourceDescription)
+	d.SetPartial(resourceName)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeSecurityGroup); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudSecurityGroupRead(d, meta)
 }

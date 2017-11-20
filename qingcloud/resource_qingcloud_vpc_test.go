@@ -46,9 +46,9 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc.foo", "vpc_network", "172.24.0.0/16"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vpc.foo", "description", "test"),
+						"qingcloud_vpc.foo", resourceDescription, "test"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vpc.foo", "name", "test"),
+						"qingcloud_vpc.foo", resourceName, "test"),
 				),
 			},
 		},
