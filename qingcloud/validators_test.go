@@ -108,3 +108,20 @@ func TestValidatePortString(t *testing.T) {
 	}
 
 }
+
+func TestValidateVolumeSize(t *testing.T) {
+	validSize := []int{10, 500, 1000}
+	for _, v := range validSize {
+		_, errors := validateVolumeSize(v, "volume size")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid volume size: %q", v, errors)
+		}
+	}
+	invalidSize := []int{9, 5001, 5500}
+	for _, v := range invalidSize {
+		_, errors := validateVolumeSize(v, "volume size")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid volume size: %q", v, errors)
+		}
+	}
+}

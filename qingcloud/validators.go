@@ -3,14 +3,13 @@ package qingcloud
 import (
 	"fmt"
 	"net"
+	"regexp"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"regexp"
 )
 
 var ColorRegex = regexp.MustCompile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
 var PortRegex = regexp.MustCompile("^0*(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{1,3}|[0-9])$")
-
 
 func validateNetworkCIDR(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -78,6 +77,17 @@ func validatePortString(v interface{}, k string) (ws []string, errors []error) {
 	if !PortRegex.MatchString(portstring) {
 		errors = append(errors, fmt.Errorf("%q (%q) doesn't match", k, portstring))
 		return
+	}
+	return
+}
+
+func validateVolumeSize(v interface{}, k string) (ws []string, errors []error) {
+	size := v.(int)
+	if size < 10 || size > 5000 {
+		errors = append(errors, fmt.Errorf("%q (%q) should > 10  && < 5000 ", k, size))
+	}
+	if size%10 != 0 {
+		errors = append(errors, fmt.Errorf("%q (%q) should be multiples of 10", k, size))
 	}
 	return
 }
