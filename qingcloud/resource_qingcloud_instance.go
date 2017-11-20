@@ -27,42 +27,24 @@ func resourceQingcloudInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_class": &schema.Schema{
-				Type:         schema.TypeInt,
-				Default:      0,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: withinArrayInt(0, 1),
-			},
-			"instance_state": &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "running",
-				ValidateFunc: withinArrayString("pending", "running", "stopped", "suspended", "terminated", "ceased"),
-			},
 			"cpu": &schema.Schema{
 				Type:         schema.TypeInt,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: withinArrayInt(1, 2, 4, 8, 16),
 				Default:      1,
 			},
 			"memory": &schema.Schema{
 				Type:         schema.TypeInt,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 				Default:      1024,
 			},
-			"vxnet_id": &schema.Schema{
+			"managed_vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"static_ip": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"hostname": &schema.Schema{
-				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
 			},
 			"keypair_ids": &schema.Schema{
@@ -79,13 +61,11 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"volume_id": &schema.Schema{
-				Type:     schema.TypeString,
+			"volume_ids" : &schema.Schema{
+				Type:     schema.TypeSet,
 				Optional: true,
-			},
-			"volume_device_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"public_ip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -117,17 +97,13 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.Count = qc.Int(1)
 	input.InstanceName = qc.String(d.Get("name").(string))
 	input.ImageID = qc.String(d.Get("image_id").(string))
-	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
-	// input.InstanceType = qc.String(d.Get("instance_type").(string))
-	if d.Get("cpu").(int) != 0 && d.Get("memory").(int) != 0 {
-		input.CPU = qc.Int(d.Get("cpu").(int))
-		input.Memory = qc.Int(d.Get("memory").(int))
-	}
+	input.CPU = qc.Int(d.Get("cpu").(int))
+	input.Memory = qc.Int(d.Get("memory").(int))
 	var vxnet string
 	if d.Get("static_ip").(string) != "" {
-		vxnet = fmt.Sprintf("%s|%s", d.Get("vxnet_id").(string), d.Get("static_ip").(string))
+		vxnet = fmt.Sprintf("%s|%s", d.Get("managed_vxnet_id").(string), d.Get("static_ip").(string))
 	} else {
-		vxnet = d.Get("vxnet_id").(string)
+		vxnet = d.Get("managed_vxnet_id").(string)
 	}
 	input.VxNets = []*string{qc.String(vxnet)}
 	if d.Get("security_group_id").(string) != "" {
@@ -204,8 +180,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", qc.StringValue(instance.InstanceName))
 	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set("description", qc.StringValue(instance.Description))
-	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
-	d.Set("instance_state", qc.StringValue(instance.Status))
 	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))
 	d.Set("memory", qc.IntValue(instance.MemoryCurrent))
 	if instance.VxNets != nil && len(instance.VxNets) > 0 {
