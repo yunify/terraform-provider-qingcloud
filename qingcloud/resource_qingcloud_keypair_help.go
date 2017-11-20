@@ -9,11 +9,11 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.ModifyKeyPairAttributesInput)
 	input.KeyPair = qc.String(d.Id())
-	attributeUpdate := false
-	attributeUpdate2 := false
-	input.KeyPairName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getDescriptionPointer(d)
-	if attributeUpdate || attributeUpdate2 {
+	nameUpdate := false
+	descriptionUpdate := false
+	input.KeyPairName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		var output *qc.ModifyKeyPairAttributesOutput
 		var err error
 		simpleRetry(func() error {

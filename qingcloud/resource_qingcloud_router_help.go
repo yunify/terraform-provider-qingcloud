@@ -12,9 +12,9 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyRouterAttributesInput)
 	input.Router = qc.String(d.Id())
 	attributeUpdate := false
-	attributeUpdate2 := false
+	descriptionUpdate := false
 	input.RouterName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getDescriptionPointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if d.HasChange("eip_id") {
 		if d.Get("eip_id") != "" {
 			input.EIP = qc.String(d.Get("eip_id").(string))
@@ -32,7 +32,7 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 
-	if attributeUpdate || attributeUpdate2 {
+	if attributeUpdate || descriptionUpdate {
 		var output *qc.ModifyRouterAttributesOutput
 		var err error
 		simpleRetry(func() error {

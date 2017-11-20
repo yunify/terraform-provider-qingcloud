@@ -10,15 +10,15 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
 	attributeUpdate := false
-	attributeUpdate2 := false
+	descriptionUpdate := false
 	if d.HasChange("color") {
 		input.Color = qc.String(d.Get("color").(string))
 		attributeUpdate = true
 	}
 
 	input.TagName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getDescriptionPointer(d)
-	if attributeUpdate || attributeUpdate2 {
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if attributeUpdate || descriptionUpdate {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
 		simpleRetry(func() error {

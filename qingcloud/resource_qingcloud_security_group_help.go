@@ -12,11 +12,11 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupAttributesInput)
 	input.SecurityGroup = qc.String(d.Id())
-	attributeUpdate := false
-	attributeUpdate2 := false
-	input.SecurityGroupName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getDescriptionPointer(d)
-	if attributeUpdate || attributeUpdate2 {
+	nameUpdate := false
+	descriptionUpdate := false
+	input.SecurityGroupName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
 		simpleRetry(func() error {

@@ -9,11 +9,11 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
 	input := new(qc.ModifyVxNetAttributesInput)
 	input.VxNet = qc.String(d.Id())
-	attributeUpdate := false
-	attributeUpdate2 := false
-	input.VxNetName, attributeUpdate = getNamePointer(d)
-	input.Description, attributeUpdate2 = getDescriptionPointer(d)
-	if attributeUpdate || attributeUpdate2 {
+	nameUpdate := false
+	descriptionUpdate := false
+	input.VxNetName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		var output *qc.ModifyVxNetAttributesOutput
 		var err error
 		simpleRetry(func() error {
