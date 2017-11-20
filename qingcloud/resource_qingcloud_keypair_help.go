@@ -40,7 +40,6 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-
 func resourceUpdateKeyPairs(d *schema.ResourceData, meta interface{}) error {
 	if !d.HasChange("keypair_ids") {
 		return nil
@@ -59,6 +58,7 @@ func resourceUpdateKeyPairs(d *schema.ResourceData, meta interface{}) error {
 
 	if len(detachKeyPairs) > 0 {
 		input := new(qc.DetachKeyPairsInput)
+		input.Instances = []*string{qc.String(d.Id())}
 		for _, keypair := range detachKeyPairs {
 			input.KeyPairs = append(input.KeyPairs, &keypair)
 		}
@@ -74,6 +74,7 @@ func resourceUpdateKeyPairs(d *schema.ResourceData, meta interface{}) error {
 	}
 	if len(attachKeyPairs) > 0 {
 		input := new(qc.AttachKeyPairsInput)
+		input.Instances = []*string{qc.String(d.Id())}
 		for _, keypair := range attachKeyPairs {
 			input.KeyPairs = append(input.KeyPairs, &keypair)
 		}

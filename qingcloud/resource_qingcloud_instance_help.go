@@ -8,25 +8,15 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.ModifyInstanceAttributesInput)
 	input.Instance = qc.String(d.Id())
-	if create {
-		if description := d.Get("description").(string); description == "" {
-			return nil
-		}
+	if d.HasChange("description") {
 		input.Description = qc.String(d.Get("description").(string))
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") {
-			return nil
-		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		if d.HasChange("name") {
-			input.InstanceName = qc.String(d.Get("name").(string))
-		}
+	}
+	if d.HasChange("name") {
+		input.InstanceName = qc.String(d.Get("name").(string))
 	}
 	_, err := clt.ModifyInstanceAttributes(input)
 	if err != nil {
@@ -210,7 +200,7 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 }
 
 func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("cpu") && !d.HasChange("memory") {
+	if !d.HasChange("cpu") && !d.HasChange("memory") || d.IsNewResource() {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance

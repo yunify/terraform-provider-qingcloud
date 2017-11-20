@@ -61,7 +61,7 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"volume_ids" : &schema.Schema{
+			"volume_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -217,7 +217,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	// clt := meta.(*QingCloudClient).instance
-	err := modifyInstanceAttributes(d, meta, false)
+	err := modifyInstanceAttributes(d, meta)
 	if err != nil {
 		return err
 	}
