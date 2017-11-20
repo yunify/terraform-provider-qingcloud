@@ -19,7 +19,7 @@ func resourceQingcloudTag() *schema.Resource {
 			"color": &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "#9f9bb7",
+				Default:      DEFAULT_TAG_COLOR,
 				ValidateFunc: validateColorString,
 			},
 			resourceDescription: &schema.Schema{
@@ -66,7 +66,11 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	tag := output.TagSet[0]
 	d.Set(resourceName, qc.StringValue(tag.TagName))
 	d.Set(resourceDescription, qc.StringValue(tag.Description))
-	d.Set("color", qc.StringValue(tag.Color))
+	if qc.StringValue(tag.Color) == "default" {
+		d.Set("color", DEFAULT_TAG_COLOR)
+	}else {
+		d.Set("color", qc.StringValue(tag.Color))
+	}
 	return nil
 }
 func resourceQingcloudTagUpdate(d *schema.ResourceData, meta interface{}) error {

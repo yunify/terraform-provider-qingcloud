@@ -24,4 +24,5 @@ const (
 	resourceDescription = "description"
 	resourceTagIds      = "tag_ids"
 	resourceTagNames    = "tag_names"
+	DEFAULT_TAG_COLOR   = "#9f9bb7"
 )
