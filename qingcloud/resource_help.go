@@ -84,7 +84,7 @@ func simpleRetry(fn func() error) error {
 
 func getNamePointer(d *schema.ResourceData) (*string, bool) {
 	var value *string = nil
-	if d.HasChange(resourceName) {
+	if d.HasChange(resourceName) && !d.IsNewResource() {
 		if d.Get(resourceName).(string) != "" {
 			value = qc.String(d.Get(resourceName).(string))
 		} else {
