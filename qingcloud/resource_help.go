@@ -82,7 +82,7 @@ func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }
 
-func getNamePointer(d *schema.ResourceData) (value *string,update bool) {
+func getNamePointer(d *schema.ResourceData) (value *string, update bool) {
 	update = false
 	if d.HasChange(resourceName) {
 		if d.Get(resourceName).(string) != "" {

@@ -13,10 +13,10 @@ func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyVolumeAttributesInput)
 	input.Volume = qc.String(d.Id())
 	nameUpdate := false
-	descriptionUpdate :=false
-	input.VolumeName , nameUpdate = getNamePointer(d)
-	input.Description , descriptionUpdate =getDescriptionPointer(d)
-	if nameUpdate||descriptionUpdate {
+	descriptionUpdate := false
+	input.VolumeName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		var err error
 		simpleRetry(func() error {
 			_, err := clt.ModifyVolumeAttributes(input)

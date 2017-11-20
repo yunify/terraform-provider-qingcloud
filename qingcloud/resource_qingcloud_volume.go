@@ -38,7 +38,7 @@ func resourceQingcloudVolume() *schema.Resource {
 					Ultra high performance type volume is 3 (only attach to ultra high performance type instance)，
 					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
 			},
-			resourceTagIds: tagIdsSchema(),
+			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
 		},
 	}
@@ -49,7 +49,7 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.CreateVolumesInput)
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
-	input.VolumeName , _ = getNamePointer(d)
+	input.VolumeName, _ = getNamePointer(d)
 	input.VolumeType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVolumesOutput
 	var err error
