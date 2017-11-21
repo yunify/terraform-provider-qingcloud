@@ -38,18 +38,8 @@ func resourceQingcloudVolume() *schema.Resource {
 					Ultra high performance type volume is 3 (only attach to ultra high performance type instance)，
 					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
 			},
-			"tag_ids": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"tag_names": &schema.Schema{
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 		},
 	}
 }
@@ -59,7 +49,7 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.CreateVolumesInput)
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
-	input.VolumeName = qc.String(d.Get(resourceName).(string))
+	input.VolumeName, _ = getNamePointer(d)
 	input.VolumeType = qc.Int(d.Get("type").(int))
 	var output *qc.CreateVolumesOutput
 	var err error
@@ -111,8 +101,8 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 	if err := motifyVolumeAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("name")
-	d.SetPartial("description")
+	d.SetPartial(resourceName)
+	d.SetPartial(resourceDescription)
 	if err := changeVolumeSize(d, meta); err != nil {
 		return err
 	}
@@ -120,7 +110,7 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVolume); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudVolumeRead(d, meta)
 }

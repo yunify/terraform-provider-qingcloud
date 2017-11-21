@@ -148,12 +148,12 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 	if err := modifyVxnetAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("name")
-	d.SetPartial("description")
+	d.SetPartial(resourceName)
+	d.SetPartial(resourceDescription)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVxNet); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudVxnetRead(d, meta)
 }
