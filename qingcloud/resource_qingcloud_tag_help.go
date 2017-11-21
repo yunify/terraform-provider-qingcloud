@@ -10,23 +10,15 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.ModifyTagAttributesInput)
 	input.Tag = qc.String(d.Id())
 	attributeUpdate := false
+	descriptionUpdate := false
 	if d.HasChange("color") {
 		input.Color = qc.String(d.Get("color").(string))
 		attributeUpdate = true
 	}
-	if d.HasChange("description") {
-		if d.Get("description").(string) == "" {
-			input.Description = qc.String(" ")
-		} else {
-			input.Description = qc.String(d.Get("description").(string))
-		}
-		attributeUpdate = true
-	}
-	if d.HasChange("name") && !d.IsNewResource() {
-		input.TagName = qc.String(d.Get("name").(string))
-		attributeUpdate = true
-	}
-	if attributeUpdate {
+
+	input.TagName, attributeUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if attributeUpdate || descriptionUpdate {
 		var output *qc.ModifyTagAttributesOutput
 		var err error
 		simpleRetry(func() error {
@@ -47,16 +39,16 @@ func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) {
 		tagIDs = append(tagIDs, qc.StringValue(tag.TagID))
 		tagNames = append(tagNames, qc.StringValue(tag.TagName))
 	}
-	d.Set("tag_ids", tagIDs)
-	d.Set("tag_names", tagNames)
+	d.Set(resourceTagIds, tagIDs)
+	d.Set(resourceTagNames, tagNames)
 }
 
 func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType string) error {
-	if !d.HasChange("tag_ids") {
+	if !d.HasChange(resourceTagIds) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).tag
-	oldV, newV := d.GetChange("tag_ids")
+	oldV, newV := d.GetChange(resourceTagIds)
 	var oldTags []string
 	var newTags []string
 	for _, v := range oldV.(*schema.Set).List() {
@@ -108,4 +100,22 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 		}
 	}
 	return nil
+}
+
+func tagIdsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
+}
+
+func tagNamesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Set:      schema.HashString,
+	}
 }

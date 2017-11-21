@@ -12,7 +12,7 @@ func resourceQingcloudTag() *schema.Resource {
 		Update: resourceQingcloudTagUpdate,
 		Delete: resourceQingcloudTagDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -22,7 +22,7 @@ func resourceQingcloudTag() *schema.Resource {
 				Default:      "#9f9bb7",
 				ValidateFunc: validateColorString,
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -33,7 +33,7 @@ func resourceQingcloudTag() *schema.Resource {
 func resourceQingcloudTagCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.CreateTagInput)
-	input.TagName = qc.String(d.Get("name").(string))
+	input.TagName, _ = getNamePointer(d)
 	var output *qc.CreateTagOutput
 	var err error
 	simpleRetry(func() error {
@@ -64,8 +64,8 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	tag := output.TagSet[0]
-	d.Set("name", qc.StringValue(tag.TagName))
-	d.Set("description", qc.StringValue(tag.Description))
+	d.Set(resourceName, qc.StringValue(tag.TagName))
+	d.Set(resourceDescription, qc.StringValue(tag.Description))
 	d.Set("color", qc.StringValue(tag.Color))
 	return nil
 }

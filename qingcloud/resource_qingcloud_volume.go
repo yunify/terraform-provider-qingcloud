@@ -1,9 +1,10 @@
 package qingcloud
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/yunify/qingcloud-sdk-go/client"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -15,15 +16,15 @@ func resourceQingcloudVolume() *schema.Resource {
 		Delete: resourceQingcloudVolumeDelete,
 		Schema: map[string]*schema.Schema{
 			"size": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-				Description: "硬盘容量，目前可创建最小 10G，最大 500G 的硬盘， 在此范围内的容量值必须是 10 的倍数	",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "size of volume ,min 10 ,max 5000 ,multiples of 10",
 			},
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -33,23 +34,21 @@ func resourceQingcloudVolume() *schema.Resource {
 				Default:      0,
 				ForceNew:     true,
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
-				Description: `性能型是 0
-					超高性能型是 3 (只能与超高性能主机挂载，目前只支持北京2区)，
-					容量型因技术升级过程中，在各区的 type 值略有不同:
-					  北京1区，亚太1区：容量型是 1
-					  北京2区，广东1区：容量型是 2`,
+				Description: `performance type volume 0
+					Ultra high performance type volume is 3 (only attach to ultra high performance type instance)，
+					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
 			},
-			"instance_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"tag_ids": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
-			"device": &schema.Schema{
-				Type:     schema.TypeString,
+			"tag_names": &schema.Schema{
+				Type:     schema.TypeSet,
 				Computed: true,
-			},
-			"status": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
@@ -60,73 +59,95 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.CreateVolumesInput)
 	input.Count = qc.Int(1)
 	input.Size = qc.Int(d.Get("size").(int))
-	input.VolumeName = qc.String(d.Get("name").(string))
+	input.VolumeName = qc.String(d.Get(resourceName).(string))
 	input.VolumeType = qc.Int(d.Get("type").(int))
-	output, err := clt.CreateVolumes(input)
+	var output *qc.CreateVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateVolumes(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
 	d.SetId(qc.StringValue(output.Volumes[0]))
-	if err := motifyVolumeAttributes(d, meta, true); err != nil {
-		return err
-	}
 	if _, err = VolumeTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	return resourceQingcloudVolumeRead(d, meta)
+	return resourceQingcloudVolumeUpdate(d, meta)
 }
 
 func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.DescribeVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
-	output, err := clt.DescribeVolumes(input)
+	var output *qc.DescribeVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeVolumes(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error create tag: %s", *output.Message)
 	}
 	if len(output.VolumeSet) == 0 {
 		d.SetId("")
 		return nil
 	}
 	volume := output.VolumeSet[0]
-	d.Set("name", qc.StringValue(volume.VolumeName))
-	d.Set("description", qc.StringValue(volume.Description))
+	d.Set(resourceName, qc.StringValue(volume.VolumeName))
+	d.Set(resourceDescription, qc.StringValue(volume.Description))
 	d.Set("size", qc.IntValue(volume.Size))
 	d.Set("type", qc.IntValue(volume.VolumeType))
-	d.Set("status", qc.StringValue(volume.Status))
-	if volume.Instance != nil {
-		d.Set("instance_id", qc.StringValue(volume.Instance.InstanceID))
-		d.Set("device", qc.StringValue(volume.Instance.Device))
-	} else {
-		d.Set("instance_id", "")
-		d.Set("device", "")
-	}
+	resourceSetTag(d, volume.Tags)
 	return nil
 }
 
 func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := motifyVolumeAttributes(d, meta, false); err != nil {
+	d.Partial(true)
+	if err := waitVolumeLease(d, meta); err != nil {
 		return err
 	}
+	if err := motifyVolumeAttributes(d, meta); err != nil {
+		return err
+	}
+	d.SetPartial("name")
+	d.SetPartial("description")
 	if err := changeVolumeSize(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("size")
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVolume); err != nil {
+		return err
+	}
+	d.SetPartial("tag_ids")
+	d.Partial(false)
 	return resourceQingcloudVolumeRead(d, meta)
 }
 
 func resourceQingcloudVolumeDelete(d *schema.ResourceData, meta interface{}) error {
+	if err := waitVolumeLease(d, meta); err != nil {
+		return err
+	}
 	clt := meta.(*QingCloudClient).volume
 	if _, err := VolumeDeleteTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	input := new(qc.DeleteVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
-	if _, err := clt.DeleteVolumes(input); err != nil {
+	var output *qc.DeleteVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteVolumes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
 		return err
 	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+
 	d.SetId("")
 	return nil
 }

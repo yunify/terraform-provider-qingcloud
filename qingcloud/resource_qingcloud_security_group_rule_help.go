@@ -14,9 +14,9 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupRuleAttributesInput)
 	input.SecurityGroupRule = qc.String(d.Id())
-	if d.Get("name").(string) != "" {
-		input.SecurityGroupRuleName = qc.String(d.Get("name").(string))
-	} else if d.HasChange("name") {
+	if d.Get(resourceName).(string) != "" {
+		input.SecurityGroupRuleName = qc.String(d.Get(resourceName).(string))
+	} else if d.HasChange(resourceName) {
 		return fmt.Errorf("name can not be modified to nil")
 	} else {
 		input.SecurityGroupRuleName = nil

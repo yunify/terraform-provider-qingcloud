@@ -12,7 +12,7 @@ package qingcloud
 // 		Update: resourceQingcloudLoadbalancerBackendUpdate,
 // 		Delete: resourceQingcloudLoadbalancerBackendDelete,
 // 		Schema: map[string]*schema.Schema{
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:        schema.TypeString,
 // 				Optional:    true,
 // 				Description: "后端服务名称",
@@ -49,7 +49,7 @@ package qingcloud
 // func resourceQingcloudLoadbalancerBackendCreate(d *schema.ResourceData, meta interface{}) error {
 // 	clt := meta.(*QingCloudClient).loadbalancer
 // 	params := loadbalancer.AddLoadBalancerBackendsRequest{}
-// 	params.BackendsNLoadbalancerBackendName.Add(d.Get("name").(string))
+// 	params.BackendsNLoadbalancerBackendName.Add(d.Get(resourceName).(string))
 // 	params.LoadbalancerListener.Set(d.Get("listener").(string))
 // 	params.BackendsNResourceId.Add(d.Get("resource").(string))
 // 	params.BackendsNLoadbalancerPolicyId.Add(d.Get("policy").(string))
@@ -71,7 +71,7 @@ package qingcloud
 // 		return err
 // 	}
 // 	lb := resp.LoadbalancerBackendSet[0]
-// 	d.Set("name", lb.LoadbalancerBackendName)
+// 	d.Set(resourceName, lb.LoadbalancerBackendName)
 // 	d.Set("listener", lb.LoadbalancerListenerID)
 // 	d.Set("resource", lb.ResourceID)
 // 	d.Set("port", lb.Port)

@@ -16,12 +16,12 @@ func resourceQingcloudEip() *schema.Resource {
 		Update: resourceQingcloudEipUpdate,
 		Delete: resourceQingcloudEipDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "the name of eip",
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "the description of eip",
@@ -45,20 +45,8 @@ func resourceQingcloudEip() *schema.Resource {
 				Description:  "need icp , 1 need , 0 no need ,default 0",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
-			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "tag ids , eip wants to use",
-			},
-			"tag_names": &schema.Schema{
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "compute by tag ids",
-			},
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 			"addr": &schema.Schema{
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -86,11 +74,7 @@ func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error 
 	input.BillingMode = qc.String(d.Get("billing_mode").(string))
 	input.NeedICP = qc.Int(d.Get("need_icp").(int))
 	input.Count = qc.Int(1)
-	if d.Get("name") != "" {
-		input.EIPName = qc.String(d.Get("name").(string))
-	} else {
-		input.EIPName = nil
-	}
+	input.EIPName, _ = getNamePointer(d)
 	var output *qc.AllocateEIPsOutput
 	var err error
 	simpleRetry(func() error {
@@ -126,11 +110,11 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	ip := output.EIPSet[0]
-	d.Set("name", qc.StringValue(ip.EIPName))
+	d.Set(resourceName, qc.StringValue(ip.EIPName))
 	d.Set("billing_mode", qc.StringValue(ip.BillingMode))
 	d.Set("bandwidth", qc.IntValue(ip.Bandwidth))
 	d.Set("need_icp", qc.IntValue(ip.NeedICP))
-	d.Set("description", qc.StringValue(ip.Description))
+	d.Set(resourceDescription, qc.StringValue(ip.Description))
 	// 如下状态是稍等来获取的
 	d.Set("addr", qc.StringValue(ip.EIPAddr))
 	d.Set("status", qc.StringValue(ip.Status))
@@ -189,12 +173,12 @@ func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error 
 	if err := modifyEipAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("description")
-	d.SetPartial("name")
+	d.SetPartial(resourceDescription)
+	d.SetPartial(resourceName)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeEIP); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudEipRead(d, meta)
 }

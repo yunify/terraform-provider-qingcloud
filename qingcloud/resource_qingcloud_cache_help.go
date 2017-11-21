@@ -11,19 +11,19 @@ func modifyCacheAttributes(d *schema.ResourceData, meta interface{}, create bool
 	input := new(qc.ModifyCacheAttributesInput)
 	input.Cache = qc.String(d.Id())
 	if create {
-		if description := d.Get("description").(string); description == "" {
+		if description := d.Get(resourceDescription).(string); description == "" {
 			return nil
 		}
-		input.Description = qc.String(d.Get("description").(string))
+		input.Description = qc.String(d.Get(resourceDescription).(string))
 	} else {
-		if !d.HasChange("description") && !d.HasChange("name") && !d.HasChange("auto_backup_time") {
+		if !d.HasChange(resourceDescription) && !d.HasChange(resourceName) && !d.HasChange("auto_backup_time") {
 			return nil
 		}
-		if d.HasChange("description") {
-			input.Description = qc.String(d.Get("description").(string))
+		if d.HasChange(resourceDescription) {
+			input.Description = qc.String(d.Get(resourceDescription).(string))
 		}
-		if d.HasChange("name") {
-			input.CacheName = qc.String(d.Get("name").(string))
+		if d.HasChange(resourceName) {
+			input.CacheName = qc.String(d.Get(resourceName).(string))
 		}
 		if d.HasChange("auto_backup_time") {
 			input.AutoBackupTime = qc.Int(d.Get("auto_backup_time").(int))

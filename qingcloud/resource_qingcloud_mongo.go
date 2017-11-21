@@ -33,12 +33,12 @@ package qingcloud
 // 				Required: true,
 // 				Description: "Mongo 存储容量(GB)，用于存放数据和日志，最小10G，最大1000G	",
 // 			},
-// 			"name": &schema.Schema{
+// 			resourceName: &schema.Schema{
 // 				Type:        schema.TypeString,
 // 				Optional:    true,
 // 				Description: "名称",
 // 			},
-// 			"description": &schema.Schema{
+// 			resourceDescription: &schema.Schema{
 // 				Type:     schema.TypeString,
 // 				Optional: true,
 // 			},
@@ -62,10 +62,10 @@ package qingcloud
 // 	params := mongo.CreateMongoRequest{}
 // 	params.Vxnet.Set(d.Get("vxnet").(string))
 // 	params.MongoVersion.Set(d.Get("version").(string))
-// 	params.MongoName.Set(d.Get("name").(string))
+// 	params.MongoName.Set(d.Get(resourceName).(string))
 // 	params.MongoType.Set(d.Get("type").(int))
 // 	params.StorageSize.Set(d.Get("size").(int))
-// 	params.Description.Set(d.Get("description").(string))
+// 	params.Description.Set(d.Get(resourceDescription).(string))
 // 	params.AutoBackupTime.Set(d.Get("auto_backup_time").(int))
 
 // 	resp, err := clt.CreateMongo(params)

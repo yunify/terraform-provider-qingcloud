@@ -12,15 +12,15 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.ModifyInstanceAttributesInput)
 	input.Instance = qc.String(d.Id())
-	if d.HasChange("description") {
-		input.Description = qc.String(d.Get("description").(string))
-	}
-	if d.HasChange("name") {
-		input.InstanceName = qc.String(d.Get("name").(string))
-	}
-	_, err := clt.ModifyInstanceAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error modify instance attributes: %s", err)
+	nameUpdate := false
+	descriptionUpdate := false
+	input.InstanceName ,nameUpdate = getNamePointer(d)
+	input.Description , descriptionUpdate =getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate{
+		_, err := clt.ModifyInstanceAttributes(input)
+		if err != nil {
+			return fmt.Errorf("Error modify instance attributes: %s", err)
+		}
 	}
 	return nil
 }

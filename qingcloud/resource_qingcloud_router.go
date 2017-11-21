@@ -14,7 +14,7 @@ func resourceQingcloudRouter() *schema.Resource {
 		Update: resourceQingcloudRouterUpdate,
 		Delete: resourceQingcloudRouterDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "路由器名称",
@@ -34,13 +34,13 @@ func resourceQingcloudRouter() *schema.Resource {
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
 				Description: "VPC 网络地址范围，目前支持 192.168.0.0/16 或 172.16.0.0/16 。 注：此参数只在北京3区需要且是必填参数。",
 			},
-			"tag_ids": &schema.Schema{
+			resourceTagIds: &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"tag_names": &schema.Schema{
+			resourceTagNames: &schema.Schema{
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -55,7 +55,7 @@ func resourceQingcloudRouter() *schema.Resource {
 				Optional:    true,
 				Description: "SecurityGroup ID",
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -75,7 +75,7 @@ func resourceQingcloudRouter() *schema.Resource {
 func resourceQingcloudRouterCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.CreateRoutersInput)
-	input.RouterName = qc.String(d.Get("name").(string))
+	input.RouterName = qc.String(d.Get(resourceName).(string))
 	input.RouterType = qc.Int(d.Get("type").(int))
 	input.VpcNetwork = qc.String(d.Get("vpc_network").(string))
 	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
@@ -148,10 +148,10 @@ func resourceQingcloudRouterRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	rtr := output.RouterSet[0]
-	d.Set("name", qc.StringValue(rtr.RouterName))
+	d.Set(resourceName, qc.StringValue(rtr.RouterName))
 	d.Set("type", qc.IntValue(rtr.RouterType))
 	d.Set("security_group_id", qc.StringValue(rtr.SecurityGroupID))
-	d.Set("description", qc.StringValue(rtr.Description))
+	d.Set(resourceDescription, qc.StringValue(rtr.Description))
 	d.Set("private_ip", qc.StringValue(rtr.PrivateIP))
 	d.Set("eip_id", qc.StringValue(rtr.EIP.EIPID))
 	d.Set("public_ip", qc.StringValue(rtr.EIP.EIPAddr))

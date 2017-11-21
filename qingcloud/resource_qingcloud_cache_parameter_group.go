@@ -19,11 +19,11 @@ func resourceQingcloudCacheParameterGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: withinArrayString("redis3.0.5", "redis2.8.17", "memcached1.4.13"),
 			},
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -34,7 +34,7 @@ func resourceQingcloudCacheParameterGroup() *schema.Resource {
 func resourceQingcloudCacheParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).cache
 	input := new(qc.CreateCacheParameterGroupInput)
-	input.CacheParameterGroupName = qc.String(d.Get("name").(string))
+	input.CacheParameterGroupName = qc.String(d.Get(resourceName).(string))
 	input.CacheType = qc.String(d.Get("type").(string))
 	output, err := clt.CreateCacheParameterGroup(input)
 	if err != nil {
@@ -64,8 +64,8 @@ func resourceQingcloudCacheParameterGroupRead(d *schema.ResourceData, meta inter
 	}
 	group := output.CacheParameterGroupSet[0]
 	d.Set("type", qc.StringValue(group.CacheType))
-	d.Set("name", qc.StringValue(group.CacheParameterGroupName))
-	d.Set("description", qc.StringValue(group.Description))
+	d.Set(resourceName, qc.StringValue(group.CacheParameterGroupName))
+	d.Set(resourceDescription, qc.StringValue(group.Description))
 	return nil
 }
 

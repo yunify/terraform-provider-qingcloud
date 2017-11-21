@@ -2,42 +2,50 @@ package qingcloud
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}, create bool) error {
+func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.ModifyVolumeAttributesInput)
 	input.Volume = qc.String(d.Id())
-	if create {
-		if description := d.Get("description").(string); description == "" {
-			return nil
-		}
-		input.Description = qc.String(d.Get("description").(string))
-	} else {
-		if !d.HasChange("description") && !d.HasChange("name") {
-			return nil
-		}
-		if d.HasChange("description") {
+
+	attributeUpdate := false
+	if d.HasChange("description") {
+		if d.Get("description").(string) != "" {
 			input.Description = qc.String(d.Get("description").(string))
+		} else {
+			input.Description = qc.String(" ")
 		}
-		if d.HasChange("name") {
-			input.VolumeName = qc.String(d.Get("name").(string))
-		}
+		attributeUpdate = true
 	}
-	_, err := clt.ModifyVolumeAttributes(input)
-	return err
+	if d.HasChange("name") && !d.IsNewResource() {
+		if d.Get("name").(string) != "" {
+			input.VolumeName = qc.String(d.Get("name").(string))
+		} else {
+			input.VolumeName = qc.String(" ")
+		}
+		attributeUpdate = true
+	}
+	if attributeUpdate {
+		var err error
+		simpleRetry(func() error {
+			_, err := clt.ModifyVolumeAttributes(input)
+			return isServerBusy(err)
+		})
+		return err
+	}
+	return nil
 }
 
 func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("size") {
+	if !d.HasChange("size") || d.IsNewResource() {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).volume
-
 	// new size must bigger than old size
 	oldV, newV := d.GetChange("size")
 	oldSize := oldV.(int)
@@ -45,66 +53,52 @@ func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
 	if oldSize >= newSize {
 		return errors.New("volume size can't reduce")
 	}
-	if newSize%10 != 0 {
-		return errors.New("volume size must be a multiple of 10")
+	describeInput := new(qc.DescribeVolumesInput)
+	describeInput.Volumes = []*string{qc.String(d.Id())}
+	var describeOutput *qc.DescribeVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		describeOutput, err = clt.DescribeVolumes(describeInput)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
 	}
-	// if disk is attached, shutdown instance, detach disk,
-	if d.Get("status").(string) == "in-use" {
-		instanceID := d.Get("instance_id").(string)
-
-		instanceClt := meta.(*QingCloudClient).instance
-		stopInstanceInput := new(qc.StopInstancesInput)
-		qingcloudMutexKV.Lock(instanceID)
-		defer qingcloudMutexKV.Unlock(instanceID)
-		stopInstanceInput.Instances = []*string{qc.String(instanceID)}
-		if _, err := instanceClt.StopInstances(stopInstanceInput); err != nil {
-			return err
-		}
-		if _, err := InstanceTransitionStateRefresh(instanceClt, instanceID); err != nil {
-			return err
-		}
-		detachVolumeInput := new(qc.DetachVolumesInput)
-		detachVolumeInput.Instance = qc.String(instanceID)
-		detachVolumeInput.Volumes = []*string{qc.String(d.Id())}
-		if _, err := clt.DetachVolumes(detachVolumeInput); err != nil {
-			return err
-		}
-		if _, err := VolumeTransitionStateRefresh(clt, d.Id()); err != nil {
-			return err
-		}
+	if qc.StringValue(describeOutput.VolumeSet[0].Status) != "available" {
+		return fmt.Errorf("Only when the state of the volume is available can it be expanded ")
 	}
 	// increase disk size
 	input := new(qc.ResizeVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
 	input.Size = qc.Int(newSize)
-	if _, err := clt.ResizeVolumes(input); err != nil {
+	simpleRetry(func() error {
+		_, err = clt.ResizeVolumes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
 		return err
 	}
 	if _, err := VolumeTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
+	return nil
+}
 
-	// attach disk, running instance
-	if d.Get("status").(string) == "in-use" {
-		instanceID := d.Get("instance_id").(string)
-		attachVolumeInput := new(qc.AttachVolumesInput)
-		attachVolumeInput.Instance = qc.String(instanceID)
-		attachVolumeInput.Volumes = []*string{qc.String(d.Id())}
-		if _, err := clt.AttachVolumes(attachVolumeInput); err != nil {
-			return err
-		}
-		if _, err := VolumeTransitionStateRefresh(clt, d.Id()); err != nil {
-			return err
-		}
-		instanceClt := meta.(*QingCloudClient).instance
-		startInstanceInput := new(qc.StartInstancesInput)
-		startInstanceInput.Instances = []*string{qc.String(instanceID)}
-		if _, err := instanceClt.StartInstances(startInstanceInput); err != nil {
-			return err
-		}
-		if _, err := InstanceTransitionStateRefresh(instanceClt, instanceID); err != nil {
-			return err
-		}
+func waitVolumeLease(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).volume
+	input := new(qc.DescribeVolumesInput)
+	input.Volumes = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	var output *qc.DescribeVolumesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeVolumes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
 	}
+	//wait for lease info
+	WaitForLease(output.VolumeSet[0].CreateTime)
 	return nil
 }

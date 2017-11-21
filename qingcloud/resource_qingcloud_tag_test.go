@@ -28,7 +28,7 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(
-						"qingcloud_tag.foo", "name", Tag1Name),
+						"qingcloud_tag.foo", resourceName, Tag1Name),
 					resource.TestCheckResourceAttr(
 						"qingcloud_tag.foo", "color", "#9f9bb7"),
 				),
@@ -38,9 +38,9 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
 					resource.TestCheckResourceAttr(
-						"qingcloud_tag.foo", "name", Tag1Name),
+						"qingcloud_tag.foo", resourceName, Tag1Name),
 					resource.TestCheckResourceAttr(
-						"qingcloud_tag.foo", "description", "test"),
+						"qingcloud_tag.foo", resourceDescription, "test"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_tag.foo", "color", "#fff"),
 				),

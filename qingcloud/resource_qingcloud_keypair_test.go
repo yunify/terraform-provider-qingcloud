@@ -33,9 +33,9 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
 					resource.TestCheckResourceAttr(
-						"qingcloud_keypair.foo", "name", "keypair1"),
+						"qingcloud_keypair.foo", resourceName, "keypair1"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_keypair.foo", "description", "test"),
+						"qingcloud_keypair.foo", resourceDescription, "test"),
 				),
 			},
 		},
@@ -142,11 +142,11 @@ func testAccCheckKeypairDestroyWithProvider(s *terraform.State, provider *schema
 
 		// Try to find the resource
 		input := new(qc.DescribeKeyPairsInput)
-		input.Tags = []*string{qc.String(rs.Primary.ID)}
+		input.KeyPairs = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.keypair.DescribeKeyPairs(input)
 		if err == nil && qc.IntValue(output.RetCode) == 0 {
 			if len(output.KeyPairSet) != 0 {
-				return fmt.Errorf("Found  tag: %s", rs.Primary.ID)
+				return fmt.Errorf("Found  keypair: %s", rs.Primary.ID)
 			}
 		}
 	}

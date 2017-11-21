@@ -4,8 +4,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/yunify/qingcloud-sdk-go/logger"
 	"github.com/yunify/qingcloud-sdk-go/request/errors"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func stringSliceDiff(nl, ol []string) ([]string, []string) {
@@ -78,4 +80,29 @@ type stop struct {
 //Stop Retry when fn's return value is nil , or fn's return type is stop struct
 func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
+}
+
+func getNamePointer(d *schema.ResourceData) (*string, bool) {
+	var value *string = nil
+	if d.HasChange(resourceName) {
+		if d.Get(resourceName).(string) != "" {
+			value = qc.String(d.Get(resourceName).(string))
+		} else {
+			value = qc.String(" ")
+		}
+		return value, true
+	}
+	return value, false
+}
+func getDescriptionPointer(d *schema.ResourceData) (*string, bool) {
+	var value *string = nil
+	if d.HasChange(resourceDescription) {
+		if d.Get(resourceDescription).(string) != "" {
+			value = qc.String(d.Get(resourceDescription).(string))
+		} else {
+			value = qc.String(" ")
+		}
+		return value, true
+	}
+	return value, false
 }

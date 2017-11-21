@@ -14,7 +14,7 @@ func resourceQingcloudKeypair() *schema.Resource {
 		Update: resourceQingcloudKeypairUpdate,
 		Delete: resourceQingcluodKeypairDelete,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The name of keypair ",
@@ -33,25 +33,13 @@ func resourceQingcloudKeypair() *schema.Resource {
 					}
 				},
 			},
-			"description": &schema.Schema{
+			resourceDescription: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of keypair ",
 			},
-			"tag_ids": &schema.Schema{
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "tag ids , keypair wants to use ",
-			},
-			"tag_names": &schema.Schema{
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "compute by tag ids ",
-			},
+			resourceTagIds:   tagIdsSchema(),
+			resourceTagNames: tagNamesSchema(),
 		},
 	}
 }
@@ -59,11 +47,7 @@ func resourceQingcloudKeypair() *schema.Resource {
 func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
 	input := new(qc.CreateKeyPairInput)
-	if d.Get("name").(string) != "" {
-		input.KeyPairName = qc.String(d.Get("name").(string))
-	} else {
-		input.KeyPairName = nil
-	}
+	input.KeyPairName, _ = getNamePointer(d)
 	input.Mode = qc.String("user")
 	input.PublicKey = qc.String(d.Get("public_key").(string))
 	var output *qc.CreateKeyPairOutput
@@ -98,8 +82,8 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	kp := output.KeyPairSet[0]
-	d.Set("name", qc.StringValue(kp.KeyPairName))
-	d.Set("description", qc.StringValue(kp.Description))
+	d.Set(resourceName, qc.StringValue(kp.KeyPairName))
+	d.Set(resourceDescription, qc.StringValue(kp.Description))
 	resourceSetTag(d, kp.Tags)
 	return nil
 }
@@ -109,12 +93,12 @@ func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) er
 	if err := modifyKeypairAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("description")
-	d.SetPartial("name")
+	d.SetPartial(resourceDescription)
+	d.SetPartial(resourceName)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeKeypair); err != nil {
 		return err
 	}
-	d.SetPartial("tag_ids")
+	d.SetPartial(resourceTagIds)
 	d.Partial(false)
 	return resourceQingcloudKeypairRead(d, meta)
 }

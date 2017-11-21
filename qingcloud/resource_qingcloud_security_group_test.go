@@ -27,7 +27,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
 					resource.TestCheckResourceAttr(
-						"qingcloud_security_group.foo", "name", "first_sg"),
+						"qingcloud_security_group.foo", resourceName, "first_sg"),
 				),
 			},
 			resource.TestStep{
@@ -35,9 +35,9 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
 					resource.TestCheckResourceAttr(
-						"qingcloud_security_group.foo", "name", "test"),
+						"qingcloud_security_group.foo", resourceName, "test"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_security_group.foo", "description", "test"),
+						"qingcloud_security_group.foo", resourceDescription, "test"),
 				),
 			},
 		},
