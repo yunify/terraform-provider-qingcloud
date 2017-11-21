@@ -82,17 +82,17 @@ func simpleRetry(fn func() error) error {
 	return retry(100, 10*time.Second, fn)
 }
 
-func getNamePointer(d *schema.ResourceData) (*string, bool) {
-	var value *string = nil
+func getNamePointer(d *schema.ResourceData) (value *string, update bool) {
+	update = false
 	if d.HasChange(resourceName) {
 		if d.Get(resourceName).(string) != "" {
 			value = qc.String(d.Get(resourceName).(string))
 		} else {
 			value = qc.String(" ")
 		}
-		return value, true
+		update = !d.IsNewResource()
 	}
-	return value, false
+	return value, update
 }
 func getDescriptionPointer(d *schema.ResourceData) (*string, bool) {
 	var value *string = nil

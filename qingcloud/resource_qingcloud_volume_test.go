@@ -35,9 +35,9 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
 					resource.TestCheckResourceAttr(
-						"qingcloud_volume.foo", "name", "volume"),
+						"qingcloud_volume.foo", resourceName, "volume"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_volume.foo", "description", "volume"),
+						"qingcloud_volume.foo", resourceDescription, "volume"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_volume.foo", "size", "20"),
 				),
