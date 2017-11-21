@@ -170,9 +170,6 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		if err != nil {
 			return nil, "", fmt.Errorf("Error describe instance: %s", err)
 		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
-		}
 		if len(output.InstanceSet) == 0 {
 			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
 		}

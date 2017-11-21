@@ -16,7 +16,7 @@ func resourceQingcloudInstance() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
@@ -41,7 +41,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			"managed_vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"static_ip": &schema.Schema{
 				Type:     schema.TypeString,
@@ -55,7 +55,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			"security_group_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"eip_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -85,20 +85,11 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.RunInstancesInput)
 	input.Count = qc.Int(1)
-	input.InstanceName , _= getNamePointer(d)
+	input.InstanceName, _ = getNamePointer(d)
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.CPU = qc.Int(d.Get("cpu").(int))
 	input.Memory = qc.Int(d.Get("memory").(int))
-	var vxnet string
-	if d.Get("static_ip").(string) != "" {
-		vxnet = fmt.Sprintf("%s|%s", d.Get("managed_vxnet_id").(string), d.Get("static_ip").(string))
-	} else {
-		vxnet = d.Get("managed_vxnet_id").(string)
-	}
-	input.VxNets = []*string{qc.String(vxnet)}
-	if d.Get("security_group_id").(string) != "" {
-		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-	}
+	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.LoginMode = qc.String("keypair")
 	kps := d.Get("keypair_ids").(*schema.Set).List()
 	if len(kps) > 0 {
@@ -113,40 +104,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	err = modifyInstanceAttributes(d, meta)
-	if err != nil {
-		return err
-	}
-	// associate eip to instance
-	if eipID := d.Get("eip_id").(string); eipID != "" {
-		eipClt := meta.(*QingCloudClient).eip
-		if _, err := EIPTransitionStateRefresh(eipClt, eipID); err != nil {
-			return err
-		}
-		associateEIPInput := new(qc.AssociateEIPInput)
-		associateEIPInput.EIP = qc.String(eipID)
-		associateEIPInput.Instance = qc.String(d.Id())
-		associateEIPoutput, err := eipClt.AssociateEIP(associateEIPInput)
-		if err != nil {
-			return fmt.Errorf("Error associate eip: %s", err)
-		}
-		if associateEIPoutput.RetCode != nil && qc.IntValue(associateEIPoutput.RetCode) != 0 {
-			return fmt.Errorf("Error associate eip: %s", *associateEIPoutput.Message)
-		}
-		if _, err := EIPTransitionStateRefresh(eipClt, eipID); err != nil {
-			return err
-		}
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
-	}
-	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
-		return err
-	}
-
-	// update volume
-	// volumeDS :=
-	return resourceQingcloudInstanceRead(d, meta)
+	return resourceQingcloudVxnetUpdate(d, meta)
 }
 
 func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -165,7 +123,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		d.SetId("")
 		return nil
 	}
-
 	instance := output.InstanceSet[0]
 	d.Set(resourceName, qc.StringValue(instance.InstanceName))
 	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
@@ -175,9 +132,9 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	if instance.VxNets != nil && len(instance.VxNets) > 0 {
 		vxnet := instance.VxNets[0]
 		if qc.IntValue(vxnet.VxNetType) == 2 {
-			d.Set("vxnet_id", "vxnet-0")
+			d.Set("managed_vxnet_id", "vxnet-0")
 		} else {
-			d.Set("vxnet_id", qc.StringValue(vxnet.VxNetID))
+			d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
 		}
 		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
 		if d.Get("static_ip") != "" {
@@ -212,7 +169,7 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	// change vxnet
-	err = instanceUpdateChangeVxNet(d, meta)
+	err = instanceUpdateChangeManagedVxNet(d, meta)
 	if err != nil {
 		return err
 	}
@@ -260,12 +217,9 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	output, err := clt.TerminateInstances(input)
+	_, err = clt.TerminateInstances(input)
 	if err != nil {
 		return fmt.Errorf("Error terminate instance: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error terminate instance: %s", *output.Message)
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err

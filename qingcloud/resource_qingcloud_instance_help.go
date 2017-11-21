@@ -14,9 +14,9 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.Instance = qc.String(d.Id())
 	nameUpdate := false
 	descriptionUpdate := false
-	input.InstanceName ,nameUpdate = getNamePointer(d)
-	input.Description , descriptionUpdate =getDescriptionPointer(d)
-	if nameUpdate || descriptionUpdate{
+	input.InstanceName, nameUpdate = getNamePointer(d)
+	input.Description, descriptionUpdate = getDescriptionPointer(d)
+	if nameUpdate || descriptionUpdate {
 		_, err := clt.ModifyInstanceAttributes(input)
 		if err != nil {
 			return fmt.Errorf("Error modify instance attributes: %s", err)
@@ -25,13 +25,13 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("vxnet_id") {
+func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) error {
+	if !d.HasChange("managed_vxnet_id") {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
 	vxnetClt := meta.(*QingCloudClient).vxnet
-	oldV, newV := d.GetChange("vxnet_id")
+	oldV, newV := d.GetChange("managed_vxnet_id")
 	// leave old vxnet
 	if oldV.(string) != "" {
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -49,12 +49,21 @@ func instanceUpdateChangeVxNet(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	// join new vxnet
 	if newV.(string) != "" {
+		selfManaged, err := isVxnetSelfManaged(newV.(string), vxnetClt)
+		if err != nil {
+			return err
+		}
+		if selfManaged {
+			return fmt.Errorf("can not use selfManaged ip as Managed ip")
+		}
 		joinVxnetInput := new(qc.JoinVxNetInput)
+		if d.Get("static_ip").(string) != "" {
+			newV = fmt.Sprintf("%s|%s", newV.(string), d.Get("static_ip").(string))
+		}
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
 		joinVxnetInput.VxNet = qc.String(newV.(string))
-		_, err := vxnetClt.JoinVxNet(joinVxnetInput)
+		_, err = vxnetClt.JoinVxNet(joinVxnetInput)
 		if err != nil {
 			return fmt.Errorf("Error leave vxnet: %s", err)
 		}
@@ -93,15 +102,6 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	}
 	clt := meta.(*QingCloudClient).instance
 	eipClt := meta.(*QingCloudClient).eip
-	describeEIPInput := new(qc.DescribeEIPsInput)
-	describeEIPInput.EIPs = []*string{qc.String(d.Get("eip_id").(string))}
-	describeEIPOutput, err := eipClt.DescribeEIPs(describeEIPInput)
-	if err != nil {
-		return fmt.Errorf("Error describe eip: %s", err)
-	}
-	if qc.StringValue(describeEIPOutput.EIPSet[0].Status) != "available" {
-		return fmt.Errorf("Error eip %s state is %s", d.Get("eip_id").(string), qc.StringValue(describeEIPOutput.EIPSet[0].Status))
-	}
 	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
 		return err
 	}
@@ -231,9 +231,6 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	input.Memory = qc.Int(d.Get("memory").(int))
 	_, err = clt.ResizeInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error resize instance: %s", err)
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// start instance
