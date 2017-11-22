@@ -335,8 +335,8 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		for _,volumeID := range additions  {
-			VolumeTransitionStateRefresh(volumeClt,volumeID)
+		for _, volumeID := range additions {
+			VolumeTransitionStateRefresh(volumeClt, volumeID)
 		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -351,12 +351,31 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		for _,volumeID := range deletions  {
-			VolumeTransitionStateRefresh(volumeClt,volumeID)
+		for _, volumeID := range deletions {
+			VolumeTransitionStateRefresh(volumeClt, volumeID)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).instance
+	input := new(qc.DescribeInstancesInput)
+	input.Instances = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	var output *qc.DescribeInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeInstances(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	//wait for lease info
+	WaitForLease(output.InstanceSet[0].CreateTime)
 	return nil
 }

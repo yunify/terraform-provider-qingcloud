@@ -161,39 +161,34 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	// clt := meta.(*QingCloudClient).instance
-	err := modifyInstanceAttributes(d, meta)
-	if err != nil {
+	if err := waitInstanceLease(d, meta); err != nil {
+		return err
+	}
+	if err := modifyInstanceAttributes(d, meta); err != nil {
 		return err
 	}
 	// change vxnet
-	err = instanceUpdateChangeManagedVxNet(d, meta)
-	if err != nil {
+	if err := instanceUpdateChangeManagedVxNet(d, meta); err != nil {
 		return err
 	}
 	// change security_group
-	err = instanceUpdateChangeSecurityGroup(d, meta)
-	if err != nil {
+	if err := instanceUpdateChangeSecurityGroup(d, meta); err != nil {
 		return err
 	}
 	// change eip
-	err = instanceUpdateChangeEip(d, meta)
-	if err != nil {
+	if err := instanceUpdateChangeEip(d, meta); err != nil {
 		return err
 	}
 	// change keypairs
-	err = instanceUpdateChangeKeyPairs(d, meta)
-	if err != nil {
+	if err := instanceUpdateChangeKeyPairs(d, meta); err != nil {
 		return err
 	}
 	// change volumes
-	err = updateInstanceVolume(d, meta)
-	if err != nil {
+	if err := updateInstanceVolume(d, meta); err != nil {
 		return err
 	}
 	// resize instance
-	err = instanceUpdateResize(d, meta)
-	if err != nil {
+	if err := instanceUpdateResize(d, meta); err != nil {
 		return err
 	}
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
@@ -203,6 +198,9 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	if err := waitInstanceLease(d, meta); err != nil {
+		return err
+	}
 	clt := meta.(*QingCloudClient).instance
 	// dissociate eip before leave vxnet
 	if _, err := deleteInstanceDissociateEip(d, meta); err != nil {
@@ -211,8 +209,7 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	_, err := deleteInstanceLeaveVxnet(d, meta)
-	if err != nil {
+	if _, err := deleteInstanceLeaveVxnet(d, meta); err != nil {
 		return err
 	}
 	if _, err := InstanceNetworkTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -220,8 +217,7 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	_, err = clt.TerminateInstances(input)
-	if err != nil {
+	if _, err := clt.TerminateInstances(input); err != nil {
 		return err
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
