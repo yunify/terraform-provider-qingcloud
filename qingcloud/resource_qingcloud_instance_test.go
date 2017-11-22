@@ -3,12 +3,63 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
+
+func TestAccQingcloudInstance_basic(t *testing.T) {
+	var instance qc.DescribeInstancesOutput
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		IDRefreshName: "qingcloud_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccInstanceConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "image_id", "centos7x64d"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "managed_vxnet_id", "vxnet-0"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "cpu", "1"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "memory", "1024"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "instance_class", "0"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccInstanceConfigTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", resourceName, "instance"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", resourceDescription, "instance"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "image_id", "centos7x64d"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "managed_vxnet_id", "vxnet-0"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "cpu", "2"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "memory", "2048"),
+					resource.TestCheckResourceAttr(
+						"qingcloud_instance.foo", "instance_class", "0"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckInstanceExists(n string, i *qc.DescribeInstancesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -70,7 +121,7 @@ resource "qingcloud_keypair" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	keypair_id = "${qingcloud_keypair.foo.id}"
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 }
 `
 const testAccInstanceConfigTwo = `
@@ -79,6 +130,10 @@ resource "qingcloud_keypair" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	keypair_id = "${qingcloud_keypair.foo.id}"
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	cpu = 2
+    memory = 2048
+	name = "instance"
+	description = "instance"
 }
 `

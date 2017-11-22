@@ -44,7 +44,7 @@ func resourceQingcloudInstance() *schema.Resource {
 				ForceNew:     true,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(0, 1),
-				Default:      1,
+				Default:      0,
 				Description:  "Type of instance , 0 - Performance type , 1 - Ultra high performance type",
 			},
 			"managed_vxnet_id": &schema.Schema{
