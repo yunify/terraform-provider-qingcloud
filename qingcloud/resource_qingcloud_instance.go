@@ -13,12 +13,14 @@ func resourceQingcloudInstance() *schema.Resource {
 		Delete: resourceQingcloudInstanceDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The name of instance",
 			},
 			resourceDescription: &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The description of instance",
 			},
 			"image_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -36,6 +38,14 @@ func resourceQingcloudInstance() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 				Default:      1024,
+			},
+			"instance_class": &schema.Schema{
+				Type:         schema.TypeInt,
+				ForceNew:     true,
+				Optional:     true,
+				ValidateFunc: withinArrayInt(0, 1),
+				Default:      1,
+				Description:  "Type of instance , 0 - Performance type , 1 - Ultra high performance type",
 			},
 			"managed_vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -86,6 +96,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.CPU = qc.Int(d.Get("cpu").(int))
 	input.Memory = qc.Int(d.Get("memory").(int))
+	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
 	if d.Get("security_group_id").(string) != "" {
 		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	}
@@ -125,6 +136,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))
 	d.Set("memory", qc.IntValue(instance.MemoryCurrent))
+	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
 	//set managed vxnet
 	for _, vxnet := range instance.VxNets {
 		if qc.IntValue(vxnet.VxNetType) != 0 {
