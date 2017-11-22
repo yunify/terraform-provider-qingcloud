@@ -43,10 +43,6 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"static_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"keypair_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Required: true,
@@ -74,6 +70,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			"private_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
@@ -114,10 +111,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	input.Verbose = qc.Int(1)
 	output, err := clt.DescribeInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error describe instance: %s", err)
-	}
-	if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-		return fmt.Errorf("Error describe instance: %s", *output.Message)
+		return err
 	}
 	if len(output.InstanceSet) == 0 {
 		d.SetId("")
@@ -137,9 +131,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
 		}
 		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
-		if d.Get("static_ip") != "" {
-			d.Set("static_ip", qc.StringValue(vxnet.PrivateIP))
-		}
 	} else {
 		d.Set("managed_vxnet_id", "")
 		d.Set("private_ip", "")
@@ -190,8 +181,13 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	// change keypair
+	// change keypairs
 	err = instanceUpdateChangeKeyPairs(d, meta)
+	if err != nil {
+		return err
+	}
+	// change volumes
+	err = updateInstanceVolume(d, meta)
 	if err != nil {
 		return err
 	}
@@ -226,7 +222,7 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	input.Instances = []*string{qc.String(d.Id())}
 	_, err = clt.TerminateInstances(input)
 	if err != nil {
-		return fmt.Errorf("Error terminate instance: %s", err)
+		return err
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
