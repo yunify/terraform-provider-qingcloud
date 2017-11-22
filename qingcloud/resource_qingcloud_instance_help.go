@@ -335,6 +335,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+		for _,volumeID := range additions  {
+			VolumeTransitionStateRefresh(volumeClt,volumeID)
+		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
@@ -347,6 +350,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		_, err := volumeClt.DetachVolumes(detachInput)
 		if err != nil {
 			return err
+		}
+		for _,volumeID := range deletions  {
+			VolumeTransitionStateRefresh(volumeClt,volumeID)
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
