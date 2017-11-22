@@ -50,7 +50,8 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			"security_group_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"eip_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -85,7 +86,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.ImageID = qc.String(d.Get("image_id").(string))
 	input.CPU = qc.Int(d.Get("cpu").(int))
 	input.Memory = qc.Int(d.Get("memory").(int))
-	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+	if d.Get("security_group_id").(string) != "" {
+		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+	}
 	input.LoginMode = qc.String("keypair")
 	kps := d.Get("keypair_ids").(*schema.Set).List()
 	if len(kps) > 0 {
@@ -125,9 +128,13 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	//set managed vxnet
 	for _, vxnet := range instance.VxNets {
 		if qc.IntValue(vxnet.VxNetType) != 0 {
-			d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
-			d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
-			break
+			if qc.IntValue(vxnet.VxNetType) == 1 {
+				d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
+				d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+			} else {
+				d.Set("managed_vxnet_id", "vxnet-0")
+				d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+			}
 		}
 	}
 	if instance.EIP != nil {
