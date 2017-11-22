@@ -1,6 +1,7 @@
 package qingcloud
 
 import (
+	"os"
 	"fmt"
 	"log"
 	"testing"
@@ -59,6 +60,66 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccQingcloudInstance_tag(t *testing.T) {
+	var instance qc.DescribeInstancesOutput
+	instanceTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-instance-tag1"
+	instanceTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-instance-tag2"
+	testTagNameValue := func(names ...string) resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			tags := instance.InstanceSet[0].Tags
+			same_count := 0
+			for _, tag := range tags {
+				for _, name := range names {
+					if qc.StringValue(tag.TagName) == name {
+						same_count++
+					}
+					if same_count == len(instance.InstanceSet[0].Tags) {
+						return nil
+					}
+				}
+			}
+			return fmt.Errorf("tag name error %#v", names)
+		}
+	}
+	testTagDetach := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if len(instance.InstanceSet[0].Tags) != 0 {
+				return fmt.Errorf("tag not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccInstanceConfigTagTemplate, instanceTag1Name, instanceTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testTagNameValue(instanceTag1Name, instanceTag2Name),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccInstanceConfigTagTwoTemplate, instanceTag1Name, instanceTag2Name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testTagDetach(),
+				),
+			},
+		},
+	})
+
 }
 
 func testAccCheckInstanceExists(n string, i *qc.DescribeInstancesOutput) resource.TestCheckFunc {
@@ -135,5 +196,37 @@ resource "qingcloud_instance" "foo" {
     memory = 2048
 	name = "instance"
 	description = "instance"
+}
+`
+const testAccInstanceConfigTagTemplate = `
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_instance" "foo" {
+	image_id = "centos7x64d"
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}",
+				"${qingcloud_tag.test2.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
+}
+`
+const testAccInstanceConfigTagTwoTemplate = `
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_instance" "foo" {
+	image_id = "centos7x64d"
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_tag" "test2"{
+	name="%v"
 }
 `
