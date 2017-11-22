@@ -19,7 +19,7 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	if nameUpdate || descriptionUpdate {
 		_, err := clt.ModifyInstanceAttributes(input)
 		if err != nil {
-			return fmt.Errorf("Error modify instance attributes: %s", err)
+			return err
 		}
 	}
 	return nil
@@ -43,7 +43,7 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 
 		_, err := vxnetClt.LeaveVxNet(leaveVxnetInput)
 		if err != nil {
-			return fmt.Errorf("Error leave vxnet: %s", err)
+			return err
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
@@ -88,7 +88,7 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	input.Instances = []*string{qc.String(d.Id())}
 	_, err := sgClt.ApplySecurityGroup(input)
 	if err != nil {
-		return fmt.Errorf("Error apply security group: %s", err)
+		return err
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
@@ -115,7 +115,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		dissociateEIPInput.EIPs = []*string{qc.String(oldV.(string))}
 		_, err := eipClt.DissociateEIPs(dissociateEIPInput)
 		if err != nil {
-			return fmt.Errorf("Error dissociate eip: %s", err)
+			return err
 		}
 	}
 
@@ -132,7 +132,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		assoicateEIPInput.Instance = qc.String(d.Id())
 		_, err := eipClt.AssociateEIP(assoicateEIPInput)
 		if err != nil {
-			return fmt.Errorf("Error assoicate eip: %s", err)
+			return err
 		}
 	}
 	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
@@ -169,13 +169,11 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		attachInput := new(qc.AttachKeyPairsInput)
 		attachInput.Instances = []*string{qc.String(d.Id())}
 		attachInput.KeyPairs = qc.StringSlice(additions)
-		output, err := kpClt.AttachKeyPairs(attachInput)
+		_, err := kpClt.AttachKeyPairs(attachInput)
 		if err != nil {
-			return fmt.Errorf("Error attach keypairs: %s", err)
+			return err
 		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error attach keypair: %s", *output.Message)
-		}
+
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
@@ -185,12 +183,9 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		detachInput := new(qc.DetachKeyPairsInput)
 		detachInput.Instances = []*string{qc.String(d.Id())}
 		detachInput.KeyPairs = qc.StringSlice(deletions)
-		output, err := kpClt.DetachKeyPairs(detachInput)
+		_, err := kpClt.DetachKeyPairs(detachInput)
 		if err != nil {
-			return fmt.Errorf("Errorr detach keypairs: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return fmt.Errorf("Error detach keypair: %s", *output.Message)
+			return err
 		}
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 			return err
@@ -213,7 +208,6 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	// stop instance
 	if *instance.Status == "running" {
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-			log.Printf("InstanceTransitionStateRefresh err: %s", err)
 			return err
 		}
 		_, err := stopInstance(d, meta)
@@ -262,7 +256,7 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 	input.Instances = []*string{qc.String(d.Id())}
 	output, err := clt.StopInstances(input)
 	if err != nil {
-		return nil, fmt.Errorf("Error stop instance: %s", err)
+		return nil, err
 	}
 	return output, nil
 }
@@ -279,7 +273,7 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 }
 
 func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.LeaveVxNetOutput, error) {
-	vxnetID := d.Get("vxnet_id").(string)
+	vxnetID := d.Get("managed_vxnet_id").(string)
 	if vxnetID != "" {
 		clt := meta.(*QingCloudClient).vxnet
 		input := new(qc.LeaveVxNetInput)
@@ -287,7 +281,7 @@ func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.Lea
 		input.VxNet = qc.String(vxnetID)
 		_, err := clt.LeaveVxNet(input)
 		if err != nil {
-			return nil, fmt.Errorf("Error instance leave vxnet: %s", err)
+			return nil, err
 		}
 	}
 	return nil, nil
@@ -313,7 +307,50 @@ func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.
 	return nil, nil
 }
 
-func updateInstanceVolume(d *schema.ResourceData, meta interface{}, create bool) error {
-	// clt := meta.(*QingCloudClient).instance
+func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).instance
+	if !d.HasChange("volume_ids") {
+		return nil
+	}
+	volumeClt := meta.(*QingCloudClient).volume
+	oldV, newV := d.GetChange("volume_ids")
+	var newVolumes []string
+	var oldVolumes []string
+	for _, v := range oldV.(*schema.Set).List() {
+		oldVolumes = append(oldVolumes, v.(string))
+	}
+	for _, v := range newV.(*schema.Set).List() {
+		newVolumes = append(newVolumes, v.(string))
+	}
+	additions, deletions := stringSliceDiff(newVolumes, oldVolumes)
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
+	// attach new key_pair
+	if len(additions) > 0 {
+		attachInput := new(qc.AttachVolumesInput)
+		attachInput.Instance = qc.String(d.Id())
+		attachInput.Volumes = qc.StringSlice(additions)
+		_, err := volumeClt.AttachVolumes(attachInput)
+		if err != nil {
+			return err
+		}
+	}
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+		return err
+	}
+	// dettach old key_pair
+	if len(deletions) > 0 {
+		detachInput := new(qc.DetachVolumesInput)
+		detachInput.Instance = qc.String(d.Id())
+		detachInput.Volumes = qc.StringSlice(deletions)
+		_, err := volumeClt.DetachVolumes(detachInput)
+		if err != nil {
+			return err
+		}
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
+	}
 	return nil
 }

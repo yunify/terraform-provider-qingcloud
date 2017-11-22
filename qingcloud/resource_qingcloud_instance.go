@@ -141,7 +141,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("static_ip", qc.StringValue(vxnet.PrivateIP))
 		}
 	} else {
-		d.Set("vxnet_id", "")
+		d.Set("managed_vxnet_id", "")
 		d.Set("private_ip", "")
 	}
 	if instance.EIP != nil {
@@ -157,6 +157,13 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 			keypairIDs = append(keypairIDs, qc.StringValue(kp))
 		}
 		d.Set("keypair_ids", keypairIDs)
+	}
+	if instance.Volumes != nil {
+		volumeIDs := make([]string, 0, len(instance.Volumes))
+		for _, volume := range instance.Volumes {
+			volumeIDs = append(volumeIDs, qc.StringValue(volume.VolumeID))
+		}
+		d.Set("volume_ids", volumeIDs)
 	}
 	resourceSetTag(d, instance.Tags)
 	return nil
