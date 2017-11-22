@@ -142,7 +142,7 @@ func testAccCheckSecurityGroupDestroyWithProvider(s *terraform.State, provider *
 		input := new(qc.DescribeSecurityGroupsInput)
 		input.SecurityGroups = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.securitygroup.DescribeSecurityGroups(input)
-		if err == nil && qc.IntValue(output.RetCode) == 0 {
+		if err == nil {
 			if len(output.SecurityGroupSet) != 0 {
 				return fmt.Errorf("Found  SecurityGroup: %s", rs.Primary.ID)
 			}

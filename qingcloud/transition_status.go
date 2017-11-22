@@ -47,9 +47,6 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		if err != nil {
 			return nil, "", err
 		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe eip: %s", *output.Message)
-		}
 		if len(output.EIPSet) == 0 {
 			return nil, "", fmt.Errorf("Error eip set is empty, request id %s", id)
 		}

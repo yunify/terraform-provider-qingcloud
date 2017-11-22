@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -54,9 +53,6 @@ func resourceQingcloudCacheParameterGroupRead(d *schema.ResourceData, meta inter
 	output, err := clt.DescribeCacheParameterGroups(input)
 	if err != nil {
 		return err
-	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe cache: %s ", *output.Message)
 	}
 	if len(output.CacheParameterGroupSet) == 0 {
 		d.SetId("")

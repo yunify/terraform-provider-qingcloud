@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -100,9 +99,7 @@ func resourceQingcloudCacheRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	if *output.RetCode != 0 {
-		return fmt.Errorf("Error describe cache: %s ", *output.Message)
-	}
+
 	if len(output.CacheSet) == 0 {
 		d.SetId("")
 		return nil
