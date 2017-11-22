@@ -57,7 +57,7 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("can not use selfManaged ip as Managed ip")
 		}
 		joinVxnetInput := new(qc.JoinVxNetInput)
-		if d.HasChange("private_ip") && d.Get("private_ip").(string) != "" {
+		if newV.(string) != "vxnet-0" && d.HasChange("private_ip") && d.Get("private_ip").(string) != "" {
 			newV = fmt.Sprintf("%s|%s", newV.(string), d.Get("private_ip").(string))
 		}
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
