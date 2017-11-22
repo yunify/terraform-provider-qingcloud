@@ -2,7 +2,6 @@ package qingcloud
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
@@ -272,41 +271,6 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 	return output, nil
 }
 
-func deleteInstanceLeaveVxnet(d *schema.ResourceData, meta interface{}) (*qc.LeaveVxNetOutput, error) {
-	vxnetID := d.Get("managed_vxnet_id").(string)
-	if vxnetID != "" {
-		clt := meta.(*QingCloudClient).vxnet
-		input := new(qc.LeaveVxNetInput)
-		input.Instances = []*string{qc.String(d.Id())}
-		input.VxNet = qc.String(vxnetID)
-		_, err := clt.LeaveVxNet(input)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return nil, nil
-}
-
-func deleteInstanceDissociateEip(d *schema.ResourceData, meta interface{}) (*qc.LeaveVxNetOutput, error) {
-	eipID := d.Get("eip_id").(string)
-	if eipID != "" {
-		clt := meta.(*QingCloudClient).eip
-		if _, err := EIPTransitionStateRefresh(clt, eipID); err != nil {
-			return nil, err
-		}
-		input := new(qc.DissociateEIPsInput)
-		input.EIPs = []*string{qc.String(eipID)}
-		_, err := clt.DissociateEIPs(input)
-		if err != nil {
-			return nil, fmt.Errorf("Error dissciate eip: %s", err)
-		}
-		if _, err := EIPTransitionStateRefresh(clt, eipID); err != nil {
-			return nil, err
-		}
-	}
-	return nil, nil
-}
-
 func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
 	if !d.HasChange("volume_ids") {
@@ -378,4 +342,11 @@ func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
 	//wait for lease info
 	WaitForLease(output.InstanceSet[0].CreateTime)
 	return nil
+}
+
+func isInstanceDeleted(instanceSet []*qc.Instance) bool {
+	if len(instanceSet) == 0 || qc.StringValue(instanceSet[0].Status) == "terminated" || qc.StringValue(instanceSet[0].Status) == "ceased" {
+		return true
+	}
+	return false
 }

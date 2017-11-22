@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -29,19 +27,20 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			"cpu": &schema.Schema{
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: withinArrayInt(1, 2, 4, 8, 16),
 				Default:      1,
 			},
 			"memory": &schema.Schema{
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 				Default:      1024,
 			},
 			"managed_vxnet_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "vxnet-0",
 			},
 			"keypair_ids": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -101,7 +100,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	return resourceQingcloudVxnetUpdate(d, meta)
+	return resourceQingcloudInstanceUpdate(d, meta)
 }
 
 func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -113,27 +112,23 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	if len(output.InstanceSet) == 0 {
+	if isInstanceDeleted(output.InstanceSet) {
 		d.SetId("")
 		return nil
 	}
 	instance := output.InstanceSet[0]
 	d.Set(resourceName, qc.StringValue(instance.InstanceName))
-	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set(resourceDescription, qc.StringValue(instance.Description))
+	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
 	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))
 	d.Set("memory", qc.IntValue(instance.MemoryCurrent))
-	if instance.VxNets != nil && len(instance.VxNets) > 0 {
-		vxnet := instance.VxNets[0]
-		if qc.IntValue(vxnet.VxNetType) == 2 {
-			d.Set("managed_vxnet_id", "vxnet-0")
-		} else {
+	//set managed vxnet
+	for _, vxnet := range instance.VxNets {
+		if qc.IntValue(vxnet.VxNetType) != 0 {
 			d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
+			d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+			break
 		}
-		d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
-	} else {
-		d.Set("managed_vxnet_id", "")
-		d.Set("private_ip", "")
 	}
 	if instance.EIP != nil {
 		d.Set("eip_id", qc.StringValue(instance.EIP.EIPID))
@@ -202,19 +197,6 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	clt := meta.(*QingCloudClient).instance
-	// dissociate eip before leave vxnet
-	if _, err := deleteInstanceDissociateEip(d, meta); err != nil {
-		return err
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
-	}
-	if _, err := deleteInstanceLeaveVxnet(d, meta); err != nil {
-		return err
-	}
-	if _, err := InstanceNetworkTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
-	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	if _, err := clt.TerminateInstances(input); err != nil {

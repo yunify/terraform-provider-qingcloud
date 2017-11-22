@@ -173,7 +173,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		if len(output.InstanceSet) == 0 {
 			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
 		}
-		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
+		if isInstanceDeleted(output.InstanceSet) {
 			return output.InstanceSet[0], "", nil
 		}
 		if len(output.InstanceSet[0].VxNets) != 0 {
@@ -185,7 +185,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting"},
+		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting", "terminating"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
