@@ -279,7 +279,7 @@ func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeIns
 	var output *qc.DescribeInstancesOutput
 	var err error
 	simpleRetry(func() error {
-		_, err = clt.DescribeInstances(input)
+		output, err = clt.DescribeInstances(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
@@ -295,7 +295,7 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 	var output *qc.StopInstancesOutput
 	var err error
 	simpleRetry(func() error {
-		_, err = clt.StopInstances(input)
+		output, err = clt.StopInstances(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
@@ -311,7 +311,7 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 	var output *qc.StartInstancesOutput
 	var err error
 	simpleRetry(func() error {
-		_, err = clt.StartInstances(input)
+		output, err = clt.StartInstances(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
