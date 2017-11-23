@@ -52,6 +52,11 @@ func resourceQingcloudInstance() *schema.Resource {
 				Optional: true,
 				Default:  "vxnet-0",
 			},
+			"private_ip": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 			"keypair_ids": &schema.Schema{
 				Type:     schema.TypeSet,
 				Required: true,
@@ -76,11 +81,6 @@ func resourceQingcloudInstance() *schema.Resource {
 			"public_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"private_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
