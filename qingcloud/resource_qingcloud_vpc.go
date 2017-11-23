@@ -157,7 +157,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.SetPartial(resourceTagIds)
 	d.Partial(false)
-	return resourceQingcloudRouterRead(d, meta)
+	return resourceQingcloudVpcRead(d, meta)
 }
 
 func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error {
