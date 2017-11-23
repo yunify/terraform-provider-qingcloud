@@ -16,7 +16,11 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.InstanceName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		_, err := clt.ModifyInstanceAttributes(input)
+		var err error
+		simpleRetry(func() error {
+			_, err = clt.ModifyInstanceAttributes(input)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -39,8 +43,11 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 		leaveVxnetInput := new(qc.LeaveVxNetInput)
 		leaveVxnetInput.Instances = []*string{qc.String(d.Id())}
 		leaveVxnetInput.VxNet = qc.String(oldV.(string))
-
-		_, err := vxnetClt.LeaveVxNet(leaveVxnetInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = vxnetClt.LeaveVxNet(leaveVxnetInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -62,7 +69,10 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 		}
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
 		joinVxnetInput.VxNet = qc.String(newV.(string))
-		_, err = vxnetClt.JoinVxNet(joinVxnetInput)
+		simpleRetry(func() error {
+			_, err = vxnetClt.JoinVxNet(joinVxnetInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -85,7 +95,11 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 	input := new(qc.ApplySecurityGroupInput)
 	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
 	input.Instances = []*string{qc.String(d.Id())}
-	_, err := sgClt.ApplySecurityGroup(input)
+	var err error
+	simpleRetry(func() error {
+		_, err = sgClt.ApplySecurityGroup(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -112,7 +126,11 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		}
 		dissociateEIPInput := new(qc.DissociateEIPsInput)
 		dissociateEIPInput.EIPs = []*string{qc.String(oldV.(string))}
-		_, err := eipClt.DissociateEIPs(dissociateEIPInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = eipClt.DissociateEIPs(dissociateEIPInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -131,7 +149,11 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		assoicateEIPInput := new(qc.AssociateEIPInput)
 		assoicateEIPInput.EIP = qc.String(newV.(string))
 		assoicateEIPInput.Instance = qc.String(d.Id())
-		_, err := eipClt.AssociateEIP(assoicateEIPInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = eipClt.AssociateEIP(assoicateEIPInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -170,11 +192,14 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		attachInput := new(qc.AttachKeyPairsInput)
 		attachInput.Instances = []*string{qc.String(d.Id())}
 		attachInput.KeyPairs = qc.StringSlice(additions)
-		_, err := kpClt.AttachKeyPairs(attachInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = kpClt.AttachKeyPairs(attachInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
-
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
@@ -184,7 +209,11 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		detachInput := new(qc.DetachKeyPairsInput)
 		detachInput.Instances = []*string{qc.String(d.Id())}
 		detachInput.KeyPairs = qc.StringSlice(deletions)
-		_, err := kpClt.DetachKeyPairs(detachInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = kpClt.DetachKeyPairs(detachInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
 			return err
 		}
@@ -224,7 +253,10 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	input.Instances = []*string{qc.String(d.Id())}
 	input.CPU = qc.Int(d.Get("cpu").(int))
 	input.Memory = qc.Int(d.Get("memory").(int))
-	_, err = clt.ResizeInstances(input)
+	simpleRetry(func() error {
+		_, err = clt.ResizeInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -244,9 +276,14 @@ func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeIns
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	output, err := clt.DescribeInstances(input)
+	var output *qc.DescribeInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		_, err = clt.DescribeInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
-		return nil, fmt.Errorf("Error describe instance: %s", err)
+		return  nil,err
 	}
 	return output, nil
 }
@@ -255,9 +292,14 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.StopInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	output, err := clt.StopInstances(input)
+	var output *qc.StopInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		_, err = clt.StopInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
-		return nil, err
+		return  nil,err
 	}
 	return output, nil
 }
@@ -266,9 +308,14 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.StartInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	output, err := clt.StartInstances(input)
+	var output *qc.StartInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		_, err = clt.StartInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
-		return nil, fmt.Errorf("Error start instance: %s", err)
+		return  nil,err
 	}
 	return output, nil
 }
@@ -297,9 +344,13 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		attachInput := new(qc.AttachVolumesInput)
 		attachInput.Instance = qc.String(d.Id())
 		attachInput.Volumes = qc.StringSlice(additions)
-		_, err := volumeClt.AttachVolumes(attachInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = volumeClt.AttachVolumes(attachInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
-			return err
+			return  err
 		}
 		for _, volumeID := range additions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)
@@ -313,9 +364,13 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		detachInput := new(qc.DetachVolumesInput)
 		detachInput.Instance = qc.String(d.Id())
 		detachInput.Volumes = qc.StringSlice(deletions)
-		_, err := volumeClt.DetachVolumes(detachInput)
+		var err error
+		simpleRetry(func() error {
+			_, err = volumeClt.DetachVolumes(detachInput)
+			return isServerBusy(err)
+		})
 		if err != nil {
-			return err
+			return  err
 		}
 		for _, volumeID := range deletions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)

@@ -106,7 +106,12 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 		kp := kps[0].(string)
 		input.LoginKeyPair = qc.String(kp)
 	}
-	output, err := clt.RunInstances(input)
+	var output *qc.RunInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.RunInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -122,7 +127,12 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	input.Verbose = qc.Int(1)
-	output, err := clt.DescribeInstances(input)
+	var output *qc.DescribeInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeInstances(input)
+		return isServerBusy(err)
+	})
 	if err != nil {
 		return err
 	}
@@ -218,7 +228,13 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	if _, err := clt.TerminateInstances(input); err != nil {
+	var output *qc.TerminateInstancesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.TerminateInstances(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
 		return err
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
