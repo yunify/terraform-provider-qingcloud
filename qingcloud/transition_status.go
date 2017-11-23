@@ -9,7 +9,6 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-
 // EipTransitionStateRefresh Waiting for no transition_status
 func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
@@ -143,7 +142,7 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		var output *qc.DescribeInstancesOutput
 		var err error
 		simpleRetry(func() error {
-			_, err = clt.DescribeInstances(input)
+			output, err = clt.DescribeInstances(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -173,7 +172,6 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 	}
 	return stateConf.WaitForState()
 }
-
 
 func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
 	if id == "" {

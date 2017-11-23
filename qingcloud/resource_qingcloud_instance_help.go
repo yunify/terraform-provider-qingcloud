@@ -283,7 +283,7 @@ func describeInstance(d *schema.ResourceData, meta interface{}) (*qc.DescribeIns
 		return isServerBusy(err)
 	})
 	if err != nil {
-		return  nil,err
+		return nil, err
 	}
 	return output, nil
 }
@@ -299,7 +299,7 @@ func stopInstance(d *schema.ResourceData, meta interface{}) (*qc.StopInstancesOu
 		return isServerBusy(err)
 	})
 	if err != nil {
-		return  nil,err
+		return nil, err
 	}
 	return output, nil
 }
@@ -315,7 +315,7 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 		return isServerBusy(err)
 	})
 	if err != nil {
-		return  nil,err
+		return nil, err
 	}
 	return output, nil
 }
@@ -350,7 +350,7 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 			return isServerBusy(err)
 		})
 		if err != nil {
-			return  err
+			return err
 		}
 		for _, volumeID := range additions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)
@@ -370,7 +370,7 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 			return isServerBusy(err)
 		})
 		if err != nil {
-			return  err
+			return err
 		}
 		for _, volumeID := range deletions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)
