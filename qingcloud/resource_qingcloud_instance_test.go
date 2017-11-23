@@ -176,6 +176,60 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 
 }
 
+func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
+	var instance qc.DescribeInstancesOutput
+	testCheck := func(volCount int) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if len(instance.InstanceSet[0].Volumes) < 0 {
+				return fmt.Errorf("no keypairs: %#v", instance.InstanceSet[0].Volumes)
+			}
+
+			if len(instance.InstanceSet[0].Volumes) != volCount {
+				return fmt.Errorf("keypair count inconformity : %#v", instance.InstanceSet[0].Volumes)
+			}
+
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccInstanceConfigVolume,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testCheck(1),
+				),
+			},
+			resource.TestStep{
+				Config: testAccInstanceConfigVolumeTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testCheck(3),
+				),
+			},
+			resource.TestStep{
+				Config: testAccInstanceConfigVolumeThree,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testCheck(2),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckInstanceExists(n string, i *qc.DescribeInstancesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -329,5 +383,64 @@ resource "qingcloud_keypair" "foo3"{
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}","${qingcloud_keypair.foo2.id}"]
+}
+`
+
+const testAccInstanceConfigVolume = `
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_volume" "foo1"{
+	size = 10
+}
+resource "qingcloud_volume" "foo2"{
+	size = 10
+}
+resource "qingcloud_volume" "foo3"{
+	size = 10
+}
+resource "qingcloud_instance" "foo" {
+	image_id = "centos7x64d"
+	volume_ids = ["${qingcloud_volume.foo1.id}"]
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+}
+`
+
+const testAccInstanceConfigVolumeTwo = `
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_volume" "foo1"{
+	size = 10
+}
+resource "qingcloud_volume" "foo2"{
+	size = 10
+}
+resource "qingcloud_volume" "foo3"{
+	size = 10
+}
+resource "qingcloud_instance" "foo" {
+	image_id = "centos7x64d"
+	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}","${qingcloud_volume.foo3.id}"]
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+}
+`
+const testAccInstanceConfigVolumeThree = `
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_volume" "foo1"{
+	size = 10
+}
+resource "qingcloud_volume" "foo2"{
+	size = 10
+}
+resource "qingcloud_volume" "foo3"{
+	size = 10
+}
+resource "qingcloud_instance" "foo" {
+	image_id = "centos7x64d"
+	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}"]
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 }
 `
