@@ -101,31 +101,33 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	}
 	clt := meta.(*QingCloudClient).instance
 	eipClt := meta.(*QingCloudClient).eip
-	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
-		return err
-	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	oldV, newV := d.GetChange("eip_id")
 	// dissociate old eip
 	if oldV.(string) != "" {
+		if _, err := EIPTransitionStateRefresh(eipClt, oldV.(string)); err != nil {
+			return err
+		}
 		dissociateEIPInput := new(qc.DissociateEIPsInput)
 		dissociateEIPInput.EIPs = []*string{qc.String(oldV.(string))}
 		_, err := eipClt.DissociateEIPs(dissociateEIPInput)
 		if err != nil {
 			return err
 		}
-	}
-
-	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
-		return err
+		if _, err := EIPTransitionStateRefresh(eipClt, oldV.(string)); err != nil {
+			return err
+		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// associate new eip
 	if newV.(string) != "" {
+		if _, err := EIPTransitionStateRefresh(eipClt, newV.(string)); err != nil {
+			return err
+		}
 		assoicateEIPInput := new(qc.AssociateEIPInput)
 		assoicateEIPInput.EIP = qc.String(newV.(string))
 		assoicateEIPInput.Instance = qc.String(d.Id())
@@ -133,9 +135,9 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-	}
-	if _, err := EIPTransitionStateRefresh(eipClt, d.Get("eip_id").(string)); err != nil {
-		return err
+		if _, err := EIPTransitionStateRefresh(eipClt, newV.(string)); err != nil {
+			return err
+		}
 	}
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err

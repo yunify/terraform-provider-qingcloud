@@ -230,6 +230,73 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 
 }
 
+func TestAccQingcloudInstance_eip(t *testing.T) {
+	var instance qc.DescribeInstancesOutput
+
+	testEIP := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if instance.InstanceSet[0].EIP != nil {
+				input := new(qc.DescribeEIPsInput)
+				input.EIPs = []*string{instance.InstanceSet[0].EIP.EIPID}
+				input.Verbose = qc.Int(1)
+				client := testAccProvider.Meta().(*QingCloudClient)
+				d, err := client.eip.DescribeEIPs(input)
+
+				if err != nil {
+					return err
+				}
+				if d == nil || len(d.EIPSet) == 0 {
+					return fmt.Errorf("EIP not found ")
+				}
+				if qc.StringValue(d.EIPSet[0].EIPAddr) != qc.StringValue(instance.InstanceSet[0].EIP.EIPAddr) {
+					return fmt.Errorf("EIP not match ")
+				}
+				return nil
+			} else {
+				return fmt.Errorf("Can not find eip ")
+			}
+		}
+	}
+	testDetachEIP := func() resource.TestCheckFunc {
+		return func(state *terraform.State) error {
+			if instance.InstanceSet[0].EIP != nil && instance.InstanceSet[0].EIP.EIPID != nil && qc.StringValue(instance.InstanceSet[0].EIP.EIPID) != "" {
+				return fmt.Errorf("EIP not detach ")
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		// module name
+		IDRefreshName: "qingcloud_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccInstanceConfigEIP,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testEIP(),
+				),
+			},
+			resource.TestStep{
+				Config: testAccInstanceConfigEIPTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+					testDetachEIP(),
+				),
+			},
+		},
+	})
+
+}
+
 func testAccCheckInstanceExists(n string, i *qc.DescribeInstancesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -441,6 +508,40 @@ resource "qingcloud_volume" "foo3"{
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}"]
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+}
+`
+
+const testAccInstanceConfigEIP = `
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_instance" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	image_id = "centos7x64d"
+	eip_id = "${qingcloud_eip.foo.id}"
+	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+}
+`
+const testAccInstanceConfigEIPTwo = `
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+resource "qingcloud_instance" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 }
 `
