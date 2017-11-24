@@ -185,39 +185,51 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	d.Partial(true)
 	if err := waitInstanceLease(d, meta); err != nil {
 		return err
 	}
 	if err := modifyInstanceAttributes(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("name")
+	d.SetPartial("description")
 	// change vxnet
 	if err := instanceUpdateChangeManagedVxNet(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("managed_vxnet_id")
+	d.SetPartial("private_ip")
 	// change security_group
 	if err := instanceUpdateChangeSecurityGroup(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("security_group_id")
 	// change eip
 	if err := instanceUpdateChangeEip(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("eip_id")
 	// change keypairs
 	if err := instanceUpdateChangeKeyPairs(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("keypair_ids")
 	// change volumes
 	if err := updateInstanceVolume(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("volume_ids")
 	// resize instance
 	if err := instanceUpdateResize(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial("cpu")
+	d.SetPartial("memory")
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
 		return err
 	}
+	d.Partial(false)
 	return resourceQingcloudInstanceRead(d, meta)
 }
 
