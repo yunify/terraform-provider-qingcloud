@@ -250,7 +250,7 @@ func testAccCheckVxNetDestroyWithProvider(s *terraform.State, provider *schema.P
 		input := new(qc.DescribeVxNetsInput)
 		input.VxNets = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.vxnet.DescribeVxNets(input)
-		if err == nil && qc.IntValue(output.RetCode) == 0 {
+		if err == nil {
 			if len(output.VxNetSet) != 0 {
 				return fmt.Errorf("Found  VxNet: %s", rs.Primary.ID)
 			}

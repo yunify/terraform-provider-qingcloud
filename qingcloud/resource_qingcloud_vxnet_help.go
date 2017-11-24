@@ -1,6 +1,8 @@
 package qingcloud
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -70,4 +72,22 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func isVxnetSelfManaged(vxnetId string, clt *qc.VxNetService) (bool, error) {
+	input := new(qc.DescribeVxNetsInput)
+	input.VxNets = []*string{qc.String(vxnetId)}
+	output, err := clt.DescribeVxNets(input)
+	if err != nil {
+		return false, err
+	}
+	if len(output.VxNetSet) == 0 {
+		return false, fmt.Errorf("Error can not find vxnet ")
+	}
+	if qc.IntValue(output.VxNetSet[0].VxNetType) == 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+
 }

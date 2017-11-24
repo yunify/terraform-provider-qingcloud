@@ -168,7 +168,7 @@ func testAccCheckEIPDestroyWithProvider(s *terraform.State, provider *schema.Pro
 		input := new(qc.DescribeEIPsInput)
 		input.EIPs = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.eip.DescribeEIPs(input)
-		if err == nil && qc.IntValue(output.RetCode) == 0 {
+		if err == nil {
 			if len(output.EIPSet) != 0 && qc.StringValue(output.EIPSet[0].Status) != "released" {
 				return fmt.Errorf("Found  EIP: %s", rs.Primary.ID)
 			}
