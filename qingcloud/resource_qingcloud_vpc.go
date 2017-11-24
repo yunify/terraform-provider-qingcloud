@@ -141,7 +141,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	d.SetPartial(resourceName)
 	d.SetPartial(resourceDescription)
 	if d.HasChange("eip_id") {
-		if err := applyRouterUpdate(d, meta); err != nil {
+		if err := applyRouterUpdate(qc.String(d.Id()), meta); err != nil {
 			return err
 		}
 	}
@@ -157,7 +157,7 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.SetPartial(resourceTagIds)
 	d.Partial(false)
-	return resourceQingcloudRouterRead(d, meta)
+	return resourceQingcloudVpcRead(d, meta)
 }
 
 func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error {
