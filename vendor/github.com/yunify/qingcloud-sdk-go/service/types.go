@@ -2036,6 +2036,8 @@ type RouterStatic struct {
 	Val2       *string `json:"val2" name:"val2"`
 	Val3       *string `json:"val3" name:"val3"`
 	Val4       *string `json:"val4" name:"val4"`
+	Val5       *string `json:"val5" name:"val5"`
+	Val6       *string `json:"val6" name:"val6"`
 	VxNetID    *string `json:"vxnet_id" name:"vxnet_id"`
 }
 

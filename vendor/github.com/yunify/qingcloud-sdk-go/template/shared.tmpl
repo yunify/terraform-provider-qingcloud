@@ -121,14 +121,14 @@
 	}
 
 	type {{$opID}}Input struct {
-		{{if $operation.Request.Params.Properties | len -}}
-			{{$data := $operation.Request.Params}}
+		{{if $operation.Request.Query.Properties | len -}}
+			{{$data := $operation.Request.Query}}
 			{{template "RenderProperties" passThrough $data `location:"params"`}}
 		{{- end -}}
 	}
 
 	func (v *{{$opID}}Input) Validate() error {
-		{{template "ValidateCustomizedType" $operation.Request.Params}}
+		{{template "ValidateCustomizedType" $operation.Request.Query}}
 		{{template "ValidateCustomizedType" $operation.Request.Headers}}
 		{{template "ValidateCustomizedType" $operation.Request.Elements}}
 
@@ -137,9 +137,11 @@
 
 	type {{$opID}}Output struct {
 		Message *string `json:"message" name:"message"`
-		{{- if $operation.Response.Elements.Properties | len -}}
-			{{$data := $operation.Response.Elements}}
-			{{template "RenderProperties" passThrough $data `location:"elements"`}}
+		{{- range $k, $reponse := $operation.Responses -}}
+			{{- if $reponse.Elements.Properties | len -}}
+			    {{$data := $reponse.Elements}}
+			    {{template "RenderProperties" passThrough $data `location:"elements"` $operation.Name}}
+			    {{- end -}}
 		{{- end -}}
 	}
 {{end}}
