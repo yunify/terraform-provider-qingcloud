@@ -144,7 +144,7 @@ func testAccCheckKeypairDestroyWithProvider(s *terraform.State, provider *schema
 		input := new(qc.DescribeKeyPairsInput)
 		input.KeyPairs = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.keypair.DescribeKeyPairs(input)
-		if err == nil && qc.IntValue(output.RetCode) == 0 {
+		if err == nil {
 			if len(output.KeyPairSet) != 0 {
 				return fmt.Errorf("Found  keypair: %s", rs.Primary.ID)
 			}

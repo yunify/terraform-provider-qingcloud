@@ -68,7 +68,7 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set(resourceDescription, qc.StringValue(tag.Description))
 	if qc.StringValue(tag.Color) == "default" {
 		d.Set("color", DEFAULT_TAG_COLOR)
-	}else {
+	} else {
 		d.Set("color", qc.StringValue(tag.Color))
 	}
 	return nil

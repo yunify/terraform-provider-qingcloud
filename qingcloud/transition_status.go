@@ -9,30 +9,6 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-// func LoadbalancerTransitionStateRefresh(clt *loadbalancer.LOADBALANCER, id string) (interface{}, error) {
-// 	refreshFunc := func() (interface{}, string, error) {
-// 		params := loadbalancer.DescribeLoadBalancersRequest{}
-// 		params.LoadbalancersN.Add(id)
-// 		params.Verbose.Set(1)
-
-// 		resp, err := clt.DescribeLoadBalancers(params)
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-// 		return resp.LoadbalancerSet[0], resp.LoadbalancerSet[0].TransitionStatus, nil
-// 	}
-
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
-// 		Target:     []string{""},
-// 		Refresh:    refreshFunc,
-// 		Timeout:    10 * time.Minute,
-// 		Delay:      10 * time.Second,
-// 		MinTimeout: 10 * time.Second,
-// 	}
-// 	return stateConf.WaitForState()
-// }
-
 // EipTransitionStateRefresh Waiting for no transition_status
 func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
@@ -46,9 +22,6 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		})
 		if err != nil {
 			return nil, "", err
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe eip: %s", *output.Message)
 		}
 		if len(output.EIPSet) == 0 {
 			return nil, "", fmt.Errorf("Error eip set is empty, request id %s", id)
@@ -166,17 +139,19 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeInstancesInput)
 		input.Instances = []*string{qc.String(id)}
-		output, err := clt.DescribeInstances(input)
+		var output *qc.DescribeInstancesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeInstances(input)
+			return isServerBusy(err)
+		})
 		if err != nil {
-			return nil, "", fmt.Errorf("Error describe instance: %s", err)
-		}
-		if output.RetCode != nil && qc.IntValue(output.RetCode) != 0 {
-			return nil, "", fmt.Errorf("Error describe instance: %s", *output.Message)
+			return nil, "", err
 		}
 		if len(output.InstanceSet) == 0 {
 			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
 		}
-		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
+		if isInstanceDeleted(output.InstanceSet) {
 			return output.InstanceSet[0], "", nil
 		}
 		if len(output.InstanceSet[0].VxNets) != 0 {
@@ -188,70 +163,8 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		return output.InstanceSet[0], qc.StringValue(output.InstanceSet[0].TransitionStatus), nil
 	}
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting"},
+		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting", "terminating"},
 		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
-
-func InstanceNetworkTransitionStateRefresh(clt *qc.InstanceService, id string) (interface{}, error) {
-	if id == "" {
-		return nil, nil
-	}
-	refreshFunc := func() (interface{}, string, error) {
-		input := new(qc.DescribeInstancesInput)
-		input.Instances = []*string{qc.String(id)}
-		output, err := clt.DescribeInstances(input)
-		if err != nil {
-			return nil, "", err
-		}
-		if len(output.InstanceSet) == 0 {
-			return nil, "", fmt.Errorf("Error instance set is empty, request id %s", id)
-		}
-		if qc.StringValue(output.InstanceSet[0].Status) == "terminated" || qc.StringValue(output.InstanceSet[0].Status) == "ceased" {
-			return output.InstanceSet[0], "done", nil
-		}
-		if len(output.InstanceSet[0].VxNets) != 0 {
-			if qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
-				return output.InstanceSet[0], "updating", nil
-			}
-		}
-		return output.InstanceSet[0], "done", nil
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"updating"},
-		Target:     []string{"done"},
-		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
-
-func VxnetInstanceStateRefresh(clt *qc.VxNetService, id string) (interface{}, error) {
-	if id == "" {
-		return nil, nil
-	}
-	refreshFunc := func() (interface{}, string, error) {
-		input := new(qc.DescribeVxNetInstancesInput)
-		input.VxNet = qc.String(id)
-		output, err := clt.DescribeVxNetInstances(input)
-		if err != nil {
-			return nil, "", err
-		}
-		if len(output.InstanceSet) == 0 {
-			return output.InstanceSet, "vxnet_free", nil
-		}
-		return output.InstanceSet, "vxnet_using", nil
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"vxnet_using"},
-		Target:     []string{"vxnet_free"},
 		Refresh:    refreshFunc,
 		Timeout:    2 * time.Minute,
 		Delay:      5 * time.Second,
