@@ -377,7 +377,7 @@ type env struct {
 	network      string // The type of network such as tcp, unix, etc.
 	security     string // The security protocol such as TLS, SSH, etc.
 	httpHandler  bool   // whether to use the http.Handler ServerTransport; requires TLS
-	balancer     string // One of "roundrobin", "pickfirst", "v1", or "".
+	balancer     string // One of "round_robin", "pick_first", "v1", or "".
 	customDialer func(string, string, time.Duration) (net.Conn, error)
 }
 
@@ -398,9 +398,9 @@ func (e env) dialer(addr string, timeout time.Duration) (net.Conn, error) {
 var (
 	tcpClearEnv   = env{name: "tcp-clear-v1-balancer", network: "tcp", balancer: "v1"}
 	tcpTLSEnv     = env{name: "tcp-tls-v1-balancer", network: "tcp", security: "tls", balancer: "v1"}
-	tcpClearRREnv = env{name: "tcp-clear", network: "tcp", balancer: "roundrobin"}
-	tcpTLSRREnv   = env{name: "tcp-tls", network: "tcp", security: "tls", balancer: "roundrobin"}
-	handlerEnv    = env{name: "handler-tls", network: "tcp", security: "tls", httpHandler: true, balancer: "roundrobin"}
+	tcpClearRREnv = env{name: "tcp-clear", network: "tcp", balancer: "round_robin"}
+	tcpTLSRREnv   = env{name: "tcp-tls", network: "tcp", security: "tls", balancer: "round_robin"}
+	handlerEnv    = env{name: "handler-tls", network: "tcp", security: "tls", httpHandler: true, balancer: "round_robin"}
 	noBalancerEnv = env{name: "no-balancer", network: "tcp", security: "tls"}
 	allEnv        = []env{tcpClearEnv, tcpTLSEnv, tcpClearRREnv, tcpTLSRREnv, handlerEnv, noBalancerEnv}
 )
@@ -682,7 +682,7 @@ func (te *test) clientConn() *grpc.ClientConn {
 	default:
 		opts = append(opts, grpc.WithInsecure())
 	}
-	// TODO(bar) switch balancer case "pickfirst".
+	// TODO(bar) switch balancer case "pick_first".
 	var scheme string
 	if te.resolverScheme == "" {
 		scheme = "passthrough:///"
@@ -692,8 +692,8 @@ func (te *test) clientConn() *grpc.ClientConn {
 	switch te.e.balancer {
 	case "v1":
 		opts = append(opts, grpc.WithBalancer(grpc.RoundRobin(nil)))
-	case "roundrobin":
-		rr := balancer.Get("roundrobin")
+	case "round_robin":
+		rr := balancer.Get("round_robin")
 		if rr == nil {
 			te.t.Fatalf("got nil when trying to get roundrobin balancer builder")
 		}
@@ -3886,8 +3886,67 @@ func testCompressOK(t *testing.T, e env) {
 	if err := stream.Send(sreq); err != nil {
 		t.Fatalf("%v.Send(%v) = %v, want <nil>", stream, sreq, err)
 	}
+	stream.CloseSend()
 	if _, err := stream.Recv(); err != nil {
 		t.Fatalf("%v.Recv() = %v, want <nil>", stream, err)
+	}
+	if _, err := stream.Recv(); err != io.EOF {
+		t.Fatalf("%v.Recv() = %v, want io.EOF", stream, err)
+	}
+}
+
+func TestIdentityEncoding(t *testing.T) {
+	defer leakcheck.Check(t)
+	for _, e := range listTestEnv() {
+		testIdentityEncoding(t, e)
+	}
+}
+
+func testIdentityEncoding(t *testing.T, e env) {
+	te := newTest(t, e)
+	te.startServer(&testServer{security: e.security})
+	defer te.tearDown()
+	tc := testpb.NewTestServiceClient(te.clientConn())
+
+	// Unary call
+	payload, err := newPayload(testpb.PayloadType_COMPRESSABLE, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := &testpb.SimpleRequest{
+		ResponseType: testpb.PayloadType_COMPRESSABLE,
+		ResponseSize: 10,
+		Payload:      payload,
+	}
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("something", "something"))
+	if _, err := tc.UnaryCall(ctx, req); err != nil {
+		t.Fatalf("TestService/UnaryCall(_, _) = _, %v, want _, <nil>", err)
+	}
+	// Streaming RPC
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	stream, err := tc.FullDuplexCall(ctx, grpc.UseCompressor("identity"))
+	if err != nil {
+		t.Fatalf("%v.FullDuplexCall(_) = _, %v, want <nil>", tc, err)
+	}
+	payload, err = newPayload(testpb.PayloadType_COMPRESSABLE, int32(31415))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sreq := &testpb.StreamingOutputCallRequest{
+		ResponseType:       testpb.PayloadType_COMPRESSABLE,
+		ResponseParameters: []*testpb.ResponseParameters{{Size: 10}},
+		Payload:            payload,
+	}
+	if err := stream.Send(sreq); err != nil {
+		t.Fatalf("%v.Send(%v) = %v, want <nil>", stream, sreq, err)
+	}
+	stream.CloseSend()
+	if _, err := stream.Recv(); err != nil {
+		t.Fatalf("%v.Recv() = %v, want <nil>", stream, err)
+	}
+	if _, err := stream.Recv(); err != io.EOF {
+		t.Fatalf("%v.Recv() = %v, want io.EOF", stream, err)
 	}
 }
 
@@ -4337,6 +4396,50 @@ func TestCredsHandshakeAuthority(t *testing.T) {
 
 	if cred.got != testAuthority {
 		t.Fatalf("client creds got authority: %q, want: %q", cred.got, testAuthority)
+	}
+}
+
+type clientFailCreds struct {
+	got string
+}
+
+func (c *clientFailCreds) ServerHandshake(rawConn net.Conn) (net.Conn, credentials.AuthInfo, error) {
+	return rawConn, nil, nil
+}
+func (c *clientFailCreds) ClientHandshake(ctx context.Context, authority string, rawConn net.Conn) (net.Conn, credentials.AuthInfo, error) {
+	return nil, nil, fmt.Errorf("client handshake fails with fatal error")
+}
+func (c *clientFailCreds) Info() credentials.ProtocolInfo {
+	return credentials.ProtocolInfo{}
+}
+func (c *clientFailCreds) Clone() credentials.TransportCredentials {
+	return c
+}
+func (c *clientFailCreds) OverrideServerName(s string) error {
+	return nil
+}
+
+// This test makes sure that failfast RPCs fail if client handshake fails with
+// fatal errors.
+func TestFailfastRPCFailOnFatalHandshakeError(t *testing.T) {
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Failed to listen: %v", err)
+	}
+	defer lis.Close()
+
+	cc, err := grpc.Dial("passthrough:///"+lis.Addr().String(), grpc.WithTransportCredentials(&clientFailCreds{}))
+	if err != nil {
+		t.Fatalf("grpc.Dial(_) = %v", err)
+	}
+	defer cc.Close()
+
+	tc := testpb.NewTestServiceClient(cc)
+	// This unary call should fail, but not timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if _, err := tc.EmptyCall(ctx, &testpb.Empty{}, grpc.FailFast(true)); grpc.Code(err) != codes.Unavailable {
+		t.Fatalf("TestService/EmptyCall(_, _) = _, %v, want <Unavailable>", err)
 	}
 }
 

@@ -47,16 +47,14 @@ lint:
 
 generate: snips ../qingcloud-api-specs/package.json
 	./snips \
-		-s=${shell go env GOPATH}/src/github.com/yunify \
-		-m=qingcloud-api-specs \
-		-n=2013-08-30 \
+		-f=../qingcloud-api-specs/2013-08-30/swagger/api_v2.0.json \
 		-t=./template \
 		-o=./service
 	go fmt ./service/...
 	@echo "ok"
 
 snips:
-	curl -L https://github.com/yunify/snips/releases/download/v0.0.9/snips-v0.0.9-${shell go env GOOS}_amd64.tar.gz | tar zx
+	curl -L https://github.com/yunify/snips/releases/download/v0.2.16/snips-v0.2.16-${shell go env GOOS}_amd64.tar.gz | tar zx
 
 ../qingcloud-api-specs/package.json:
 	-go get -d github.com/yunify/qingcloud-api-specs
