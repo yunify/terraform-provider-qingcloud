@@ -1,8 +1,6 @@
 package qingcloud
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -47,10 +45,10 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+func applyRouterUpdate(routerId *string, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.UpdateRoutersInput)
-	input.Routers = []*string{qc.String(d.Id())}
+	input.Routers = []*string{routerId}
 	var output *qc.UpdateRoutersOutput
 	var err error
 	simpleRetry(func() error {
@@ -60,8 +58,8 @@ func applyRouterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
+	if _, err = RouterTransitionStateRefresh(clt, *routerId); err != nil {
+		return err
 	}
 	return nil
 }

@@ -95,7 +95,7 @@ func testAccCheckTagDestroyWithProvider(s *terraform.State, provider *schema.Pro
 		input := new(qc.DescribeTagsInput)
 		input.Tags = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.tag.DescribeTags(input)
-		if err == nil && qc.IntValue(output.RetCode) == 0 {
+		if err == nil {
 			if len(output.TagSet) != 0 {
 				return fmt.Errorf("Found  tag: %s", rs.Primary.ID)
 			}
