@@ -12,48 +12,46 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 			resourceName: &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The name of Vpc",
+				Description: "The name of Vpc Static",
 			},
-			"type": &schema.Schema{
+			"static_type": &schema.Schema{
 				Type:         schema.TypeInt,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      1,
-				ValidateFunc: withinArrayInt(0, 1, 2, 3),
-				Description: "Type of Vpc: 0 - medium, 1 - small, 2 - large, 3 - ultra-large, default 1	",
+				ValidateFunc: withinArrayInt(1, 2, 3, 4, 5, 6, 7, 8),
+				Description: "1 : port_forwarding , 2" +
+							 "2 : VPN rule" +
+							 "3 : DHCP" +
+							 "4 :  Two layers GRE"+
+							 "4 :  Two layers GRE",
+
 			},
-			"vpc_network": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: withinArrayString("192.168.0.0/16", "172.16.0.0/16", "172.17.0.0/16",
-					"172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.21.0.0/16", "172.22.0.0/16",
-					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
+			"val1": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "Network address range of vpc.",
 			},
-			resourceTagIds:   tagIdsSchema(),
-			resourceTagNames: tagNamesSchema(),
-			"eip_id": &schema.Schema{
+			"val2": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The eip's id used by the vpc",
 			},
-			"security_group_id": &schema.Schema{
+			"val3": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The security group's id used by the vpc",
 			},
-			resourceDescription: &schema.Schema{
+			"val4": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The description of vpc",
 			},
-			"private_ip": &schema.Schema{
+			"val5": &schema.Schema{
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
 				Description: "The private ip of vpc",
 			},
-			"public_ip": &schema.Schema{
+			"val6": &schema.Schema{
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The public ip of vpc",
@@ -62,19 +60,18 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 	}
 }
 
-func resourceQingcloudVpcStaticCreate(d *schema.ResourceData, meta interface{})  {
+func resourceQingcloudVpcStaticCreate(d *schema.ResourceData, meta interface{}) {
 
 }
 
-func resourceQingcloudVpcStaticRead(d *schema.ResourceData, meta interface{})  {
+func resourceQingcloudVpcStaticRead(d *schema.ResourceData, meta interface{}) {
 
 }
 
-func resourceQingcloudVpcStaticUpdate(d *schema.ResourceData, meta interface{})  {
+func resourceQingcloudVpcStaticUpdate(d *schema.ResourceData, meta interface{}) {
 
 }
 
-func resourceQingcloudVpcStaticDelete(d *schema.ResourceData, meta interface{})  {
+func resourceQingcloudVpcStaticDelete(d *schema.ResourceData, meta interface{}) {
 
 }
-
