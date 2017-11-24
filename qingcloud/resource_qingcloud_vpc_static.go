@@ -49,6 +49,7 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 			"val2": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "port_forwarding : destination ip " +
 					"OpenVPN : VPN Server Port , default 1194" +
 					"PPTP/L2TP : username & password , format (user:password)" +
@@ -60,6 +61,7 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 			"val3": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "port_forwarding : destination port " +
 					"OpenVPN : VPN protocol , default udp" +
 					"PPTP VPN : Max Connections , 1-253" +
@@ -69,6 +71,7 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 			"val4": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "port_forwarding : protocol , default tcp , support udp & tcp " +
 					"VPN : client CIDR ,support 10.255.x.0/24 , default auto allocation" +
 					"Three layers IPsec : tunnel pattern . default main , support main & aggrmode ",
@@ -76,6 +79,7 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 			"val5": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "OpenVPN :  verification mode " +
 					"L2TP VPN : L2TP server port 1701",
 			},
@@ -87,14 +91,15 @@ func resourceQingcloudVpcStaticCreate(d *schema.ResourceData, meta interface{}) 
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.AddRouterStaticsInput)
 	static := new(qc.RouterStatic)
-	input.Router = qc.String(d.Get("vpc_id").(string))
-	static.RouterID = qc.String(d.Get("vpc_id").(string))
+	input.Router = getSetStringPointer(d, "vpc_id")
+	static.RouterID = getSetStringPointer(d, "vpc_id")
 	static.RouterStaticName, _ = getNamePointer(d)
 	static.StaticType = qc.Int(d.Get("static_type").(int))
-	static.Val1 = getResourceString(d, "val1")
-	static.Val2 = getResourceString(d, "val2")
-	static.Val3 = getResourceString(d, "val3")
-	static.Val4 = getResourceString(d, "val4")
+	static.Val1 = getSetStringPointer(d, "val1")
+	static.Val2 = getSetStringPointer(d, "val2")
+	static.Val3 = getSetStringPointer(d, "val3")
+	static.Val4 = getSetStringPointer(d, "val4")
+	static.Val5 = getSetStringPointer(d, "val5")
 	input.Statics = []*qc.RouterStatic{static}
 	var output *qc.AddRouterStaticsOutput
 	var err error
@@ -118,6 +123,7 @@ func resourceQingcloudVpcStaticCreate(d *schema.ResourceData, meta interface{}) 
 func resourceQingcloudVpcStaticRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.DescribeRouterStaticsInput)
+	input.Router = getSetStringPointer(d, "vpc_id")
 	input.RouterStatics = []*string{qc.String(d.Id())}
 	var output *qc.DescribeRouterStaticsOutput
 	var err error
@@ -128,25 +134,67 @@ func resourceQingcloudVpcStaticRead(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
-	if len(output.RouterStaticSet)==0{
+	if len(output.RouterStaticSet) == 0 {
 		d.SetId("")
 		return nil
 	}
-	d.Set(resourceName,qc.StringValue(output.RouterStaticSet[0].RouterStaticName))
-	d.Set("static_type",qc.IntValue(output.RouterStaticSet[0].StaticType))
-	d.Set("val1",qc.StringValue(output.RouterStaticSet[0].Val1))
-	d.Set("val2",qc.StringValue(output.RouterStaticSet[0].Val2))
-	d.Set("val3",qc.StringValue(output.RouterStaticSet[0].Val3))
-	d.Set("val4",qc.StringValue(output.RouterStaticSet[0].Val4))
+	d.Set(resourceName, qc.StringValue(output.RouterStaticSet[0].RouterStaticName))
+	d.Set("static_type", qc.IntValue(output.RouterStaticSet[0].StaticType))
+	d.Set("val1", qc.StringValue(output.RouterStaticSet[0].Val1))
+	d.Set("val2", qc.StringValue(output.RouterStaticSet[0].Val2))
+	d.Set("val3", qc.StringValue(output.RouterStaticSet[0].Val3))
+	d.Set("val4", qc.StringValue(output.RouterStaticSet[0].Val4))
+	d.Set("val5", qc.StringValue(output.RouterStaticSet[0].Val5))
 	return nil
 }
 
 func resourceQingcloudVpcStaticUpdate(d *schema.ResourceData, meta interface{}) error {
-
-	return resourceQingcloudVpcStaticRead(d,meta)
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.ModifyRouterStaticAttributesInput)
+	input.RouterStatic = qc.String(d.Id())
+	input.RouterStaticName, _ = getNamePointer(d)
+	input.Val1 = getUpdateStringPointer(d, "val1")
+	input.Val2 = getUpdateStringPointer(d, "val2")
+	input.Val3 = getUpdateStringPointer(d, "val3")
+	input.Val4 = getUpdateStringPointer(d, "val4")
+	input.Val5 = getUpdateStringPointer(d, "val5")
+	var output *qc.ModifyRouterStaticAttributesOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.ModifyRouterStaticAttributes(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	if err := applyRouterUpdate(qc.String(d.Get("vpc_id").(string)), meta); err != nil {
+		return nil
+	}
+	if _, err := RouterTransitionStateRefresh(clt, d.Get("vpc_id").(string)); err != nil {
+		return err
+	}
+	return resourceQingcloudVpcStaticRead(d, meta)
 }
 
 func resourceQingcloudVpcStaticDelete(d *schema.ResourceData, meta interface{}) error {
-
+	clt := meta.(*QingCloudClient).router
+	input := new(qc.DeleteRouterStaticsInput)
+	input.RouterStatics = []*string{qc.String(d.Id())}
+	var output *qc.DeleteRouterStaticsOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteRouterStatics(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	if err := applyRouterUpdate(qc.String(d.Get("vpc_id").(string)), meta); err != nil {
+		return nil
+	}
+	if _, err := RouterTransitionStateRefresh(clt, d.Get("vpc_id").(string)); err != nil {
+		return err
+	}
+	d.SetId("")
 	return nil
 }

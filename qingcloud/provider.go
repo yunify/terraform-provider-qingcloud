@@ -28,8 +28,7 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"qingcloud_eip": resourceQingcloudEip(),
-			// "qingcloud_eip_associate": resourceQingcloudEipAssociate(),
+			"qingcloud_eip":                   resourceQingcloudEip(),
 			"qingcloud_keypair":               resourceQingcloudKeypair(),
 			"qingcloud_security_group":        resourceQingcloudSecurityGroup(),
 			"qingcloud_security_group_rule":   resourceQingcloudSecurityGroupRule(),
@@ -41,12 +40,7 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_tag":                   resourceQingcloudTag(),
 			"qingcloud_cache":                 resourceQingcloudCache(),
 			"qingcloud_cache_parameter_group": resourceQingcloudCacheParameterGroup(),
-			// "qingcloud_mongo": resourceQingcloudMongo(),
-			// "qingcloud_loadbalancer":             resourceQingcloudLoadbalancer(),
-			// "qingcloud_loadbalancer_listener":    resourceQingcloudLoadbalancerListener(),
-			// "qingcloud_loadbalancer_backend":     resourceQingcloudLoadbalancerBackend(),
-			// "qingcloud_loadbalancer_policy":      resourceQingcloudLoadbalancerPloicy(),
-			// "qingcloud_loadbalancer_policy_rule": resourceQingcloudLoadbalancerPloicyRule(),
+			"qingcloud_vpc_static":            resourceQingcloudVpcStatic(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
