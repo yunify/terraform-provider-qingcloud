@@ -106,3 +106,16 @@ func getDescriptionPointer(d *schema.ResourceData) (*string, bool) {
 	}
 	return value, false
 }
+func getSetStringPointer(d *schema.ResourceData, key string) *string {
+	if d.Get(key).(string) != "" {
+		return qc.String(d.Get(key).(string))
+	}
+	return nil
+}
+
+func getUpdateStringPointer(d *schema.ResourceData, key string) *string {
+	if d.Get(key).(string) != "" {
+		return qc.String(d.Get(key).(string))
+	}
+	return qc.String(" ")
+}

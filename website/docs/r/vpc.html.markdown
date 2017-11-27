@@ -9,7 +9,7 @@ description: |-
 # Qingcloud\_vpc
 
 Provides a  Vpc resource.  
-User this resource in SDN 2.0 environment.
+Use this resource in SDN 2.0 environment.
 
 ## Example Usage
 

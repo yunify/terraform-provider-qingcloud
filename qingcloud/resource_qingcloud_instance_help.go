@@ -93,7 +93,7 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	input := new(qc.ApplySecurityGroupInput)
-	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
+	input.SecurityGroup = getUpdateStringPointer(d, "security_group_id")
 	input.Instances = []*string{qc.String(d.Id())}
 	var err error
 	simpleRetry(func() error {

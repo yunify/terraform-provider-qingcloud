@@ -27,8 +27,8 @@ make test
 cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provider-qingcloud
 ```
 
-## Finish Resource：
-- [ ] Instance
+## Finish Resource:
+- [x] Instance
 - [x] Volume
 - [x] Vxnet
 - [ ] Router(Deprecated,Use Vpc in SDN2.0)
@@ -37,11 +37,8 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [x] SecurityGroupRules
 - [x] Keypairs
 - [x] Vpc
-- [ ] Image
-- [ ] LoadBalancer
 - [x] Tag
-- [ ] redis
-- [ ] mongodb
+- [x] VpcStatic
 
 
 ## Contributing

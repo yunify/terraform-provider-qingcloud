@@ -97,9 +97,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.CPU = qc.Int(d.Get("cpu").(int))
 	input.Memory = qc.Int(d.Get("memory").(int))
 	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
-	if d.Get("security_group_id").(string) != "" {
-		input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-	}
+	input.SecurityGroup = getSetStringPointer(d, "security_group_id")
 	input.LoginMode = qc.String("keypair")
 	kps := d.Get("keypair_ids").(*schema.Set).List()
 	if len(kps) > 0 {

@@ -241,53 +241,6 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id s
 	return stateConf.WaitForState()
 }
 
-func CacheParameterGroupTransitionStateRefresh(clt *qc.CacheService, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		input := new(qc.DescribeCacheParameterGroupsInput)
-		input.CacheParameterGroups = []*string{qc.String(id)}
-		output, err := clt.DescribeCacheParameterGroups(input)
-		if err != nil {
-			return nil, "", err
-		}
-		cpg := output.CacheParameterGroupSet[0]
-		if cpg.IsApplied != nil && qc.IntValue(cpg.IsApplied) == 1 {
-			return cpg, "updated", nil
-		}
-		return cpg, "not_updated", nil
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"not_updated"},
-		Target:     []string{"updated"},
-		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
-
-func CacheTransitionStateRefresh(clt *qc.CacheService, id string) (interface{}, error) {
-	refreshFunc := func() (interface{}, string, error) {
-		input := new(qc.DescribeCachesInput)
-		input.Caches = []*string{qc.String(id)}
-		input.Verbose = qc.Int(1)
-		output, err := clt.DescribeCaches(input)
-		if err != nil {
-			return nil, "", err
-		}
-		c := output.CacheSet[0]
-		return c, qc.StringValue(c.TransitionStatus), nil
-	}
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
-		Target:     []string{""},
-		Refresh:    refreshFunc,
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	return stateConf.WaitForState()
-}
 func WaitForLease(CreateTime *time.Time) {
 	now := time.Now()
 	subS := now.Sub(qc.TimeValue(CreateTime)).Seconds()
