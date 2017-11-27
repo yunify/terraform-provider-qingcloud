@@ -1,4 +1,4 @@
-package: github.com/yunify/qingcloud-terraform-provider
+package: github.com/yunify/terraform-provider-qingcloud
 import:
 - package: github.com/hashicorp/terraform
   version: 0.9.1

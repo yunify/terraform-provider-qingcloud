@@ -1,9 +1,9 @@
 # terraform-qingcloud
 
 
-Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingcloud-terraform-provider.svg?branch=master)](https://travis-ci.org/yunify/qingcloud-terraform-provider)
+Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/terraform-provider-qingcloud.svg?branch=master)](https://travis-ci.org/yunify/terraform-provider-qingcloud)
 
-[![codebeat badge](https://codebeat.co/badges/4559529b-cb96-4120-a489-30ca998c3790)](https://codebeat.co/projects/github-com-yunify-qingcloud-terraform-provider-master)
+[![codebeat badge](https://codebeat.co/badges/4559529b-cb96-4120-a489-30ca998c3790)](https://codebeat.co/projects/github-com-yunify-terraform-provider-qingcloud-master)
 
 ## Usage
 
@@ -11,7 +11,7 @@ Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/qingclo
 
 #### On Linux
 ``` bash
-go get github.com/yunify/qingcloud-terraform-provider
+go get github.com/yunify/terraform-provider-qingcloud
 glide up
 make build
 make test
@@ -20,7 +20,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 
 #### On Mac
 ``` bash
-go get github.com/yunify/qingcloud-terraform-provider
+go get github.com/yunify/terraform-provider-qingcloud
 glide up
 make build
 make test
@@ -43,7 +43,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 
 ## Contributing
 
-1. Fork it ( https://github.com/yunify/qingcloud-terraform-provider/fork )
+1. Fork it ( https://github.com/yunify/terraform-provider-qingcloud/fork )
 2. Create your feature branch (`git checkout -b new-feature`)
 3. Commit your changes (`git commit -asm 'Add some feature'`)
 4. Push to the branch (`git push origin new-feature`)
