@@ -5,6 +5,10 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceTagColor = "color"
+)
+
 func resourceQingcloudTag() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudTagCreate,
@@ -16,7 +20,7 @@ func resourceQingcloudTag() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"color": &schema.Schema{
+			resourceTagColor: &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      DEFAULT_TAG_COLOR,
@@ -67,9 +71,9 @@ func resourceQingcloudTagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set(resourceName, qc.StringValue(tag.TagName))
 	d.Set(resourceDescription, qc.StringValue(tag.Description))
 	if qc.StringValue(tag.Color) == "default" {
-		d.Set("color", DEFAULT_TAG_COLOR)
+		d.Set(resourceTagColor, DEFAULT_TAG_COLOR)
 	} else {
-		d.Set("color", qc.StringValue(tag.Color))
+		d.Set(resourceTagColor, qc.StringValue(tag.Color))
 	}
 	return nil
 }

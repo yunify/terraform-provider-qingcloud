@@ -8,6 +8,12 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceVxnetType         = "type"
+	resourceVxnetVpcID        = "vpc_id"
+	resourceVxnetVpcIPNetwork = "ip_network"
+)
+
 func resourceQingcloudVxnet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudVxnetCreate,
@@ -16,32 +22,27 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Delete: resourceQingcloudVxnetDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of vxnet",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"type": &schema.Schema{
+			resourceVxnetType: &schema.Schema{
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				Description:  "type of vxnet,1 - Managed vxnet,0 - Self-managed vxnet.",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of vxnet",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"vpc_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The vpc id , vxnet want to join.",
+			resourceVxnetVpcID: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"ip_network": &schema.Schema{
+			resourceVxnetVpcIPNetwork: &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,
-				Description:  "Network segment of Managed vxnet",
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
@@ -54,7 +55,7 @@ func resourceQingcloudVxnetCreate(d *schema.ResourceData, meta interface{}) erro
 	input := new(qc.CreateVxNetsInput)
 	input.Count = qc.Int(1)
 	input.VxNetName, _ = getNamePointer(d)
-	input.VxNetType = qc.Int(d.Get("type").(int))
+	input.VxNetType = qc.Int(d.Get(resourceVxnetType).(int))
 	var output *qc.CreateVxNetsOutput
 	var err error
 	simpleRetry(func() error {
@@ -88,29 +89,29 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	vxnet := output.VxNetSet[0]
 	d.Set(resourceName, qc.StringValue(vxnet.VxNetName))
-	d.Set("type", qc.IntValue(vxnet.VxNetType))
+	d.Set(resourceVxnetType, qc.IntValue(vxnet.VxNetType))
 	d.Set(resourceDescription, qc.StringValue(vxnet.Description))
 	if vxnet.Router != nil {
-		d.Set("ip_network", qc.StringValue(vxnet.Router.IPNetwork))
+		d.Set(resourceVxnetVpcIPNetwork, qc.StringValue(vxnet.Router.IPNetwork))
 	} else {
-		d.Set("ip_network", "")
+		d.Set(resourceVxnetVpcIPNetwork, "")
 	}
-	d.Set("vpc_id", qc.StringValue(vxnet.VpcRouterID))
+	d.Set(resourceVxnetVpcID, qc.StringValue(vxnet.VpcRouterID))
 	resourceSetTag(d, vxnet.Tags)
 	return nil
 }
 
 func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
-	if d.HasChange("vpc_id") || d.HasChange("ip_network") {
-		vpcID := d.Get("vpc_id").(string)
-		IPNetwork := d.Get("ip_network").(string)
+	if d.HasChange(resourceVxnetVpcID) || d.HasChange(resourceVxnetVpcIPNetwork) {
+		vpcID := d.Get(resourceVxnetVpcID).(string)
+		IPNetwork := d.Get(resourceVxnetVpcIPNetwork).(string)
 		if (vpcID != "" && IPNetwork == "") || (vpcID == "" && IPNetwork != "") {
 			return errors.New("vpc_id and ip_network must both be empty or no empty at the same time")
-		} else if d.Get("type").(int) == 0 {
+		} else if d.Get(resourceVxnetType).(int) == 0 {
 			return fmt.Errorf("vpc_id and ip_network can be set in Managed vxnet")
 		}
-		oldVPC, newVPC := d.GetChange("vpc_id")
+		oldVPC, newVPC := d.GetChange(resourceVxnetVpcID)
 		oldVPCID := oldVPC.(string)
 		newVPCID := newVPC.(string)
 		if oldVPCID == "" {
@@ -143,8 +144,8 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		}
 	}
-	d.SetPartial("vpc_id")
-	d.SetPartial("ip_network")
+	d.SetPartial(resourceVxnetVpcID)
+	d.SetPartial(resourceVxnetVpcIPNetwork)
 	if err := modifyVxnetAttributes(d, meta); err != nil {
 		return err
 	}
@@ -160,7 +161,7 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).vxnet
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(resourceVxnetVpcID).(string)
 	// vxnet leave router
 	if vpcID != "" {
 		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {

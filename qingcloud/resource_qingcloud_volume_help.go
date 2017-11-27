@@ -1,7 +1,6 @@
 package qingcloud
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -28,16 +27,16 @@ func motifyVolumeAttributes(d *schema.ResourceData, meta interface{}) error {
 }
 
 func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("size") || d.IsNewResource() {
+	if !d.HasChange(resourceVolumeSize) || d.IsNewResource() {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).volume
 	// new size must bigger than old size
-	oldV, newV := d.GetChange("size")
+	oldV, newV := d.GetChange(resourceVolumeSize)
 	oldSize := oldV.(int)
 	newSize := newV.(int)
 	if oldSize >= newSize {
-		return errors.New("volume size can't reduce")
+		return fmt.Errorf("volume size can't reduce")
 	}
 	describeInput := new(qc.DescribeVolumesInput)
 	describeInput.Volumes = []*string{qc.String(d.Id())}

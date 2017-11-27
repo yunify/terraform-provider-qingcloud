@@ -16,14 +16,12 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 		Delete: resourceQingcloudSecurityGroupDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of SecurityGroup ",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of SecurityGroup",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
@@ -99,9 +97,6 @@ func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface
 	})
 	if err != nil {
 		return err
-	}
-	if len(describeSecurityGroupOutput.SecurityGroupSet[0].Resources) > 0 {
-		return fmt.Errorf("Error security group %s is using, can't delete", d.Id())
 	}
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}

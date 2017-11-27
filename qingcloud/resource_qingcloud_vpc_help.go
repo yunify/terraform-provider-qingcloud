@@ -13,12 +13,12 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	descriptionUpdate := false
 	input.RouterName, attributeUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
-	if d.HasChange("eip_id") {
-		input.EIP = getUpdateStringPointer(d, "eip_id")
+	if d.HasChange(resourceVpcEipID) {
+		input.EIP = getUpdateStringPointer(d, resourceVpcEipID)
 		attributeUpdate = true
 	}
-	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		input.SecurityGroup = getUpdateStringPointer(d, "security_group_id")
+	if d.HasChange(resourceVpcSecurityGroupID) && !d.IsNewResource() {
+		input.SecurityGroup = getUpdateStringPointer(d, resourceVpcSecurityGroupID)
 		attributeUpdate = true
 	}
 

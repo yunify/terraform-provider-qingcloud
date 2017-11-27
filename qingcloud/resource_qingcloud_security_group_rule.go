@@ -98,7 +98,7 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 	d.SetId(qc.StringValue(output.SecurityGroupRules[0]))
-	if err := applySecurityGroupRule(d, meta); err != nil {
+	if err := applySecurityGroupRule(qc.String("security_group_id"), meta); err != nil {
 		return nil
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
@@ -137,7 +137,7 @@ func resourceQingcloudSecurityGroupRuleUpdate(d *schema.ResourceData, meta inter
 	if err := ModifySecurityGroupRuleAttributes(d, meta); err != nil {
 		return err
 	}
-	if err := applySecurityGroupRule(d, meta); err != nil {
+	if err := applySecurityGroupRule(qc.String("security_group_id"), meta); err != nil {
 		return err
 	}
 	return resourceQingcloudSecurityGroupRuleRead(d, meta)
@@ -156,7 +156,7 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	if err != nil {
 		return err
 	}
-	if err := applySecurityGroupRule(d, meta); err != nil {
+	if err := applySecurityGroupRule(qc.String("security_group_id"), meta); err != nil {
 		return nil
 	}
 	d.SetId("")

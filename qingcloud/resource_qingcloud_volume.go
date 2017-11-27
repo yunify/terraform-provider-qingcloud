@@ -8,6 +8,11 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceVolumeSize = "size"
+	resourceVolumeType = "type"
+)
+
 func resourceQingcloudVolume() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudVolumeCreate,
@@ -15,10 +20,9 @@ func resourceQingcloudVolume() *schema.Resource {
 		Update: resourceQingcloudVolumeUpdate,
 		Delete: resourceQingcloudVolumeDelete,
 		Schema: map[string]*schema.Schema{
-			"size": &schema.Schema{
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "size of volume ,min 10 ,max 5000 ,multiples of 10",
+			resourceVolumeSize: &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
@@ -28,15 +32,12 @@ func resourceQingcloudVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": &schema.Schema{
+			resourceVolumeType: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ForceNew:     true,
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
-				Description: `performance type volume 0
-					Ultra high performance type volume is 3 (only attach to ultra high performance type instance)，
-					Capacity type volume ,The values vary from region to region , Some region are 1 and some are 2.`,
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
@@ -48,9 +49,9 @@ func resourceQingcloudVolumeCreate(d *schema.ResourceData, meta interface{}) err
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.CreateVolumesInput)
 	input.Count = qc.Int(1)
-	input.Size = qc.Int(d.Get("size").(int))
+	input.Size = qc.Int(d.Get(resourceVolumeSize).(int))
 	input.VolumeName, _ = getNamePointer(d)
-	input.VolumeType = qc.Int(d.Get("type").(int))
+	input.VolumeType = qc.Int(d.Get(resourceVolumeType).(int))
 	var output *qc.CreateVolumesOutput
 	var err error
 	simpleRetry(func() error {
@@ -87,8 +88,8 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 	volume := output.VolumeSet[0]
 	d.Set(resourceName, qc.StringValue(volume.VolumeName))
 	d.Set(resourceDescription, qc.StringValue(volume.Description))
-	d.Set("size", qc.IntValue(volume.Size))
-	d.Set("type", qc.IntValue(volume.VolumeType))
+	d.Set(resourceVolumeSize, qc.IntValue(volume.Size))
+	d.Set(resourceVolumeType, qc.IntValue(volume.VolumeType))
 	resourceSetTag(d, volume.Tags)
 	return nil
 }
@@ -106,7 +107,7 @@ func resourceQingcloudVolumeUpdate(d *schema.ResourceData, meta interface{}) err
 	if err := changeVolumeSize(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("size")
+	d.SetPartial(resourceVolumeSize)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeVolume); err != nil {
 		return err
 	}

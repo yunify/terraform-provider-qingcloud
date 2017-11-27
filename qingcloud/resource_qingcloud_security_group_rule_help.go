@@ -7,9 +7,6 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-// Warning
-// The null character string and null pointer is difference when Go SDK processing parameter.
-// For example,if val3 is "",then request has "val3=";if it is nil,and the request doesn't have "val3=".
 func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupRuleAttributesInput)

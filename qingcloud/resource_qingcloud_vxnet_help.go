@@ -33,8 +33,8 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.JoinRouterInput)
 	input.VxNet = qc.String(d.Id())
-	input.Router = qc.String(d.Get("vpc_id").(string))
-	input.IPNetwork = qc.String(d.Get("ip_network").(string))
+	input.Router = qc.String(d.Get(resourceVxnetVpcID).(string))
+	input.IPNetwork = qc.String(d.Get(resourceVxnetVpcIPNetwork).(string))
 	var output *qc.JoinRouterOutput
 	var err error
 	simpleRetry(func() error {
@@ -44,14 +44,14 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("vpc_id").(string)); err != nil {
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get(resourceVxnetVpcID).(string)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
-	oldVPC, _ := d.GetChange("vpc_id")
+	oldVPC, _ := d.GetChange(resourceVxnetVpcID)
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.LeaveRouterInput)
 	input.VxNets = []*string{qc.String(d.Id())}
@@ -68,7 +68,7 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	if _, err := VxnetLeaveRouterTransitionStateRefresh(meta.(*QingCloudClient).vxnet, d.Id()); err != nil {
 		return err
 	}
-	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get("vpc_id").(string)); err != nil {
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get(resourceVxnetVpcID).(string)); err != nil {
 		return err
 	}
 	return nil
