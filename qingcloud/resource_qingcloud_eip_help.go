@@ -66,7 +66,7 @@ func changeEIPBillMode(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 	}
-
+	return nil
 }
 
 func getEIPResourceMap(data *qc.EIP) map[string]interface{} {

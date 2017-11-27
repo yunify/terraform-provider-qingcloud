@@ -211,10 +211,10 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 	return stateConf.WaitForState()
 }
 
-func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id string) (interface{}, error) {
+func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id *string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeSecurityGroupsInput)
-		input.SecurityGroups = []*string{qc.String(id)}
+		input.SecurityGroups = []*string{id}
 		var output *qc.DescribeSecurityGroupsOutput
 		var err error
 		simpleRetry(func() error {
