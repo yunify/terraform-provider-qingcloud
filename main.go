@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/yunify/qingcloud-terraform-provider/qingcloud"
+	"github.com/yunify/terraform-provider-qingcloud/qingcloud"
 )
 
 func main() {
