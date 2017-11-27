@@ -26,27 +26,9 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	input.Protocol = qc.String(d.Get("protocol").(string))
 	input.Priority = qc.Int(d.Get("priority").(int))
 	input.RuleAction = qc.String(d.Get("action").(string))
-	if d.Get("from_port").(string) != "" {
-		input.Val1 = qc.String(d.Get("from_port").(string))
-	} else if d.HasChange("from_port") {
-		input.Val1 = qc.String(" ")
-	} else {
-		input.Val1 = nil
-	}
-	if d.Get("to_port").(string) != "" {
-		input.Val2 = qc.String(d.Get("to_port").(string))
-	} else if d.HasChange("to_port") {
-		input.Val2 = qc.String(" ")
-	} else {
-		input.Val2 = nil
-	}
-	if d.Get("cidr_block").(string) != "" {
-		input.Val3 = qc.String(d.Get("cidr_block").(string))
-	} else if d.HasChange("cidr_block") {
-		input.Val3 = qc.String(" ")
-	} else {
-		input.Val3 = nil
-	}
+	input.Val1 = getUpdateStringPointer(d, "from_port")
+	input.Val2 = getUpdateStringPointer(d, "to_port")
+	input.Val3 = getUpdateStringPointer(d, "cidr_block")
 	var output *qc.ModifySecurityGroupRuleAttributesOutput
 	var err error
 	simpleRetry(func() error {

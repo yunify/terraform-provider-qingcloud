@@ -205,7 +205,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 
 }
 
-func testAccCheckVxNetExists(n string, eip *qc.DescribeVxNetsOutput) resource.TestCheckFunc {
+func testAccCheckVxNetExists(n string, vxnet *qc.DescribeVxNetsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -221,7 +221,7 @@ func testAccCheckVxNetExists(n string, eip *qc.DescribeVxNetsOutput) resource.Te
 		input.VxNets = []*string{qc.String(rs.Primary.ID)}
 		d, err := client.vxnet.DescribeVxNets(input)
 
-		log.Printf("[WARN] eip id %#v", rs.Primary.ID)
+		log.Printf("[WARN] vxnet id %#v", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -231,7 +231,7 @@ func testAccCheckVxNetExists(n string, eip *qc.DescribeVxNetsOutput) resource.Te
 			return fmt.Errorf("VxNet not found")
 		}
 
-		*eip = *d
+		*vxnet = *d
 		return nil
 	}
 }
