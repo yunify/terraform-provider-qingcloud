@@ -29,12 +29,12 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 }
 
 func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("managed_vxnet_id") {
+	if !d.HasChange(resourceInstanceManagedVxnetID) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
 	vxnetClt := meta.(*QingCloudClient).vxnet
-	oldV, newV := d.GetChange("managed_vxnet_id")
+	oldV, newV := d.GetChange(resourceInstanceManagedVxnetID)
 	// leave old vxnet
 	if oldV.(string) != "" {
 		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
@@ -64,8 +64,8 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("can not use selfManaged ip as Managed ip")
 		}
 		joinVxnetInput := new(qc.JoinVxNetInput)
-		if newV.(string) != "vxnet-0" && d.HasChange("private_ip") && d.Get("private_ip").(string) != "" {
-			newV = fmt.Sprintf("%s|%s", newV.(string), d.Get("private_ip").(string))
+		if newV.(string) != "vxnet-0" && d.HasChange(resourceInstancePrivateIP) && d.Get(resourceInstancePrivateIP).(string) != "" {
+			newV = fmt.Sprintf("%s|%s", newV.(string), d.Get(resourceInstancePrivateIP).(string))
 		}
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
 		joinVxnetInput.VxNet = qc.String(newV.(string))
@@ -84,7 +84,7 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 }
 
 func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("security_group_id") {
+	if !d.HasChange(resourceInstanceSecurityGroupId) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
@@ -93,7 +93,7 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	input := new(qc.ApplySecurityGroupInput)
-	input.SecurityGroup = getUpdateStringPointer(d, "security_group_id")
+	input.SecurityGroup = getUpdateStringPointer(d, resourceInstanceSecurityGroupId)
 	input.Instances = []*string{qc.String(d.Id())}
 	var err error
 	simpleRetry(func() error {
@@ -110,7 +110,7 @@ func instanceUpdateChangeSecurityGroup(d *schema.ResourceData, meta interface{})
 }
 
 func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("eip_id") {
+	if !d.HasChange(resourceInstanceEipID) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
@@ -118,7 +118,7 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
-	oldV, newV := d.GetChange("eip_id")
+	oldV, newV := d.GetChange(resourceInstanceEipID)
 	// dissociate old eip
 	if oldV.(string) != "" {
 		if _, err := EIPTransitionStateRefresh(eipClt, oldV.(string)); err != nil {
@@ -168,13 +168,13 @@ func instanceUpdateChangeEip(d *schema.ResourceData, meta interface{}) error {
 }
 
 func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("keypair_ids") {
+	if !d.HasChange(resourceInstanceKeyPairIDs) {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
 	kpClt := meta.(*QingCloudClient).keypair
 
-	oldV, newV := d.GetChange("keypair_ids")
+	oldV, newV := d.GetChange(resourceInstanceKeyPairIDs)
 	var nkps []string
 	var okps []string
 	for _, v := range oldV.(*schema.Set).List() {
@@ -225,7 +225,7 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 }
 
 func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange("cpu") && !d.HasChange("memory") || d.IsNewResource() {
+	if !d.HasChange(resourceInstanceCPU) && !d.HasChange(resourceInstanceMemory) || d.IsNewResource() {
 		return nil
 	}
 	clt := meta.(*QingCloudClient).instance
@@ -251,8 +251,8 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 	//  resize instance
 	input := new(qc.ResizeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	input.CPU = qc.Int(d.Get("cpu").(int))
-	input.Memory = qc.Int(d.Get("memory").(int))
+	input.CPU = qc.Int(d.Get(resourceInstanceCPU).(int))
+	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
 	simpleRetry(func() error {
 		_, err = clt.ResizeInstances(input)
 		return isServerBusy(err)
@@ -322,11 +322,11 @@ func startInstance(d *schema.ResourceData, meta interface{}) (*qc.StartInstances
 
 func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).instance
-	if !d.HasChange("volume_ids") {
+	if !d.HasChange(resourceInstanceVolumeIDs) {
 		return nil
 	}
 	volumeClt := meta.(*QingCloudClient).volume
-	oldV, newV := d.GetChange("volume_ids")
+	oldV, newV := d.GetChange(resourceInstanceVolumeIDs)
 	var newVolumes []string
 	var oldVolumes []string
 	for _, v := range oldV.(*schema.Set).List() {

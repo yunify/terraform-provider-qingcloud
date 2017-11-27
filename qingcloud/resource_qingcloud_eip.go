@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+const (
+	resourceEipBandwidth = "bandwidth"
+	resourceEipBillMode  = "billing_mode"
+	resourceEipNeedIcp   = "need_icp"
+	resourceEipAddr      = "addr"
+	resourceEipResource  = "resource"
+)
+
 func resourceQingcloudEip() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudEipCreate,
@@ -17,51 +25,39 @@ func resourceQingcloudEip() *schema.Resource {
 		Delete: resourceQingcloudEipDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "the name of eip",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "the description of eip",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"bandwidth": &schema.Schema{
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Maximum bandwidth to the elastic public network, measured in Mbps",
+			resourceEipBandwidth: &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
 			},
-			"billing_mode": &schema.Schema{
+			resourceEipBillMode: &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "bandwidth",
-				Description:  "Internet charge type of the EIP : bandwidth , traffic ,default bandwidth",
 				ValidateFunc: withinArrayString("traffic", "bandwidth"),
 			},
-			"need_icp": &schema.Schema{
+			resourceEipNeedIcp: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				Description:  "need icp , 1 need , 0 no need ,default 0",
 				ValidateFunc: withinArrayInt(0, 1),
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			"addr": &schema.Schema{
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ip address of this eip",
+			resourceEipAddr: &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"status": &schema.Schema{
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "the status of eip",
-			},
-			"resource": &schema.Schema{
+			resourceEipResource: &schema.Schema{
 				Type:         schema.TypeMap,
 				Computed:     true,
 				ComputedWhen: []string{"id"},
-				Description:  "the resource who use this eip",
 			},
 		},
 	}
@@ -70,9 +66,9 @@ func resourceQingcloudEip() *schema.Resource {
 func resourceQingcloudEipCreate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).eip
 	input := new(qc.AllocateEIPsInput)
-	input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
-	input.BillingMode = qc.String(d.Get("billing_mode").(string))
-	input.NeedICP = qc.Int(d.Get("need_icp").(int))
+	input.Bandwidth = qc.Int(d.Get(resourceEipBandwidth).(int))
+	input.BillingMode = qc.String(d.Get(resourceEipBillMode).(string))
+	input.NeedICP = qc.Int(d.Get(resourceEipNeedIcp).(int))
 	input.Count = qc.Int(1)
 	input.EIPName, _ = getNamePointer(d)
 	var output *qc.AllocateEIPsOutput
@@ -105,20 +101,19 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if len(output.EIPSet) == 0 || qc.StringValue(output.EIPSet[0].Status) == "ceased" || qc.StringValue(output.EIPSet[0].Status) == "released" {
+	if isEipDeleted(output.EIPSet) {
 		d.SetId("")
 		return nil
 	}
 	ip := output.EIPSet[0]
 	d.Set(resourceName, qc.StringValue(ip.EIPName))
-	d.Set("billing_mode", qc.StringValue(ip.BillingMode))
-	d.Set("bandwidth", qc.IntValue(ip.Bandwidth))
-	d.Set("need_icp", qc.IntValue(ip.NeedICP))
+	d.Set(resourceEipBillMode, qc.StringValue(ip.BillingMode))
+	d.Set(resourceEipBandwidth, qc.IntValue(ip.Bandwidth))
+	d.Set(resourceEipNeedIcp, qc.IntValue(ip.NeedICP))
 	d.Set(resourceDescription, qc.StringValue(ip.Description))
 	// 如下状态是稍等来获取的
-	d.Set("addr", qc.StringValue(ip.EIPAddr))
-	d.Set("status", qc.StringValue(ip.Status))
-	if err := d.Set("resource", getEIPResourceMap(ip)); err != nil {
+	d.Set(resourceEipAddr, qc.StringValue(ip.EIPAddr))
+	if err := d.Set(resourceEipResource, getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
 	resourceSetTag(d, ip.Tags)
@@ -126,50 +121,21 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceQingcloudEipUpdate(d *schema.ResourceData, meta interface{}) error {
-	clt := meta.(*QingCloudClient).eip
 	d.Partial(true)
 	if err := waitEipLease(d, meta); err != nil {
 		return err
 	}
-	if d.HasChange("need_icp") && !d.IsNewResource() {
+	if d.HasChange(resourceEipNeedIcp) && !d.IsNewResource() {
 		return fmt.Errorf("Errorf EIP need_icp could not be updated")
 	}
-	if d.HasChange("bandwidth") && !d.IsNewResource() {
-		input := new(qc.ChangeEIPsBandwidthInput)
-		input.EIPs = []*string{qc.String(d.Id())}
-		input.Bandwidth = qc.Int(d.Get("bandwidth").(int))
-		var output *qc.ChangeEIPsBandwidthOutput
-		var err error
-		simpleRetry(func() error {
-			output, err = clt.ChangeEIPsBandwidth(input)
-			return isServerBusy(err)
-		})
-		if err != nil {
-			return err
-		}
-		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
-			return nil
-		}
-		d.SetPartial("bandwidth")
+	if err := changeEIPBandwidth(d, meta); err != nil {
+		return err
 	}
-	if d.HasChange("billing_mode") && !d.IsNewResource() {
-		input := new(qc.ChangeEIPsBillingModeInput)
-		input.EIPs = []*string{qc.String(d.Id())}
-		input.BillingMode = qc.String(d.Get("billing_mode").(string))
-		var output *qc.ChangeEIPsBillingModeOutput
-		var err error
-		simpleRetry(func() error {
-			output, err = clt.ChangeEIPsBillingMode(input)
-			return isServerBusy(err)
-		})
-		if err != nil {
-			return err
-		}
-		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
-			return nil
-		}
-		d.SetPartial("billing_mode")
+	d.SetPartial(resourceEipBandwidth)
+	if err := changeEIPBillMode(d, meta); err != nil {
+		return err
 	}
+	d.SetPartial(resourceEipBillMode)
 	if err := modifyEipAttributes(d, meta); err != nil {
 		return err
 	}
