@@ -44,7 +44,7 @@ resource "qingcloud_instance" "init"{
 	name = "master-${count.index}"
 	image_id = "centos7x64d"
 	instance_class = "0"
-	vxnet_id="vxnet-0"
+	managed_vxnet_id="vxnet-0"
 	keypair_ids = ["${qingcloud_keypair.arthur.id}"]
 	security_group_id ="${qingcloud_security_group.basic.id}"
 	eip_id = "${qingcloud_eip.init.id}"
