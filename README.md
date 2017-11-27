@@ -27,7 +27,7 @@ make test
 cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provider-qingcloud
 ```
 
-## Finish Resource：
+## Finish Resource:
 - [x] Instance
 - [x] Volume
 - [x] Vxnet
@@ -38,7 +38,7 @@ cp ./terraform-provider-qingcloud $(dirname `which terraform`)/terraform-provide
 - [x] Keypairs
 - [x] Vpc
 - [x] Tag
-- [ ] VpcStatic
+- [x] VpcStatic
 
 
 ## Contributing
