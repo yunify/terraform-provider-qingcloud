@@ -30,11 +30,10 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func applySecurityGroupRule(d *schema.ResourceData, meta interface{}) error {
+func applySecurityGroupRule(sgID *string, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
-	sgID := d.Get("security_group_id").(string)
 	input := new(qc.ApplySecurityGroupInput)
-	input.SecurityGroup = qc.String(sgID)
+	input.SecurityGroup = sgID
 	var output *qc.ApplySecurityGroupOutput
 	var err error
 	simpleRetry(func() error {

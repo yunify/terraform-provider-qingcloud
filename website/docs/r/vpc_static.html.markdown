@@ -24,7 +24,7 @@ resource "qingcloud_vpc" "foo" {
 }
 resource "qingcloud_vpc_static" "foo"{
         vpc_id = "${qingcloud_vpc.foo.id}"
-        static_type = 1
+        type = 1
         val1 = "80"
         val2 = "192.168.0.3"
         val3 = "81"
@@ -35,7 +35,7 @@ resource "qingcloud_vpc_static" "foo"{
 
 The following arguments are supported:
 
-* `static_type` - (Required , ForceNew) Type of VpcStatic:  1 : port_forwarding , 2 : VPN rule , 3 : DHCP , 4 :  Two layers GRE , 6 :  Three layers GRE , 7 :  Three layers IPsec , 8 :  Private DNS .
+* `type` - (Required , ForceNew) Type of VpcStatic:  1 : port_forwarding , 2 : VPN rule , 3 : DHCP , 4 :  Two layers GRE , 6 :  Three layers GRE , 7 :  Three layers IPsec , 8 :  Private DNS .
 * `name` - (Optional) The name of vpc static.
 * `vpc_id`- (Required , ForceNew) The id of vpc.
 * `val1` - (Required) "port_forwarding : source port "  
@@ -66,7 +66,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `static_type` - Type of VpcStatic:  1 : port_forwarding , 2 : VPN rule , 3 : DHCP , 4 :  Two layers GRE , 6 :  Three layers GRE , 7 :  Three layers IPsec , 8 :  Private DNS .
+* `type` - Type of VpcStatic:  1 : port_forwarding , 2 : VPN rule , 3 : DHCP , 4 :  Two layers GRE , 6 :  Three layers GRE , 7 :  Three layers IPsec , 8 :  Private DNS .
 * `name` - The name of vpc static.
 * `vpc_id`- The id of vpc.
 * `val1` - "port_forwarding : source port "  

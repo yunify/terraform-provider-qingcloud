@@ -7,11 +7,11 @@
 #    \ \____/ /\_____\\ \_\ 
 #     \/___/  \/_____/ \/_/ 
 resource "qingcloud_eip" "init"{
-	name = "连接第一个主机的地址"
-	description = "主机-1"
-	billing_mode = "traffic"
-	bandwidth = 1
-	need_icp = 0
+  name = "连接第一个主机的地址"
+  description = "主机-1"
+  billing_mode = "traffic"
+  bandwidth = 1
+  need_icp = 0
 }
 
 # /\  _`\                                 __/\ \__            /\  _`\                                 
@@ -23,8 +23,8 @@ resource "qingcloud_eip" "init"{
 #                                                        /\___/                                 \ \_\ 
 #                                                        \/__/                                   \/_/ 
 resource "qingcloud_security_group" "basic"{
-	name = "防火墙"
-	description = "这是第一个防火墙"
+  name = "防火墙"
+  description = "这是第一个防火墙"
 }
 
 # /\  _`\ /\  _`\ /\ \/\ \
@@ -34,19 +34,19 @@ resource "qingcloud_security_group" "basic"{
 #    \ `\____\ `\____\ \_\ \_\
 #     \/_____/\/_____/\/_/\/_/
 resource "qingcloud_keypair" "arthur"{
-	name = "arthur"
-	description = "sdfafd"
-	public_key = "${file("~/.ssh/id_rsa.pub")}"
+  name = "arthur"
+  description = "sdfafd"
+  public_key = "${file("~/.ssh/id_rsa.pub")}"
 }
 
 resource "qingcloud_instance" "init"{
-	count = 1
-	name = "master-${count.index}"
-	image_id = "centos7x64d"
-	instance_class = "0"
-	managed_vxnet_id="vxnet-0"
-	keypair_ids = ["${qingcloud_keypair.arthur.id}"]
-	security_group_id ="${qingcloud_security_group.basic.id}"
-	eip_id = "${qingcloud_eip.init.id}"
+  count = 1
+  name = "master-${count.index}"
+  image_id = "centos7x64d"
+  instance_class = "0"
+  managed_vxnet_id="vxnet-0"
+  keypair_ids = ["${qingcloud_keypair.arthur.id}"]
+  security_group_id ="${qingcloud_security_group.basic.id}"
+  eip_id = "${qingcloud_eip.init.id}"
 }
 

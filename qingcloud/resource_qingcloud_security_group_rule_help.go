@@ -7,9 +7,6 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
-// Warning
-// The null character string and null pointer is difference when Go SDK processing parameter.
-// For example,if val3 is "",then request has "val3=";if it is nil,and the request doesn't have "val3=".
 func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.ModifySecurityGroupRuleAttributesInput)
@@ -21,14 +18,14 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	} else {
 		input.SecurityGroupRuleName = nil
 	}
-	input.Direction = qc.Int(d.Get("direction").(int))
-	input.SecurityGroup = qc.String(d.Get("security_group_id").(string))
-	input.Protocol = qc.String(d.Get("protocol").(string))
-	input.Priority = qc.Int(d.Get("priority").(int))
-	input.RuleAction = qc.String(d.Get("action").(string))
-	input.Val1 = getUpdateStringPointer(d, "from_port")
-	input.Val2 = getUpdateStringPointer(d, "to_port")
-	input.Val3 = getUpdateStringPointer(d, "cidr_block")
+	input.Direction = qc.Int(d.Get(resourceSecurityGroupRuleDirection).(int))
+	input.SecurityGroup = qc.String(d.Get(resourceSecurityGroupRuleSecurityGroupID).(string))
+	input.Protocol = qc.String(d.Get(resourceSecurityGroupRuleProtocol).(string))
+	input.Priority = qc.Int(d.Get(resourceSecurityGroupRulePriority).(int))
+	input.RuleAction = qc.String(d.Get(resourceSecurityGroupRuleAction).(string))
+	input.Val1 = getUpdateStringPointer(d, resourceSecurityGroupRuleFromPort)
+	input.Val2 = getUpdateStringPointer(d, resourceSecurityGroupRuleToPort)
+	input.Val3 = getUpdateStringPointer(d, resourceSecurityGroupCidrBlock)
 	var output *qc.ModifySecurityGroupRuleAttributesOutput
 	var err error
 	simpleRetry(func() error {

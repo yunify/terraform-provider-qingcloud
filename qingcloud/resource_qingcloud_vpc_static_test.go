@@ -29,7 +29,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 					testAccCheckVpcStaticExists(
 						"qingcloud_vpc_static.foo", &vpcStatic),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vpc_static.foo", "static_type", "1"),
+						"qingcloud_vpc_static.foo", "type", "1"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc_static.foo", "val1", "80"),
 					resource.TestCheckResourceAttr(
@@ -48,7 +48,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc_static.foo", resourceName, "test"),
 					resource.TestCheckResourceAttr(
-						"qingcloud_vpc_static.foo", "static_type", "1"),
+						"qingcloud_vpc_static.foo", "type", "1"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_vpc_static.foo", "val1", "81"),
 					resource.TestCheckResourceAttr(
@@ -128,7 +128,7 @@ resource "qingcloud_vpc" "foo" {
 }
 resource "qingcloud_vpc_static" "foo"{
         vpc_id = "${qingcloud_vpc.foo.id}"
-        static_type = 1
+        type = 1
         val1 = "80"
         val2 = "192.168.0.3"
         val3 = "81"
@@ -147,7 +147,7 @@ resource "qingcloud_vpc" "foo" {
 resource "qingcloud_vpc_static" "foo"{
         vpc_id = "${qingcloud_vpc.foo.id}"
 		name = "test"
-        static_type = 1
+        type = 1
         val1 = "81"
         val2 = "192.168.0.4"
         val3 = "82"

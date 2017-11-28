@@ -7,6 +7,15 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceVpcType            = "type"
+	resourceVpcNetwork         = "vpc_network"
+	resourceVpcEipID           = "eip_id"
+	resourceVpcSecurityGroupID = "security_group_id"
+	resourceVpcPrivateIP       = "private_ip"
+	resourceVpcPublicIP        = "public_ip"
+)
+
 func resourceQingcloudVpc() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudVpcCreate,
@@ -15,53 +24,45 @@ func resourceQingcloudVpc() *schema.Resource {
 		Delete: resourceQingcloudVpcDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of Vpc",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"type": &schema.Schema{
+			resourceVpcType: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      1,
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
-				Description: "Type of Vpc: 0 - medium, 1 - small, 2 - large, 3 - ultra-large, default 1	",
 			},
-			"vpc_network": &schema.Schema{
+			resourceVpcNetwork: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: withinArrayString("192.168.0.0/16", "172.16.0.0/16", "172.17.0.0/16",
 					"172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.21.0.0/16", "172.22.0.0/16",
 					"172.23.0.0/16", "172.24.0.0/16", "172.25.0.0/16"),
-				Description: "Network address range of vpc.",
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			"eip_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The eip's id used by the vpc",
+			resourceVpcEipID: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"security_group_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The security group's id used by the vpc",
+			resourceVpcSecurityGroupID: &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of vpc",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"private_ip": &schema.Schema{
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The private ip of vpc",
+			resourceVpcPrivateIP: &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"public_ip": &schema.Schema{
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The public ip of vpc",
+			resourceVpcPublicIP: &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -72,9 +73,9 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.CreateRoutersInput)
 	input.RouterName, _ = getNamePointer(d)
-	input.VpcNetwork = getSetStringPointer(d, "vpc_network")
-	input.SecurityGroup = getSetStringPointer(d, "security_group_id")
-	input.RouterType = qc.Int(d.Get("type").(int))
+	input.VpcNetwork = getSetStringPointer(d, resourceVpcNetwork)
+	input.SecurityGroup = getSetStringPointer(d, resourceVpcSecurityGroupID)
+	input.RouterType = qc.Int(d.Get(resourceVpcType).(int))
 	input.Count = qc.Int(1)
 	var output *qc.CreateRoutersOutput
 	var err error
@@ -113,12 +114,12 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	rtr := output.RouterSet[0]
 	d.Set(resourceName, qc.StringValue(rtr.RouterName))
-	d.Set("type", qc.IntValue(rtr.RouterType))
-	d.Set("security_group_id", qc.StringValue(rtr.SecurityGroupID))
+	d.Set(resourceVpcType, qc.IntValue(rtr.RouterType))
+	d.Set(resourceVpcSecurityGroupID, qc.StringValue(rtr.SecurityGroupID))
 	d.Set(resourceDescription, qc.StringValue(rtr.Description))
-	d.Set("private_ip", qc.StringValue(rtr.PrivateIP))
-	d.Set("eip_id", qc.StringValue(rtr.EIP.EIPID))
-	d.Set("public_ip", qc.StringValue(rtr.EIP.EIPAddr))
+	d.Set(resourceVpcPrivateIP, qc.StringValue(rtr.PrivateIP))
+	d.Set(resourceVpcEipID, qc.StringValue(rtr.EIP.EIPID))
+	d.Set(resourceVpcPublicIP, qc.StringValue(rtr.EIP.EIPAddr))
 	return nil
 }
 
@@ -136,18 +137,18 @@ func resourceQingcloudVpcUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.SetPartial(resourceName)
 	d.SetPartial(resourceDescription)
-	if d.HasChange("eip_id") {
+	if d.HasChange(resourceVpcEipID) {
 		if err := applyRouterUpdate(qc.String(d.Id()), meta); err != nil {
 			return err
 		}
 	}
-	d.SetPartial("eip_id")
-	if d.HasChange("security_group_id") && !d.IsNewResource() {
-		if err := applySecurityGroupRule(d, meta); err != nil {
+	d.SetPartial(resourceVpcEipID)
+	if d.HasChange(resourceVpcSecurityGroupID) && !d.IsNewResource() {
+		if err := applySecurityGroupRule(qc.String(resourceVpcSecurityGroupID), meta); err != nil {
 			return err
 		}
 	}
-	d.SetPartial("security_group_id")
+	d.SetPartial(resourceVpcSecurityGroupID)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeRouter); err != nil {
 		return err
 	}

@@ -13,8 +13,8 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	descriptionUpdate := false
 	input.TagName, attributeUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
-	if d.HasChange("color") {
-		input.Color = qc.String(d.Get("color").(string))
+	if d.HasChange(resourceTagColor) {
+		input.Color = qc.String(d.Get(resourceTagColor).(string))
 		attributeUpdate = true
 	}
 	if attributeUpdate || descriptionUpdate {

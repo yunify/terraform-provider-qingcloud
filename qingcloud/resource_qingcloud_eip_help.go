@@ -26,6 +26,48 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	}
 	return nil
 }
+func changeEIPBandwidth(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange(resourceEipBandwidth) && !d.IsNewResource() {
+		clt := meta.(*QingCloudClient).eip
+		input := new(qc.ChangeEIPsBandwidthInput)
+		input.EIPs = []*string{qc.String(d.Id())}
+		input.Bandwidth = qc.Int(d.Get(resourceEipBandwidth).(int))
+		var output *qc.ChangeEIPsBandwidthOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ChangeEIPsBandwidth(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return err
+		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+func changeEIPBillMode(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).eip
+	if d.HasChange(resourceEipBillMode) && !d.IsNewResource() {
+		input := new(qc.ChangeEIPsBillingModeInput)
+		input.EIPs = []*string{qc.String(d.Id())}
+		input.BillingMode = qc.String(d.Get(resourceEipBillMode).(string))
+		var output *qc.ChangeEIPsBillingModeOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.ChangeEIPsBillingMode(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return err
+		}
+		if _, err := EIPTransitionStateRefresh(clt, d.Id()); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
 
 func getEIPResourceMap(data *qc.EIP) map[string]interface{} {
 	var a = make(map[string]interface{}, 3)
@@ -51,4 +93,11 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 	//wait for lease info
 	WaitForLease(output.EIPSet[0].CreateTime)
 	return nil
+}
+
+func isEipDeleted(eipSet []*qc.EIP) bool {
+	if len(eipSet) == 0 || qc.StringValue(eipSet[0].Status) == "ceased" || qc.StringValue(eipSet[0].Status) == "ceased" {
+		return true
+	}
+	return false
 }

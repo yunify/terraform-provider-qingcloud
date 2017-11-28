@@ -5,6 +5,20 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceInstanceImageID         = "image_id"
+	resourceInstanceCPU             = "cpu"
+	resourceInstanceMemory          = "memory"
+	resourceInstanceClass           = "instance_class"
+	resourceInstanceManagedVxnetID  = "managed_vxnet_id"
+	resourceInstancePrivateIP       = "private_ip"
+	resourceInstanceKeyPairIDs      = "keypair_ids"
+	resourceInstanceSecurityGroupId = "security_group_id"
+	resourceInstanceEipID           = "eip_id"
+	resourceInstanceVolumeIDs       = "volume_ids"
+	resourceInstancePublicIP        = "public_ip"
+)
+
 func resourceQingcloudInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudInstanceCreate,
@@ -13,72 +27,69 @@ func resourceQingcloudInstance() *schema.Resource {
 		Delete: resourceQingcloudInstanceDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of instance",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of instance",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"image_id": &schema.Schema{
+			resourceInstanceImageID: &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"cpu": &schema.Schema{
+			resourceInstanceCPU: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1, 2, 4, 8, 16),
 				Default:      1,
 			},
-			"memory": &schema.Schema{
+			resourceInstanceMemory: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 				Default:      1024,
 			},
-			"instance_class": &schema.Schema{
+			resourceInstanceClass: &schema.Schema{
 				Type:         schema.TypeInt,
 				ForceNew:     true,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
-				Description:  "Type of instance , 0 - Performance type , 1 - Ultra high performance type",
 			},
-			"managed_vxnet_id": &schema.Schema{
+			resourceInstanceManagedVxnetID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "vxnet-0",
 			},
-			"private_ip": &schema.Schema{
+			resourceInstancePrivateIP: &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"keypair_ids": &schema.Schema{
+			resourceInstanceKeyPairIDs: &schema.Schema{
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"security_group_id": &schema.Schema{
+			resourceInstanceSecurityGroupId: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"eip_id": &schema.Schema{
+			resourceInstanceEipID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"volume_ids": &schema.Schema{
+			resourceInstanceVolumeIDs: &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"public_ip": &schema.Schema{
+			resourceInstancePublicIP: &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,13 +104,13 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input := new(qc.RunInstancesInput)
 	input.Count = qc.Int(1)
 	input.InstanceName, _ = getNamePointer(d)
-	input.ImageID = qc.String(d.Get("image_id").(string))
-	input.CPU = qc.Int(d.Get("cpu").(int))
-	input.Memory = qc.Int(d.Get("memory").(int))
-	input.InstanceClass = qc.Int(d.Get("instance_class").(int))
-	input.SecurityGroup = getSetStringPointer(d, "security_group_id")
+	input.ImageID = getSetStringPointer(d, resourceInstanceImageID)
+	input.CPU = qc.Int(d.Get(resourceInstanceCPU).(int))
+	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
+	input.InstanceClass = qc.Int(d.Get(resourceInstanceClass).(int))
+	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
 	input.LoginMode = qc.String("keypair")
-	kps := d.Get("keypair_ids").(*schema.Set).List()
+	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
 	if len(kps) > 0 {
 		kp := kps[0].(string)
 		input.LoginKeyPair = qc.String(kp)
@@ -141,42 +152,42 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	instance := output.InstanceSet[0]
 	d.Set(resourceName, qc.StringValue(instance.InstanceName))
 	d.Set(resourceDescription, qc.StringValue(instance.Description))
-	d.Set("image_id", qc.StringValue(instance.Image.ImageID))
-	d.Set("cpu", qc.IntValue(instance.VCPUsCurrent))
-	d.Set("memory", qc.IntValue(instance.MemoryCurrent))
-	d.Set("instance_class", qc.IntValue(instance.InstanceClass))
+	d.Set(resourceInstanceImageID, qc.StringValue(instance.Image.ImageID))
+	d.Set(resourceInstanceCPU, qc.IntValue(instance.VCPUsCurrent))
+	d.Set(resourceInstanceMemory, qc.IntValue(instance.MemoryCurrent))
+	d.Set(resourceInstanceClass, qc.IntValue(instance.InstanceClass))
 	//set managed vxnet
 	for _, vxnet := range instance.VxNets {
 		if qc.IntValue(vxnet.VxNetType) != 0 {
 			if qc.IntValue(vxnet.VxNetType) == 1 {
-				d.Set("managed_vxnet_id", qc.StringValue(vxnet.VxNetID))
-				d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+				d.Set(resourceInstanceManagedVxnetID, qc.StringValue(vxnet.VxNetID))
+				d.Set(resourceInstancePrivateIP, qc.StringValue(vxnet.PrivateIP))
 			} else {
-				d.Set("managed_vxnet_id", "vxnet-0")
-				d.Set("private_ip", qc.StringValue(vxnet.PrivateIP))
+				d.Set(resourceInstanceManagedVxnetID, "vxnet-0")
+				d.Set(resourceInstancePrivateIP, qc.StringValue(vxnet.PrivateIP))
 			}
 		}
 	}
 	if instance.EIP != nil {
-		d.Set("eip_id", qc.StringValue(instance.EIP.EIPID))
-		d.Set("public_ip", qc.StringValue(instance.EIP.EIPAddr))
+		d.Set(resourceInstanceEipID, qc.StringValue(instance.EIP.EIPID))
+		d.Set(resourceInstancePublicIP, qc.StringValue(instance.EIP.EIPAddr))
 	}
 	if instance.SecurityGroup != nil {
-		d.Set("security_group_id", qc.StringValue(instance.SecurityGroup.SecurityGroupID))
+		d.Set(resourceInstanceSecurityGroupId, qc.StringValue(instance.SecurityGroup.SecurityGroupID))
 	}
 	if instance.KeyPairIDs != nil {
 		keypairIDs := make([]string, 0, len(instance.KeyPairIDs))
 		for _, kp := range instance.KeyPairIDs {
 			keypairIDs = append(keypairIDs, qc.StringValue(kp))
 		}
-		d.Set("keypair_ids", keypairIDs)
+		d.Set(resourceInstanceKeyPairIDs, keypairIDs)
 	}
 	if instance.Volumes != nil {
 		volumeIDs := make([]string, 0, len(instance.Volumes))
 		for _, volume := range instance.Volumes {
 			volumeIDs = append(volumeIDs, qc.StringValue(volume.VolumeID))
 		}
-		d.Set("volume_ids", volumeIDs)
+		d.Set(resourceInstanceVolumeIDs, volumeIDs)
 	}
 	resourceSetTag(d, instance.Tags)
 	return nil
@@ -190,40 +201,40 @@ func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) e
 	if err := modifyInstanceAttributes(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("name")
-	d.SetPartial("description")
+	d.SetPartial(resourceName)
+	d.SetPartial(resourceDescription)
 	// change vxnet
 	if err := instanceUpdateChangeManagedVxNet(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("managed_vxnet_id")
-	d.SetPartial("private_ip")
+	d.SetPartial(resourceInstanceManagedVxnetID)
+	d.SetPartial(resourceInstancePrivateIP)
 	// change security_group
 	if err := instanceUpdateChangeSecurityGroup(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("security_group_id")
+	d.SetPartial(resourceInstanceSecurityGroupId)
 	// change eip
 	if err := instanceUpdateChangeEip(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("eip_id")
+	d.SetPartial(resourceInstanceEipID)
 	// change keypairs
 	if err := instanceUpdateChangeKeyPairs(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("keypair_ids")
+	d.SetPartial(resourceInstanceKeyPairIDs)
 	// change volumes
 	if err := updateInstanceVolume(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("volume_ids")
+	d.SetPartial(resourceInstanceVolumeIDs)
 	// resize instance
 	if err := instanceUpdateResize(d, meta); err != nil {
 		return err
 	}
-	d.SetPartial("cpu")
-	d.SetPartial("memory")
+	d.SetPartial(resourceInstanceCPU)
+	d.SetPartial(resourceInstanceMemory)
 	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeInstance); err != nil {
 		return err
 	}

@@ -8,11 +8,11 @@
 #     \/___/  \/_____/ \/_/
                           
 resource "qingcloud_eip" "vpc"{
-	name = "first"
-	description = "first one"
-	billing_mode = "traffic"
-	bandwidth = 1
-	need_icp = 0
+  name = "first"
+  description = "first one"
+  billing_mode = "traffic"
+  bandwidth = 1
+  need_icp = 0
 }
 
 
@@ -25,29 +25,29 @@ resource "qingcloud_eip" "vpc"{
 #                                                        /\___/                                 \ \_\ 
 #                                                        \/__/                                   \/_/ 
 resource "qingcloud_security_group" "basic"{
-	name = "防火墙"
-	description = "这是第一个防火墙"
+  name = "防火墙"
+  description = "这是第一个防火墙"
 }
 
 resource "qingcloud_security_group_rule" "allow-in-80"{
-	name = "允许使用80"
-	security_group_id  = "${qingcloud_security_group.basic.id}"
-	protocol = "tcp"
-	priority = 1
-	action = "accept"
-	direction = 0
-	from_port = "80"
-	to_port = "80"
+  name = "允许使用80"
+  security_group_id  = "${qingcloud_security_group.basic.id}"
+  protocol = "tcp"
+  priority = 1
+  action = "accept"
+  direction = 0
+  from_port = "80"
+  to_port = "80"
 }
 resource "qingcloud_security_group_rule" "allow-in-81"{
-	name = "允许使用81"
-	security_group_id = "${qingcloud_security_group.basic.id}"
-	protocol = "tcp"
-	priority = 1
-	action = "accept"
-	direction = 0
-	from_port = "81"
-	to_port = "81"
+  name = "允许使用81"
+  security_group_id = "${qingcloud_security_group.basic.id}"
+  protocol = "tcp"
+  priority = 1
+  action = "accept"
+  direction = 0
+  from_port = "81"
+  to_port = "81"
 }
 
 #  ____    ____    __  __     
@@ -59,9 +59,9 @@ resource "qingcloud_security_group_rule" "allow-in-81"{
 #     \/_____/\/_____/\/_/\/_/
                             
 resource "qingcloud_keypair" "arthur"{
-	name = "arthur"
-	description = "sdfafd"
-	public_key = "${file("~/.ssh/id_rsa.pub")}"
+  name = "arthur"
+  description = "sdfafd"
+  public_key = "${file("~/.ssh/id_rsa.pub")}"
 }
 
 #  ____                     __
@@ -73,25 +73,25 @@ resource "qingcloud_keypair" "arthur"{
 #     \/_/\/ /\/___/  \/___/   \/__/\/____/ \/_/
                                                
 resource "qingcloud_vpc" "vpc"{
-	name = "vpc-network"
-	type = 1
-	vpc_network = "172.16.0.0/16"
-	security_group_id = "${qingcloud_security_group.basic.id}"
-	description = "测试的网络"
-	eip_id = "${qingcloud_eip.vpc.id}"
+  name = "vpc-network"
+  type = 1
+  vpc_network = "172.16.0.0/16"
+  security_group_id = "${qingcloud_security_group.basic.id}"
+  description = "测试的网络"
+  eip_id = "${qingcloud_eip.vpc.id}"
 }
 
 resource "qingcloud_vpc_static" "foo1"{
-  	vpc_id = "${qingcloud_vpc.vpc.id}"
-	static_type = 1
-	val1 = "80"
-	val2 = "${qingcloud_instance.master.private_ip}"
+  vpc_id = "${qingcloud_vpc.vpc.id}"
+  type = 1
+  val1 = "80"
+  val2 = "${qingcloud_instance.master.private_ip}"
   val3 = "80"
 }
 
 resource "qingcloud_vpc_static" "foo2"{
   vpc_id = "${qingcloud_vpc.vpc.id}"
-  static_type = 1
+  type = 1
   val1 = "81"
   val2 = "${qingcloud_instance.master.private_ip}"
   val3 = "81"
@@ -106,11 +106,11 @@ resource "qingcloud_vpc_static" "foo2"{
 #     `\/__/ \//\/_/\/_/\/_/\/____/ \/__/
                                        
 resource "qingcloud_vxnet" "vx"{
-	name = "app vxnet"
-	type = 1
-	description = "应用的网络"
-	vpc_id = "${qingcloud_vpc.vpc.id}"
-	ip_network = "172.16.1.0/24"
+  name = "app vxnet"
+  type = 1
+  description = "应用的网络"
+  vpc_id = "${qingcloud_vpc.vpc.id}"
+  ip_network = "172.16.1.0/24"
 }
 
 
@@ -122,22 +122,22 @@ resource "qingcloud_vxnet" "vx"{
 #     /\_____\ \_\ \_\/\____/ \ \__\ \__/.\_\ \_\ \_\ \____\ \____\
 #     \/_____/\/_/\/_/\/___/   \/__/\/__/\/_/\/_/\/_/\/____/\/____/
 resource "qingcloud_instance" "master"{
-	image_id = "trustysrvx64f"
-	instance_class = "0"
-	managed_vxnet_id = "${qingcloud_vxnet.vx.id}"
-	keypair_ids = ["${qingcloud_keypair.arthur.id}"]
-	security_group_id ="${qingcloud_security_group.basic.id}"
+  image_id = "trustysrvx64f"
+  instance_class = "0"
+  managed_vxnet_id = "${qingcloud_vxnet.vx.id}"
+  keypair_ids = ["${qingcloud_keypair.arthur.id}"]
+  security_group_id ="${qingcloud_security_group.basic.id}"
 }
 
 resource "qingcloud_instance" "slave"{
-	count = 3
+  count = 3
 
-	name = "slave-${count.index}"
-	image_id = "trustysrvx64f"
-	instance_class = "0"
-	managed_vxnet_id = "${qingcloud_vxnet.vx.id}"
-	keypair_ids = ["${qingcloud_keypair.arthur.id}"]
-	security_group_id ="${qingcloud_security_group.basic.id}"
+  name = "slave-${count.index}"
+  image_id = "trustysrvx64f"
+  instance_class = "0"
+  managed_vxnet_id = "${qingcloud_vxnet.vx.id}"
+  keypair_ids = ["${qingcloud_keypair.arthur.id}"]
+  security_group_id ="${qingcloud_security_group.basic.id}"
 }
 
 

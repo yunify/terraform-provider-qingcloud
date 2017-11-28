@@ -7,6 +7,10 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+const (
+	resourceKeyPairPublicKey = "public_key"
+)
+
 func resourceQingcloudKeypair() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudKeypairCreate,
@@ -15,15 +19,13 @@ func resourceQingcloudKeypair() *schema.Resource {
 		Delete: resourceQingcluodKeypairDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of keypair ",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"public_key": &schema.Schema{
-				Type:        schema.TypeString,
-				ForceNew:    true,
-				Required:    true,
-				Description: "The SSH public key ",
+			resourceKeyPairPublicKey: &schema.Schema{
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
@@ -34,9 +36,8 @@ func resourceQingcloudKeypair() *schema.Resource {
 				},
 			},
 			resourceDescription: &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of keypair ",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
@@ -49,7 +50,7 @@ func resourceQingcloudKeypairCreate(d *schema.ResourceData, meta interface{}) er
 	input := new(qc.CreateKeyPairInput)
 	input.KeyPairName, _ = getNamePointer(d)
 	input.Mode = qc.String("user")
-	input.PublicKey = qc.String(d.Get("public_key").(string))
+	input.PublicKey = qc.String(d.Get(resourceKeyPairPublicKey).(string))
 	var output *qc.CreateKeyPairOutput
 	var err error
 	simpleRetry(func() error {
