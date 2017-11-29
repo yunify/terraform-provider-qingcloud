@@ -38,6 +38,9 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 
 func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get(resourceVxnetVpcID).(string)); err != nil {
+		return err
+	}
 	input := new(qc.JoinRouterInput)
 	input.VxNet = qc.String(d.Id())
 	input.Router = qc.String(d.Get(resourceVxnetVpcID).(string))
@@ -59,6 +62,9 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 
 func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	oldVPC, _ := d.GetChange(resourceVxnetVpcID)
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldVPC.(string)); err != nil {
+		return err
+	}
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.LeaveRouterInput)
 	input.VxNets = []*string{qc.String(d.Id())}

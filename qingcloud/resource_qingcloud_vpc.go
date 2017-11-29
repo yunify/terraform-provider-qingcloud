@@ -94,7 +94,6 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
-	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}

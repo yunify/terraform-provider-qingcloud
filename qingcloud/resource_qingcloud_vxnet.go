@@ -123,25 +123,16 @@ func resourceQingcloudVxnetUpdate(d *schema.ResourceData, meta interface{}) erro
 		newVPCID := newVPC.(string)
 		if oldVPCID == "" {
 			// do a join router action
-			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, newVPCID); err != nil {
-				return err
-			}
 			if err := vxnetJoinRouter(d, meta); err != nil {
 				return err
 			}
 		} else if newVPCID == "" {
 			// do a leave router action
-			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldVPCID); err != nil {
-				return err
-			}
 			if err := vxnetLeaverRouter(d, meta); err != nil {
 				return err
 			}
 		} else {
 			// do a leave router then do a  join router action
-			if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldVPCID); err != nil {
-				return err
-			}
 			if err := vxnetLeaverRouter(d, meta); err != nil {
 				return err
 			}
@@ -171,9 +162,6 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	vpcID := d.Get(resourceVxnetVpcID).(string)
 	// vxnet leave router
 	if vpcID != "" {
-		if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, vpcID); err != nil {
-			return err
-		}
 		if err := vxnetLeaverRouter(d, meta); err != nil {
 			return err
 		}

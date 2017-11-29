@@ -207,9 +207,9 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return err
 		}
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 	}
 	// dettach old key_pair
 	if len(deletions) > 0 {
@@ -362,9 +362,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		for _, volumeID := range additions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)
 		}
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 	}
 	// dettach old key_pair
 	if len(deletions) > 0 {
