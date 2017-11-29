@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2016 Magicshui
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/**
+ * Copyright (c) 2017 yunify
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package qingcloud
 
 import (
@@ -92,9 +105,6 @@ func resourceQingcloudVpcStaticCreate(d *schema.ResourceData, meta interface{}) 
 	if err := applyRouterUpdate(qc.String(d.Get(resourceVpcStaticVpcid).(string)), meta); err != nil {
 		return nil
 	}
-	if _, err := RouterTransitionStateRefresh(clt, d.Get(resourceVpcStaticVpcid).(string)); err != nil {
-		return err
-	}
 	return resourceQingcloudVpcStaticRead(d, meta)
 }
 
@@ -148,9 +158,6 @@ func resourceQingcloudVpcStaticUpdate(d *schema.ResourceData, meta interface{}) 
 	if err := applyRouterUpdate(qc.String(d.Get(resourceVpcStaticVpcid).(string)), meta); err != nil {
 		return nil
 	}
-	if _, err := RouterTransitionStateRefresh(clt, d.Get(resourceVpcStaticVpcid).(string)); err != nil {
-		return err
-	}
 	return resourceQingcloudVpcStaticRead(d, meta)
 }
 
@@ -169,9 +176,6 @@ func resourceQingcloudVpcStaticDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	if err := applyRouterUpdate(qc.String(d.Get(resourceVpcStaticVpcid).(string)), meta); err != nil {
 		return nil
-	}
-	if _, err := RouterTransitionStateRefresh(clt, d.Get(resourceVpcStaticVpcid).(string)); err != nil {
-		return err
 	}
 	d.SetId("")
 	return nil

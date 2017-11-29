@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2016 Magicshui
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/**
+ * Copyright (c) 2017 yunify
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package qingcloud
 
 import (
@@ -200,9 +213,9 @@ func instanceUpdateChangeKeyPairs(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return err
 		}
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 	}
 	// dettach old key_pair
 	if len(deletions) > 0 {
@@ -355,9 +368,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 		for _, volumeID := range additions {
 			VolumeTransitionStateRefresh(volumeClt, volumeID)
 		}
-	}
-	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
-		return err
+		if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
+			return err
+		}
 	}
 	// dettach old key_pair
 	if len(deletions) > 0 {

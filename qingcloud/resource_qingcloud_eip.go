@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2016 Magicshui
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/**
+ * Copyright (c) 2017 yunify
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package qingcloud
 
 import (
@@ -111,7 +124,6 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set(resourceEipBandwidth, qc.IntValue(ip.Bandwidth))
 	d.Set(resourceEipNeedIcp, qc.IntValue(ip.NeedICP))
 	d.Set(resourceDescription, qc.StringValue(ip.Description))
-	// 如下状态是稍等来获取的
 	d.Set(resourceEipAddr, qc.StringValue(ip.EIPAddr))
 	if err := d.Set(resourceEipResource, getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)

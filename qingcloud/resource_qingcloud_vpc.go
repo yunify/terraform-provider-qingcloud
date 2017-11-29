@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2016 Magicshui
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/**
+ * Copyright (c) 2017 yunify
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package qingcloud
 
 import (
@@ -87,7 +100,6 @@ func resourceQingcloudVpcCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 	d.SetId(qc.StringValue(output.Routers[0]))
-	_, err = RouterTransitionStateRefresh(clt, d.Id())
 	if _, err = RouterTransitionStateRefresh(clt, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for router (%s) to start: %s", d.Id(), err.Error())
 	}

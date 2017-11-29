@@ -1,3 +1,16 @@
+/**
+ * Copyright (c) 2016 Magicshui
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/**
+ * Copyright (c) 2017 yunify
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package qingcloud
 
 import (
@@ -31,6 +44,9 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 
 func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, d.Get(resourceVxnetVpcID).(string)); err != nil {
+		return err
+	}
 	input := new(qc.JoinRouterInput)
 	input.VxNet = qc.String(d.Id())
 	input.Router = qc.String(d.Get(resourceVxnetVpcID).(string))
@@ -52,6 +68,9 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 
 func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	oldVPC, _ := d.GetChange(resourceVxnetVpcID)
+	if _, err := RouterTransitionStateRefresh(meta.(*QingCloudClient).router, oldVPC.(string)); err != nil {
+		return err
+	}
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.LeaveRouterInput)
 	input.VxNets = []*string{qc.String(d.Id())}
