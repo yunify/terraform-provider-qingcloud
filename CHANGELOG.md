@@ -1,4 +1,4 @@
-## 0.1.0 (November 29, 2017)
+## 1.0.0 (November 29, 2017)
 FEATURES:
 
 * **New Resource**: `qingcloud_eip` ([#21](https://github.com/yunify/terraform-provider-qingcloud/issues/21))
