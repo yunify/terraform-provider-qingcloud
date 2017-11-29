@@ -3,11 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
-*/
+ */
 
 package qingcloud
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -118,10 +119,11 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
 	input.LoginMode = qc.String("keypair")
 	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
-	if len(kps) > 0 {
-		kp := kps[0].(string)
-		input.LoginKeyPair = qc.String(kp)
+	if len(kps) < 1 {
+		return fmt.Errorf("KeyPair Required")
 	}
+	kp := kps[0].(string)
+	input.LoginKeyPair = qc.String(kp)
 	var output *qc.RunInstancesOutput
 	var err error
 	simpleRetry(func() error {
@@ -183,11 +185,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		d.Set(resourceInstanceSecurityGroupId, qc.StringValue(instance.SecurityGroup.SecurityGroupID))
 	}
 	if instance.KeyPairIDs != nil {
-		keypairIDs := make([]string, 0, len(instance.KeyPairIDs))
-		for _, kp := range instance.KeyPairIDs {
-			keypairIDs = append(keypairIDs, qc.StringValue(kp))
-		}
-		d.Set(resourceInstanceKeyPairIDs, keypairIDs)
+		d.Set(resourceInstanceKeyPairIDs, qc.StringValueSlice(instance.KeyPairIDs))
 	}
 	if instance.Volumes != nil {
 		volumeIDs := make([]string, 0, len(instance.Volumes))

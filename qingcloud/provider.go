@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
-*/
+ */
 
 package qingcloud
 
@@ -49,8 +49,6 @@ func Provider() terraform.ResourceProvider {
 		ConfigureFunc: providerConfigure,
 	}
 }
-
-var qingcloudMutexKV = mutexkv.NewMutexKV()
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	accesskey, ok := d.GetOk("access_key")

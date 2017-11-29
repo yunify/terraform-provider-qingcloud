@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
-*/
+ */
 
 package qingcloud
 
@@ -11,16 +11,18 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
-const(
+
+const (
 	resourceSecurityGroupRuleSecurityGroupID = "security_group_id"
-	resourceSecurityGroupRuleProtocol ="protocol"
-	resourceSecurityGroupRulePriority = "priority"
-	resourceSecurityGroupRuleAction = "action"
-	resourceSecurityGroupRuleDirection = "direction"
-	resourceSecurityGroupRuleFromPort ="from_port"
-	resourceSecurityGroupRuleToPort = "to_port"
-	resourceSecurityGroupCidrBlock = "cidr_block"
+	resourceSecurityGroupRuleProtocol        = "protocol"
+	resourceSecurityGroupRulePriority        = "priority"
+	resourceSecurityGroupRuleAction          = "action"
+	resourceSecurityGroupRuleDirection       = "direction"
+	resourceSecurityGroupRuleFromPort        = "from_port"
+	resourceSecurityGroupRuleToPort          = "to_port"
+	resourceSecurityGroupCidrBlock           = "cidr_block"
 )
+
 func resourceQingcloudSecurityGroupRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQingcloudSecurityGroupRuleCreate,
@@ -88,9 +90,9 @@ func resourceQingcloudSecurityGroupRuleCreate(d *schema.ResourceData, meta inter
 	rule.Action = qc.String(d.Get(resourceSecurityGroupRuleAction).(string))
 	rule.Direction = qc.Int(d.Get(resourceSecurityGroupRuleDirection).(int))
 	rule.SecurityGroupRuleName, _ = getNamePointer(d)
-	rule.Val1 = getSetStringPointer(d,resourceSecurityGroupRuleFromPort)
-	rule.Val2 = getSetStringPointer(d , resourceSecurityGroupRuleToPort)
-	rule.Val3 = getSetStringPointer(d , resourceSecurityGroupCidrBlock)
+	rule.Val1 = getSetStringPointer(d, resourceSecurityGroupRuleFromPort)
+	rule.Val2 = getSetStringPointer(d, resourceSecurityGroupRuleToPort)
+	rule.Val3 = getSetStringPointer(d, resourceSecurityGroupCidrBlock)
 	input.Rules = []*qc.SecurityGroupRule{rule}
 	var output *qc.AddSecurityGroupRulesOutput
 	var err error
