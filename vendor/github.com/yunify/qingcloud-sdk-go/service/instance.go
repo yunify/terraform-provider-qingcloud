@@ -600,7 +600,9 @@ type RunInstancesInput struct {
 	BillingID *string `json:"billing_id" name:"billing_id" location:"params"`
 	Count     *int    `json:"count" name:"count" default:"1" location:"params"`
 	// CPU's available values: 1, 2, 4, 8, 16
-	CPU      *int    `json:"cpu" name:"cpu" default:"1" location:"params"`
+	CPU *int `json:"cpu" name:"cpu" default:"1" location:"params"`
+	// CPUMax's available values: 1, 2, 4, 8, 16
+	CPUMax   *int    `json:"cpu_max" name:"cpu_max" location:"params"`
 	Hostname *string `json:"hostname" name:"hostname" location:"params"`
 	ImageID  *string `json:"image_id" name:"image_id" location:"params"` // Required
 	// InstanceClass's available values: 0, 1
@@ -611,6 +613,8 @@ type RunInstancesInput struct {
 	// LoginMode's available values: keypair, passwd
 	LoginMode   *string `json:"login_mode" name:"login_mode" location:"params"` // Required
 	LoginPasswd *string `json:"login_passwd" name:"login_passwd" location:"params"`
+	// MemMax's available values: 1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768
+	MemMax *int `json:"mem_max" name:"mem_max" location:"params"`
 	// Memory's available values: 1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768
 	Memory *int `json:"memory" name:"memory" default:"1024" location:"params"`
 	// NeedNewSID's available values: 0, 1
@@ -646,6 +650,26 @@ func (v *RunInstancesInput) Validate() error {
 				ParameterName:  "CPU",
 				ParameterValue: cpuParameterValue,
 				AllowedValues:  cpuValidValues,
+			}
+		}
+	}
+
+	if v.CPUMax != nil {
+		cpuMaxValidValues := []string{"1", "2", "4", "8", "16"}
+		cpuMaxParameterValue := fmt.Sprint(*v.CPUMax)
+
+		cpuMaxIsValid := false
+		for _, value := range cpuMaxValidValues {
+			if value == cpuMaxParameterValue {
+				cpuMaxIsValid = true
+			}
+		}
+
+		if !cpuMaxIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "CPUMax",
+				ParameterValue: cpuMaxParameterValue,
+				AllowedValues:  cpuMaxValidValues,
 			}
 		}
 	}
@@ -700,6 +724,26 @@ func (v *RunInstancesInput) Validate() error {
 				ParameterName:  "LoginMode",
 				ParameterValue: loginModeParameterValue,
 				AllowedValues:  loginModeValidValues,
+			}
+		}
+	}
+
+	if v.MemMax != nil {
+		memMaxValidValues := []string{"1024", "2048", "4096", "6144", "8192", "12288", "16384", "24576", "32768"}
+		memMaxParameterValue := fmt.Sprint(*v.MemMax)
+
+		memMaxIsValid := false
+		for _, value := range memMaxValidValues {
+			if value == memMaxParameterValue {
+				memMaxIsValid = true
+			}
+		}
+
+		if !memMaxIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "MemMax",
+				ParameterValue: memMaxParameterValue,
+				AllowedValues:  memMaxValidValues,
 			}
 		}
 	}
