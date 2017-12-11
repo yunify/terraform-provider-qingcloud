@@ -40,6 +40,27 @@ func modifyInstanceAttributes(d *schema.ResourceData, meta interface{}) error {
 	}
 	return nil
 }
+func setInstanceUserData(d *schema.ResourceData, meta interface{}, runInstanceInput *qc.RunInstancesInput) error {
+	clt := meta.(*QingCloudClient).userdata
+	input := new(qc.UploadUserDataAttachmentInput)
+	input.AttachmentName = qc.String(resourceInstanceUserData)
+	input.AttachmentContent = qc.String(d.Get(resourceInstanceUserData).(string))
+	var output *qc.UploadUserDataAttachmentOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.UploadUserDataAttachment(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	runInstanceInput.NeedUserdata = qc.Int(1)
+	runInstanceInput.UserdataType = qc.String("tar")
+	runInstanceInput.UserdataValue = output.AttachmentID
+	runInstanceInput.UserdataFile = qc.String("userdata")
+	runInstanceInput.UserdataPath = qc.String("/etc/qingcloud/userdata")
+	return nil
+}
 
 func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) error {
 	if !d.HasChange(resourceInstanceManagedVxnetID) {

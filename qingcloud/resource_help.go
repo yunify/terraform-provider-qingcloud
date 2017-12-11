@@ -14,6 +14,7 @@
 package qingcloud
 
 import (
+	"encoding/base64"
 	"math/rand"
 	"time"
 
@@ -131,4 +132,8 @@ func getUpdateStringPointer(d *schema.ResourceData, key string) *string {
 		return qc.String(d.Get(key).(string))
 	}
 	return qc.String(" ")
+}
+func isBase64Encoded(data []byte) bool {
+	_, err := base64.StdEncoding.DecodeString(string(data))
+	return err == nil
 }

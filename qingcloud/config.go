@@ -36,8 +36,7 @@ type QingCloudClient struct {
 	volume        *qc.VolumeService
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
-	cache         *qc.CacheService
-	mongo         *qc.MongoService
+	userdata      *qc.UserDataService
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -91,14 +90,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	cache, err := clt.Cache(c.Zone)
-	if err != nil {
-		return nil, err
-	}
-	mongo, err := clt.Mongo(c.Zone)
-	if err != nil {
-		return nil, err
-	}
+	userdata, err := clt.UserData(c.Zone)
 
 	return &QingCloudClient{
 		zone:          c.Zone,
@@ -112,7 +104,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		volume:        volume,
 		loadbalancer:  loadbalancer,
 		tag:           tag,
-		cache:         cache,
-		mongo:         mongo,
+		userdata:      userdata,
 	}, nil
 }

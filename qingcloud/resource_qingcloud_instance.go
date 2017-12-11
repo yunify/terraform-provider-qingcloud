@@ -31,6 +31,7 @@ const (
 	resourceInstanceEipID           = "eip_id"
 	resourceInstanceVolumeIDs       = "volume_ids"
 	resourceInstancePublicIP        = "public_ip"
+	resourceInstanceUserData        = "userdata"
 )
 
 func resourceQingcloudInstance() *schema.Resource {
@@ -107,6 +108,20 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			resourceInstanceUserData: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !isBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
+				},
+			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
 		},
@@ -130,6 +145,11 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	}
 	kp := kps[0].(string)
 	input.LoginKeyPair = qc.String(kp)
+	if d.Get(resourceInstanceUserData).(string) != "" {
+		if err := setInstanceUserData(d, meta, input); err != nil {
+			return err
+		}
+	}
 	var output *qc.RunInstancesOutput
 	var err error
 	simpleRetry(func() error {
