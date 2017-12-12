@@ -14,14 +14,20 @@
 package qingcloud
 
 import (
+	"net/url"
+	"strconv"
+	"strings"
+	"fmt"
+	
 	"github.com/yunify/qingcloud-sdk-go/config"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 type Config struct {
-	ID     string
-	Secret string
-	Zone   string
+	ID       string
+	Secret   string
+	Zone     string
+	EndPoint string
 }
 
 type QingCloudClient struct {
@@ -36,16 +42,31 @@ type QingCloudClient struct {
 	volume        *qc.VolumeService
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
-	cache         *qc.CacheService
-	mongo         *qc.MongoService
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
 	cfg, err := config.New(c.ID, c.Secret)
-	cfg.LogLevel = "debug"
 	if err != nil {
 		return nil, err
 	}
+	cfg.LogLevel = "debug"
+	qcUrl, err := url.Parse(c.EndPoint)
+	if err != nil {
+		return nil, err
+	}
+	if !strings.Contains(qcUrl.Host, ":") {
+		return nil, fmt.Errorf("If you use endpoint , you must pass in the port number ")
+	}
+	// get host and port
+	hostPort := strings.Split(qcUrl.Host, ":")
+	cfg.Host = hostPort[0]
+	port, err := strconv.Atoi(hostPort[1])
+	if err != nil {
+		return nil, err
+	}
+	cfg.Port = port
+	cfg.Protocol = qcUrl.Scheme
+	cfg.URI = qcUrl.Path
 	clt, err := qc.Init(cfg)
 	if err != nil {
 		return nil, err
@@ -91,14 +112,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	cache, err := clt.Cache(c.Zone)
-	if err != nil {
-		return nil, err
-	}
-	mongo, err := clt.Mongo(c.Zone)
-	if err != nil {
-		return nil, err
-	}
 
 	return &QingCloudClient{
 		zone:          c.Zone,
@@ -112,7 +125,5 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		volume:        volume,
 		loadbalancer:  loadbalancer,
 		tag:           tag,
-		cache:         cache,
-		mongo:         mongo,
 	}, nil
 }

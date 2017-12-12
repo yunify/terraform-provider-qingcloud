@@ -71,10 +71,19 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 			zone = DEFAULT_ZONE
 		}
 	}
+	endpoint, ok := d.GetOk("endpoint")
+	if !ok {
+		endpoint = os.Getenv("QINGCLOUD_ENDPOINT")
+		if endpoint == "" {
+			endpoint = DEFAULT_ENDPOINT
+		}
+	}
+
 	config := Config{
-		ID:     accesskey.(string),
-		Secret: secretkey.(string),
-		Zone:   zone.(string),
+		ID:       accesskey.(string),
+		Secret:   secretkey.(string),
+		Zone:     zone.(string),
+		EndPoint: endpoint.(string),
 	}
 	return config.Client()
 }
