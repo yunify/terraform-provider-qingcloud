@@ -176,9 +176,10 @@ func (s *SnapshotService) CreateSnapshots(i *CreateSnapshotsInput) (*CreateSnaps
 type CreateSnapshotsInput struct {
 
 	// IsFull's available values: 0, 1
-	IsFull       *int      `json:"is_full" name:"is_full" location:"params"`
-	Resources    []*string `json:"resources" name:"resources" location:"params"` // Required
-	SnapshotName *string   `json:"snapshot_name" name:"snapshot_name" location:"params"`
+	IsFull        *int      `json:"is_full" name:"is_full" location:"params"`
+	Resources     []*string `json:"resources" name:"resources" location:"params"` // Required
+	ServiceParams *string   `json:"service_params" name:"service_params" location:"params"`
+	SnapshotName  *string   `json:"snapshot_name" name:"snapshot_name" location:"params"`
 }
 
 func (v *CreateSnapshotsInput) Validate() error {
