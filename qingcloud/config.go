@@ -14,11 +14,6 @@
 package qingcloud
 
 import (
-	"fmt"
-	"net/url"
-	"strconv"
-	"strings"
-
 	"github.com/yunify/qingcloud-sdk-go/config"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
