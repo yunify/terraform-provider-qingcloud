@@ -11,8 +11,8 @@ Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/terrafo
 
 To install Terraform, find the [appropriate package](https://github.com/yunify/terraform-provider-qingcloud/releases) for your system and download it. Terraform is packaged as a tgz archive.  
 After downloading Terraform, unzip the package.   
-On Linux or Mac ,Rename the single binary to `terraform-provider-qingcloud`. 
-On Windows , Rename the single binary to `terraform-provider-qingcloud.exe`.
+On Linux or Mac ,Rename the single binary to `terraform-provider-qingcloud` , and put it to in the sub-path .terraform.d/plugins in your user's home directory.
+On Windows , Rename the single binary to `terraform-provider-qingcloud.exe` , and put it to in the sub-path terraform.d/plugins beneath your user's "Application Data" directory.
 Then put the binary file into terraform 's PATH.
 
 ### Verifying the Installation
