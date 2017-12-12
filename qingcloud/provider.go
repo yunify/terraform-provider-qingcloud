@@ -38,6 +38,11 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				Description: descriptions["zone"],
 			},
+			"endpoint": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["endpoint"],
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"qingcloud_eip":                 resourceQingcloudEip(),
@@ -95,5 +100,6 @@ func init() {
 		"access_key": "qingcloud access key ID ",
 		"secret_key": "qingcloud access key secret",
 		"zone":       "qingcloud reigon zone",
+		"endpoint":   "qingcloud api endpoint",
 	}
 }

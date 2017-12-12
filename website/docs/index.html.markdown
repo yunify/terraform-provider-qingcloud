@@ -66,7 +66,7 @@ The following methods are supported, in this order, and explained below:
 
 ### Static credentials ###
 
-Static credentials can be provided by adding an `access_key` `secret_key` and `zone` in-line in the
+Static credentials can be provided by adding an `access_key` `secret_key` `zone` and `endpoint` in-line in the
 qingcloud provider block:
 
 Usage:
@@ -76,6 +76,7 @@ provider "qingcloud" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
   region     = "${var.region}"
+  endpoint   = "${var.endpoint}"
 }
 ```
 
@@ -84,7 +85,7 @@ provider "qingcloud" {
 
 You can provide your credentials via `QINGCLOUD_ACCESS_KEY` and `QINGCLOUD_SECRET_KEY`,
 environment variables, representing your Qingcloud Access Key and Secret Key, respectively.
-`QINGCLOUD_ZONE` is also used, if applicable:
+`QINGCLOUD_ZONE` and `QINGCLOUD_ENDPOINT` is also used, if applicable:
 
 ```hcl
 provider "qingcloud" {}
@@ -96,6 +97,7 @@ Usage:
 $ export QINGCLOUD_ACCESS_KEY="anaccesskey"
 $ export QINGCLOUD_SECRET_KEY="asecretkey"
 $ export QINGCLOUD_ZONE="pek3a"
+$ export QINGCLOUD_ENDPOINT="https://api.qingcloud.com:443/iaas"
 $ terraform plan
 ```
 
@@ -111,6 +113,9 @@ In old version access_key name is id , and it was deprecated.
 * `secret_key` - (Optional) This is the Qingcloud secret key. It must be provided, but
 it can also be sourced from the `QINGCLOUD_SECRET_KEY` environment variable.
 In old version secret_key name is secret , and it was deprecated.
+
+* `endpoint` - (Optional) This is the Qingcloud API address , default `https://api.qingcloud.com:443/iaas`.  
+It can also be sourced from the  `QINGCLOUD_ENDPOINT` . This parameter is often used in private clouds.
 
 * `zone` - (Required) This is the Qingcloud zone. It must be provided, but
 it can also be sourced from the `QINGCLOUD_ZONE` environment variables.
