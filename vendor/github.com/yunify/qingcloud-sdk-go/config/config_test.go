@@ -93,13 +93,28 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewWithEndpoint(t *testing.T) {
-	config, err := NewWithEndpoint("AccessKeyID", "SecretAccessKey", "https://api.qingcloud.com/iaas")
-	assert.Nil(t, err)
+	config, err := NewWithEndpoint("AccessKeyID", "SecretAccessKey", "test.qingcloud.com:444/iaas?a=1#hhh")
+	assert.NotNil(t, err)
 
+	config, err = NewWithEndpoint("AccessKeyID", "SecretAccessKey", "http:test.qingcloud.com:444/iaas?a=1#hhh")
+	assert.NotNil(t, err)
+
+	config, err = NewWithEndpoint("AccessKeyID", "SecretAccessKey", "https://api.qingcloud.com/iaas")
+	assert.Nil(t, err)
 	assert.Equal(t, "AccessKeyID", config.AccessKeyID)
 	assert.Equal(t, "SecretAccessKey", config.SecretAccessKey)
 	assert.Equal(t, "https", config.Protocol)
 	assert.Equal(t, "api.qingcloud.com", config.Host)
 	assert.Equal(t, 443, config.Port)
 	assert.Equal(t, "/iaas", config.URI)
+
+	config, err = NewWithEndpoint("AccessKeyID", "SecretAccessKey", "http://test.qingcloud.com:444/iaas")
+	assert.Nil(t, err)
+	assert.Equal(t, "AccessKeyID", config.AccessKeyID)
+	assert.Equal(t, "SecretAccessKey", config.SecretAccessKey)
+	assert.Equal(t, "http", config.Protocol)
+	assert.Equal(t, "test.qingcloud.com", config.Host)
+	assert.Equal(t, 444, config.Port)
+	assert.Equal(t, "/iaas", config.URI)
+	
 }
