@@ -33,6 +33,10 @@ func resourceQingcloudVxnet() *schema.Resource {
 		Read:   resourceQingcloudVxnetRead,
 		Update: resourceQingcloudVxnetUpdate,
 		Delete: resourceQingcloudVxnetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,

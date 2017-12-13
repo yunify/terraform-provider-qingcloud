@@ -6,16 +6,16 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccQingcloudVolume_importBasic(t *testing.T) {
-	resourceName := "qingcloud_volume.foo"
+func TestAccQingcloudVxnet_importBasic(t *testing.T) {
+	resourceName := "qingcloud_vxnet.foo"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		CheckDestroy: testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVolumeConfigTwo,
+				Config: testAccVxNetConfigThree,
 			},
 			resource.TestStep{
 				ResourceName:      resourceName,
@@ -25,4 +25,3 @@ func TestAccQingcloudVolume_importBasic(t *testing.T) {
 		},
 	})
 }
-
