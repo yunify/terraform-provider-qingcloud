@@ -32,6 +32,10 @@ func resourceQingcloudVolume() *schema.Resource {
 		Read:   resourceQingcloudVolumeRead,
 		Update: resourceQingcloudVolumeUpdate,
 		Delete: resourceQingcloudVolumeDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceVolumeSize: &schema.Schema{
 				Type:     schema.TypeInt,
