@@ -19,9 +19,10 @@ import (
 )
 
 type Config struct {
-	ID     string
-	Secret string
-	Zone   string
+	ID       string
+	Secret   string
+	Zone     string
+	EndPoint string
 }
 
 type QingCloudClient struct {
@@ -36,16 +37,14 @@ type QingCloudClient struct {
 	volume        *qc.VolumeService
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
-	cache         *qc.CacheService
-	mongo         *qc.MongoService
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
-	cfg, err := config.New(c.ID, c.Secret)
-	cfg.LogLevel = "debug"
+	cfg, err := config.NewWithEndpoint(c.ID, c.Secret, c.EndPoint)
 	if err != nil {
 		return nil, err
 	}
+	cfg.LogLevel = "debug"
 	clt, err := qc.Init(cfg)
 	if err != nil {
 		return nil, err
@@ -91,14 +90,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	cache, err := clt.Cache(c.Zone)
-	if err != nil {
-		return nil, err
-	}
-	mongo, err := clt.Mongo(c.Zone)
-	if err != nil {
-		return nil, err
-	}
 
 	return &QingCloudClient{
 		zone:          c.Zone,
@@ -112,7 +103,5 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		volume:        volume,
 		loadbalancer:  loadbalancer,
 		tag:           tag,
-		cache:         cache,
-		mongo:         mongo,
 	}, nil
 }
