@@ -1211,6 +1211,7 @@ type LoadBalancer struct {
 	LoadBalancerName *string                 `json:"loadbalancer_name" name:"loadbalancer_name"`
 	// LoadBalancerType's available values: 0, 1, 2, 3, 4, 5
 	LoadBalancerType *int      `json:"loadbalancer_type" name:"loadbalancer_type"`
+	NodeCount        *int      `json:"node_count" name:"node_count"`
 	PrivateIPs       []*string `json:"private_ips" name:"private_ips"`
 	SecurityGroupID  *string   `json:"security_group_id" name:"security_group_id"`
 	// Status's available values: pending, active, stopped, suspended, deleted, ceased
