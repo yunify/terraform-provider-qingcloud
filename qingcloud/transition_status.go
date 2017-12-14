@@ -261,10 +261,10 @@ func WaitForLease(CreateTime *time.Time) {
 		time.Sleep(time.Second * time.Duration(30))
 	}
 }
-func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id string) (interface{}, error) {
+func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id *string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeLoadBalancersInput)
-		input.LoadBalancers = []*string{qc.String(id)}
+		input.LoadBalancers = []*string{id}
 		var output *qc.DescribeLoadBalancersOutput
 		var err error
 		simpleRetry(func() error {

@@ -52,21 +52,22 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 				Optional: true,
 				Default:  2,
 			},
-			resourceLoadBalancerSecurityGroupID:&schema.Schema{
+			resourceLoadBalancerSecurityGroupID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed:true,
+				Computed: true,
 			},
-			resourceLoadBalancerVxnetID:&schema.Schema{
+			resourceLoadBalancerVxnetID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed:true,
+				Default:  "vxnet-0",
+				ForceNew: true,
 			},
-			resourceLoadBalancerHttpHeaderSize:&schema.Schema{
+			resourceLoadBalancerHttpHeaderSize: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      15,
-				ValidateFunc: withinArrayIntRange(1,127),
+				ValidateFunc: withinArrayIntRange(1, 127),
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
