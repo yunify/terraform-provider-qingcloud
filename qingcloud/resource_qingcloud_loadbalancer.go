@@ -2,6 +2,7 @@ package qingcloud
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 const (
@@ -73,4 +74,39 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 			resourceTagNames: tagNamesSchema(),
 		},
 	}
+}
+
+func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	input := new(qc.DescribeLoadBalancersInput)
+	input.LoadBalancers = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	var output *qc.DescribeLoadBalancersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeLoadBalancers(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	if isLoadBalancerDeleted(output.LoadBalancerSet) {
+		d.SetId("")
+		return nil
+	}
+	lb := output.LoadBalancerSet[0]
+	d.Set(resourceName, qc.StringValue(lb.LoadBalancerName))
+	d.Set(resourceDescription, qc.StringValue(lb.Description))
+	d.Set(resourceLoadBalancerType, qc.IntValue(lb.LoadBalancerType))
+	d.Set(resourceLoadBalancerVxnetID, qc.StringValue(lb.VxNetID))
+	d.Set(resourceLoadBalancerPrivateIPs, qc.StringValueSlice(lb.PrivateIPs))
+	d.Set(resourceLoadBalancerSecurityGroupID, qc.StringValue(lb.SecurityGroupID))
+	d.Set(resourceLoadBalancerNodeCount, qc.IntValue(lb.NodeCount))
+	var eipIDs []string
+	for _, eip := range lb.Cluster {
+		eipIDs = append(eipIDs, qc.StringValue(eip.EIPID))
+	}
+	d.Set(resourceLoadBalancerEipIDs, eipIDs)
+	resourceSetTag(d, lb.Tags)
+	return nil
 }

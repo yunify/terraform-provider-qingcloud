@@ -136,3 +136,37 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 	}
 	return nil
 }
+
+func updateLoadbalancerEips(d *schema.ResourceData, meta interface{}) error {
+	if !d.HasChange(resourceLoadBalancerEipIDs) {
+		return nil
+	}
+	oldV, newV := d.GetChange(resourceInstanceVolumeIDs)
+	var newEips []string
+	var oldEips []string
+	for _, v := range oldV.(*schema.Set).List() {
+		oldEips = append(oldEips, v.(string))
+	}
+	for _, v := range newV.(*schema.Set).List() {
+		newEips = append(newEips, v.(string))
+	}
+	additions, deletions := stringSliceDiff(newEips, oldEips)
+	if len(deletions) > 0 {
+		if err := dissociateEipsToLoadBalancer(qc.String(d.Id()), qc.StringSlice(deletions), meta); err != nil {
+			return err
+		}
+	}
+	if len(additions) > 0 {
+		if err := associateEipsToLoadBalancer(qc.String(d.Id()), qc.StringSlice(additions), meta); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func isLoadBalancerDeleted(lbSet []*qc.LoadBalancer) bool {
+	if len(lbSet) == 0 || qc.StringValue(lbSet[0].Status) == "deleted" || qc.StringValue(lbSet[0].Status) == "ceased" {
+		return true
+	}
+	return false
+}
