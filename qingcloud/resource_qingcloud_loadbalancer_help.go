@@ -50,3 +50,49 @@ func resizeLoadBalancer(lbID *string, lbType *int, meta interface{}) error {
 	}
 	return nil
 }
+
+func associateEipsToLoadBalancer(lbID *string, eips []*string, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	input := new(qc.AssociateEIPsToLoadBalancerInput)
+	input.LoadBalancer = lbID
+	input.EIPs = eips
+	var output *qc.AssociateEIPsToLoadBalancerOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.AssociateEIPsToLoadBalancer(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+	if _, err := LoadBalancerTransitionStateRefresh(clt, lbID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func dissociateEipsToLoadBalancer(lbID *string, eips []*string, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	input := new(qc.DissociateEIPsFromLoadBalancerInput)
+	input.LoadBalancer = lbID
+	input.EIPs = eips
+	var output *qc.DissociateEIPsFromLoadBalancerOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DissociateEIPsFromLoadBalancer(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+	if _, err := LoadBalancerTransitionStateRefresh(clt, lbID); err != nil {
+		return err
+	}
+	return nil
+}
