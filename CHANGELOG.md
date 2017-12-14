@@ -1,4 +1,5 @@
 ## 1.0.0 (November 29, 2017)
+
 FEATURES:
 
 * **New Resource**: `qingcloud_eip` ([#21](https://github.com/yunify/terraform-provider-qingcloud/issues/21))
@@ -12,3 +13,14 @@ FEATURES:
 * **New Resource**: `qingcloud_volume` ([#75](https://github.com/yunify/terraform-provider-qingcloud/issues/75))
 * **New Resource**: `qingcloud_vpc_static` ([#98](https://github.com/yunify/terraform-provider-qingcloud/issues/98))
 
+## 1.0.1 (December 14,, 2017)
+
+IMPROVEMENTS:
+
+* provider : Add paramertes to set alternative api endpoint ([#106](https://github.com/yunify/terraform-provider-qingcloud/issues/106))
+* resource/qingcloud_eip add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+* resource/qingcloud_instance add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+* resource/qingcloud_keypair add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+* resource/qingcloud_tag add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+* resource/qingcloud_volume add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+* resource/qingcloud_vxnet add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
