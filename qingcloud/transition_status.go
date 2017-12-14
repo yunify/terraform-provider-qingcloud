@@ -261,3 +261,31 @@ func WaitForLease(CreateTime *time.Time) {
 		time.Sleep(time.Second * time.Duration(30))
 	}
 }
+func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeLoadBalancersInput)
+		input.LoadBalancers = []*string{qc.String(id)}
+		var output *qc.DescribeLoadBalancersOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeLoadBalancers(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		if len(output.LoadBalancerSet) == 0 {
+			return nil, "", fmt.Errorf("error lb set is empty, request id %s", id)
+		}
+		return output.LoadBalancerSet[0], qc.StringValue(output.LoadBalancerSet[0].TransitionStatus), nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    2 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+	return stateConf.WaitForState()
+}
