@@ -19,8 +19,8 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 
 	return &schema.Resource{
 		Create: resourceQingcloudVpcCreate,
-		Read:   resourceQingcloudVpcRead,
-		Update: resourceQingcloudVpcUpdate,
+		Read:   resourceQingcloudLoadBalancerRead,
+		Update: resourceQingcloudLoadBalancerUpdate,
 		Delete: resourceQingcloudVpcDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
@@ -74,6 +74,22 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 			resourceTagNames: tagNamesSchema(),
 		},
 	}
+}
+func resourceQingcloudLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
+	if err := modifyLoadBalancerAttributes(d, meta); err != nil {
+		return err
+	}
+	if d.HasChange(resourceLoadBalancerEipIDs) {
+		if err := updateLoadbalancerEips(d, meta); err != nil {
+			return err
+		}
+	}
+	if d.HasChange(resourceLoadBalancerType) {
+		if err := resizeLoadBalancer(qc.String(d.Id()), qc.Int(d.Get(resourceLoadBalancerType).(int)), meta); err != nil {
+			return err
+		}
+	}
+	return resourceQingcloudLoadBalancerRead(d, meta)
 }
 
 func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
