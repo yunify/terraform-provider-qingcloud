@@ -28,6 +28,10 @@ func resourceQingcloudTag() *schema.Resource {
 		Read:   resourceQingcloudTagRead,
 		Update: resourceQingcloudTagUpdate,
 		Delete: resourceQingcloudTagDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,

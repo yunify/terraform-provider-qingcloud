@@ -39,6 +39,10 @@ func resourceQingcloudInstance() *schema.Resource {
 		Read:   resourceQingcloudInstanceRead,
 		Update: resourceQingcloudInstanceUpdate,
 		Delete: resourceQingcloudInstanceDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
