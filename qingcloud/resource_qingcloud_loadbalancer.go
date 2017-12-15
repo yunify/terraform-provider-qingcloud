@@ -53,7 +53,6 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 			resourceLoadBalancerNodeCount: &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  2,
 			},
 			resourceLoadBalancerSecurityGroupID: &schema.Schema{
 				Type:     schema.TypeString,
@@ -117,7 +116,9 @@ func resourceQingcloudLoadBalancerCreate(d *schema.ResourceData, meta interface{
 	input.VxNet = getSetStringPointer(d, resourceLoadBalancerVxnetID)
 	input.SecurityGroup = getSetStringPointer(d, resourceLoadBalancerSecurityGroupID)
 	input.HTTPHeaderSize = qc.Int(d.Get(resourceLoadBalancerHttpHeaderSize).(int))
-	input.NodeCount = qc.Int(d.Get(resourceLoadBalancerNodeCount).(int))
+	if d.Get(resourceLoadBalancerNodeCount).(int) != 0 {
+		input.NodeCount = qc.Int(d.Get(resourceLoadBalancerNodeCount).(int))
+	}
 	input.LoadBalancerType = qc.Int(d.Get(resourceLoadBalancerType).(int))
 	if _, ok := d.GetOk(resourceLoadBalancerPrivateIPs); ok {
 		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
@@ -143,7 +144,7 @@ func resourceQingcloudLoadBalancerCreate(d *schema.ResourceData, meta interface{
 	if _, err = LoadBalancerTransitionStateRefresh(clt, qc.String(d.Id())); err != nil {
 		return err
 	}
-	return resourceQingcloudVpcUpdate(d, meta)
+	return resourceQingcloudLoadBalancerUpdate(d, meta)
 }
 func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
