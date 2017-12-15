@@ -113,11 +113,13 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 	input.LoadBalancerName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	input.SecurityGroup, sgUpdate = getUpdateStringPointerInfo(d, resourceLoadBalancerSecurityGroupID)
-	input.NodeCount, ncUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerNodeCount)
+	if d.Get(resourceLoadBalancerVxnetID).(string) == BasicNetworkID {
+		input.NodeCount, ncUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerNodeCount)
+	}
 	input.HTTPHeaderSize, httpHeaderSizeUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerHttpHeaderSize)
 	if d.HasChange(resourceLoadBalancerPrivateIPs) {
 		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
-		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == "vxnet-0" {
+		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == BasicNetworkID {
 			return fmt.Errorf("error private_ips info")
 		}
 		input.PrivateIP = qc.String(privateIPs[0].(string))
@@ -140,17 +142,18 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 }
 
 func updateLoadbalancerEips(d *schema.ResourceData, meta interface{}) error {
-	if !d.HasChange(resourceLoadBalancerEipIDs) {
-		return nil
-	}
-	oldV, newV := d.GetChange(resourceInstanceVolumeIDs)
+	oldV, newV := d.GetChange(resourceLoadBalancerEipIDs)
 	var newEips []string
 	var oldEips []string
-	for _, v := range oldV.(*schema.Set).List() {
-		oldEips = append(oldEips, v.(string))
+	if oldV != nil {
+		for _, v := range oldV.(*schema.Set).List() {
+			oldEips = append(oldEips, v.(string))
+		}
 	}
-	for _, v := range newV.(*schema.Set).List() {
-		newEips = append(newEips, v.(string))
+	if newV != nil {
+		for _, v := range newV.(*schema.Set).List() {
+			newEips = append(newEips, v.(string))
+		}
 	}
 	additions, deletions := stringSliceDiff(newEips, oldEips)
 	if len(deletions) > 0 {

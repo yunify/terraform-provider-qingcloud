@@ -53,6 +53,7 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 			resourceLoadBalancerNodeCount: &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			resourceLoadBalancerSecurityGroupID: &schema.Schema{
 				Type:     schema.TypeString,
@@ -62,7 +63,7 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 			resourceLoadBalancerVxnetID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "vxnet-0",
+				Default:  BasicNetworkID,
 				ForceNew: true,
 			},
 			resourceLoadBalancerHttpHeaderSize: &schema.Schema{
@@ -90,7 +91,7 @@ func resourceQingcloudLoadBalancerUpdate(d *schema.ResourceData, meta interface{
 	d.SetPartial(resourceLoadBalancerNodeCount)
 	d.SetPartial(resourceName)
 	d.SetPartial(resourceDescription)
-	if d.HasChange(resourceLoadBalancerEipIDs) && !d.IsNewResource() {
+	if d.HasChange(resourceLoadBalancerEipIDs) {
 		if err := updateLoadbalancerEips(d, meta); err != nil {
 			return err
 		}
@@ -116,20 +117,23 @@ func resourceQingcloudLoadBalancerCreate(d *schema.ResourceData, meta interface{
 	input.VxNet = getSetStringPointer(d, resourceLoadBalancerVxnetID)
 	input.SecurityGroup = getSetStringPointer(d, resourceLoadBalancerSecurityGroupID)
 	input.HTTPHeaderSize = qc.Int(d.Get(resourceLoadBalancerHttpHeaderSize).(int))
-	if d.Get(resourceLoadBalancerNodeCount).(int) != 0 {
+	if d.Get(resourceLoadBalancerNodeCount).(int) != 0 && qc.StringValue(input.VxNet) == BasicNetworkID {
 		input.NodeCount = qc.Int(d.Get(resourceLoadBalancerNodeCount).(int))
 	}
 	input.LoadBalancerType = qc.Int(d.Get(resourceLoadBalancerType).(int))
 	if _, ok := d.GetOk(resourceLoadBalancerPrivateIPs); ok {
 		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
-		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == "vxnet-0" {
+		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == BasicNetworkID {
 			return fmt.Errorf("error private_ips info")
 		}
 		input.PrivateIP = qc.String(privateIPs[0].(string))
 	}
-	var eips []*string
-	for _, value := range d.Get(resourceLoadBalancerEipIDs).(*schema.Set).List() {
-		eips = append(eips, qc.String(value.(string)))
+	if qc.StringValue(input.VxNet) == BasicNetworkID {
+		var eips []*string
+		for _, value := range d.Get(resourceLoadBalancerEipIDs).(*schema.Set).List() {
+			eips = append(eips, qc.String(value.(string)))
+		}
+		input.EIPs = eips
 	}
 	var output *qc.CreateLoadBalancerOutput
 	var err error
@@ -173,7 +177,7 @@ func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{})
 	d.Set(resourceLoadBalancerSecurityGroupID, qc.StringValue(lb.SecurityGroupID))
 	d.Set(resourceLoadBalancerNodeCount, qc.IntValue(lb.NodeCount))
 	var eipIDs []string
-	for _, eip := range lb.Cluster {
+	for _, eip := range lb.EIPs {
 		eipIDs = append(eipIDs, qc.StringValue(eip.EIPID))
 	}
 	d.Set(resourceLoadBalancerEipIDs, eipIDs)
