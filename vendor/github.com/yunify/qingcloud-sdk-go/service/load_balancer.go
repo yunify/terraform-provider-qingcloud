@@ -348,6 +348,7 @@ func (s *LoadBalancerService) CreateLoadBalancer(i *CreateLoadBalancerInput) (*C
 
 type CreateLoadBalancerInput struct {
 	EIPs             []*string `json:"eips" name:"eips" location:"params"`
+	HTTPHeaderSize   *int      `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancerName *string   `json:"loadbalancer_name" name:"loadbalancer_name" location:"params"`
 	// LoadBalancerType's available values: 0, 1, 2, 3, 4, 5
 	LoadBalancerType *int    `json:"loadbalancer_type" name:"loadbalancer_type" default:"0" location:"params"`
@@ -1394,6 +1395,7 @@ type ModifyLoadBalancerListenerAttributesInput struct {
 	Forwardfor               *int    `json:"forwardfor" name:"forwardfor" location:"params"`
 	HealthyCheckMethod       *string `json:"healthy_check_method" name:"healthy_check_method" location:"params"`
 	HealthyCheckOption       *string `json:"healthy_check_option" name:"healthy_check_option" location:"params"`
+	HTTPHeaderSize           *int    `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancerListener     *string `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"` // Required
 	LoadBalancerListenerName *string `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name" location:"params"`
 	ServerCertificateID      *string `json:"server_certificate_id" name:"server_certificate_id" location:"params"`
