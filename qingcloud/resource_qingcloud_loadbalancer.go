@@ -2,7 +2,7 @@ package qingcloud
 
 import (
 	"fmt"
-	
+
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -23,7 +23,7 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 		Create: resourceQingcloudLoadBalancerCreate,
 		Read:   resourceQingcloudLoadBalancerRead,
 		Update: resourceQingcloudLoadBalancerUpdate,
-		Delete: resourceQingcloudVpcDelete,
+		Delete: resourceQingcloudLoadBalancerDelete,
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
@@ -78,19 +78,35 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 	}
 }
 func resourceQingcloudLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
+	if err := waitLoadBalancerLease(d, meta); err != nil {
+		return err
+	}
+	d.Partial(true)
 	if err := modifyLoadBalancerAttributes(d, meta); err != nil {
 		return err
 	}
+	d.SetPartial(resourceLoadBalancerPrivateIPs)
+	d.SetPartial(resourceLoadBalancerHttpHeaderSize)
+	d.SetPartial(resourceLoadBalancerSecurityGroupID)
+	d.SetPartial(resourceLoadBalancerNodeCount)
+	d.SetPartial(resourceName)
+	d.SetPartial(resourceDescription)
 	if d.HasChange(resourceLoadBalancerEipIDs) && !d.IsNewResource() {
 		if err := updateLoadbalancerEips(d, meta); err != nil {
 			return err
 		}
 	}
+	d.SetPartial(resourceLoadBalancerEipIDs)
 	if d.HasChange(resourceLoadBalancerType) && !d.IsNewResource() {
 		if err := resizeLoadBalancer(qc.String(d.Id()), qc.Int(d.Get(resourceLoadBalancerType).(int)), meta); err != nil {
 			return err
 		}
 	}
+	d.SetPartial(resourceLoadBalancerType)
+	if err := resourceUpdateTag(d, meta, qingcloudResourceTypeLoadBalancer); err != nil {
+		return err
+	}
+	d.Partial(false)
 	return resourceQingcloudLoadBalancerRead(d, meta)
 }
 
@@ -161,5 +177,31 @@ func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{})
 	}
 	d.Set(resourceLoadBalancerEipIDs, eipIDs)
 	resourceSetTag(d, lb.Tags)
+	return nil
+}
+
+func resourceQingcloudLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	if _, err := LoadBalancerTransitionStateRefresh(clt, qc.String(d.Id())); err != nil {
+		return err
+	}
+	if err := waitLoadBalancerLease(d, meta); err != nil {
+		return err
+	}
+	input := new(qc.DeleteLoadBalancersInput)
+	input.LoadBalancers = []*string{qc.String(d.Id())}
+	var output *qc.DeleteLoadBalancersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DeleteLoadBalancers(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	if _, err := LoadBalancerTransitionStateRefresh(clt, qc.String(d.Id())); err != nil {
+		return err
+	}
+	d.SetId("")
 	return nil
 }

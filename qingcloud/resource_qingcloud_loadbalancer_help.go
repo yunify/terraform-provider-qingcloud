@@ -172,3 +172,22 @@ func isLoadBalancerDeleted(lbSet []*qc.LoadBalancer) bool {
 	}
 	return false
 }
+
+func waitLoadBalancerLease(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	input := new(qc.DescribeLoadBalancersInput)
+	input.LoadBalancers = []*string{qc.String(d.Id())}
+	input.Verbose = qc.Int(1)
+	var output *qc.DescribeLoadBalancersOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.DescribeLoadBalancers(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	//wait for lease info
+	WaitForLease(output.LoadBalancerSet[0].CreateTime)
+	return nil
+}
