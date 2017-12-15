@@ -1,6 +1,8 @@
 package qingcloud
 
 import (
+	"fmt"
+	
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -18,7 +20,7 @@ const (
 func resourceQingcloudLoadBalancer() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceQingcloudVpcCreate,
+		Create: resourceQingcloudLoadBalancerCreate,
 		Read:   resourceQingcloudLoadBalancerRead,
 		Update: resourceQingcloudLoadBalancerUpdate,
 		Delete: resourceQingcloudVpcDelete,
@@ -79,12 +81,12 @@ func resourceQingcloudLoadBalancerUpdate(d *schema.ResourceData, meta interface{
 	if err := modifyLoadBalancerAttributes(d, meta); err != nil {
 		return err
 	}
-	if d.HasChange(resourceLoadBalancerEipIDs) {
+	if d.HasChange(resourceLoadBalancerEipIDs) && !d.IsNewResource() {
 		if err := updateLoadbalancerEips(d, meta); err != nil {
 			return err
 		}
 	}
-	if d.HasChange(resourceLoadBalancerType) {
+	if d.HasChange(resourceLoadBalancerType) && !d.IsNewResource() {
 		if err := resizeLoadBalancer(qc.String(d.Id()), qc.Int(d.Get(resourceLoadBalancerType).(int)), meta); err != nil {
 			return err
 		}
@@ -92,6 +94,41 @@ func resourceQingcloudLoadBalancerUpdate(d *schema.ResourceData, meta interface{
 	return resourceQingcloudLoadBalancerRead(d, meta)
 }
 
+func resourceQingcloudLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
+	clt := meta.(*QingCloudClient).loadbalancer
+	input := new(qc.CreateLoadBalancerInput)
+	input.LoadBalancerName, _ = getNamePointer(d)
+	input.VxNet = getSetStringPointer(d, resourceLoadBalancerVxnetID)
+	input.SecurityGroup = getSetStringPointer(d, resourceLoadBalancerSecurityGroupID)
+	input.HTTPHeaderSize = qc.Int(d.Get(resourceLoadBalancerHttpHeaderSize).(int))
+	input.NodeCount = qc.Int(d.Get(resourceLoadBalancerNodeCount).(int))
+	input.LoadBalancerType = qc.Int(d.Get(resourceLoadBalancerType).(int))
+	if _, ok := d.GetOk(resourceLoadBalancerPrivateIPs); ok {
+		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
+		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == "vxnet-0" {
+			return fmt.Errorf("error private_ips info")
+		}
+		input.PrivateIP = qc.String(privateIPs[0].(string))
+	}
+	var eips []*string
+	for _, value := range d.Get(resourceLoadBalancerEipIDs).(*schema.Set).List() {
+		eips = append(eips, qc.String(value.(string)))
+	}
+	var output *qc.CreateLoadBalancerOutput
+	var err error
+	simpleRetry(func() error {
+		output, err = clt.CreateLoadBalancer(input)
+		return isServerBusy(err)
+	})
+	if err != nil {
+		return err
+	}
+	d.SetId(qc.StringValue(output.LoadBalancerID))
+	if _, err = LoadBalancerTransitionStateRefresh(clt, qc.String(d.Id())); err != nil {
+		return err
+	}
+	return resourceQingcloudVpcUpdate(d, meta)
+}
 func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DescribeLoadBalancersInput)

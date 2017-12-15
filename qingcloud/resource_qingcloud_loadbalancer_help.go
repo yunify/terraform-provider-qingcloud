@@ -123,7 +123,7 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 		input.PrivateIP = qc.String(privateIPs[0].(string))
 		privateIPUpdate = true
 	}
-	if nameUpdate || descriptionUpdate || sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate{
+	if nameUpdate || descriptionUpdate || sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate {
 		var err error
 		simpleRetry(func() error {
 			_, err = clt.ModifyLoadBalancerAttributes(input)
@@ -133,7 +133,7 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 	}
-	if sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate{
+	if sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate {
 		updateLoadBalancer(qc.String(d.Id()), meta)
 	}
 	return nil
