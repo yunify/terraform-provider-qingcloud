@@ -1201,9 +1201,9 @@ func (v *KeyPair) Validate() error {
 }
 
 type LoadBalancer struct {
-	Cluster     []*EIP     `json:"cluster" name:"cluster"`
 	CreateTime  *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
 	Description *string    `json:"description" name:"description"`
+	EIPs        []*EIP     `json:"eips" name:"eips"`
 	// IsApplied's available values: 0, 1
 	IsApplied        *int                    `json:"is_applied" name:"is_applied"`
 	Listeners        []*LoadBalancerListener `json:"listeners" name:"listeners"`
@@ -1225,8 +1225,8 @@ type LoadBalancer struct {
 
 func (v *LoadBalancer) Validate() error {
 
-	if len(v.Cluster) > 0 {
-		for _, property := range v.Cluster {
+	if len(v.EIPs) > 0 {
+		for _, property := range v.EIPs {
 			if err := property.Validate(); err != nil {
 				return err
 			}
