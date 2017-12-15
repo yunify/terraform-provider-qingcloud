@@ -1271,6 +1271,7 @@ func (s *LoadBalancerService) ModifyLoadBalancerAttributes(i *ModifyLoadBalancer
 
 type ModifyLoadBalancerAttributesInput struct {
 	Description      *string `json:"description" name:"description" location:"params"`
+	HTTPHeaderSize   *int    `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancer     *string `json:"loadbalancer" name:"loadbalancer" location:"params"` // Required
 	LoadBalancerName *string `json:"loadbalancer_name" name:"loadbalancer_name" location:"params"`
 	NodeCount        *int    `json:"node_count" name:"node_count" location:"params"`
@@ -1395,7 +1396,6 @@ type ModifyLoadBalancerListenerAttributesInput struct {
 	Forwardfor               *int    `json:"forwardfor" name:"forwardfor" location:"params"`
 	HealthyCheckMethod       *string `json:"healthy_check_method" name:"healthy_check_method" location:"params"`
 	HealthyCheckOption       *string `json:"healthy_check_option" name:"healthy_check_option" location:"params"`
-	HTTPHeaderSize           *int    `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancerListener     *string `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"` // Required
 	LoadBalancerListenerName *string `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name" location:"params"`
 	ServerCertificateID      *string `json:"server_certificate_id" name:"server_certificate_id" location:"params"`
