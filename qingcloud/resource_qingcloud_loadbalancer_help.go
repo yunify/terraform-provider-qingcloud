@@ -109,10 +109,12 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 	sgUpdate := false
 	ncUpdate := false
 	privateIPUpdate := false
+	httpHeaderSizeUpdate := false
 	input.LoadBalancerName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	input.SecurityGroup, sgUpdate = getUpdateStringPointerInfo(d, resourceLoadBalancerSecurityGroupID)
 	input.NodeCount, ncUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerNodeCount)
+	input.HTTPHeaderSize, httpHeaderSizeUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerHttpHeaderSize)
 	if d.HasChange(resourceLoadBalancerPrivateIPs) {
 		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
 		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == "vxnet-0" {
@@ -121,7 +123,7 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 		input.PrivateIP = qc.String(privateIPs[0].(string))
 		privateIPUpdate = true
 	}
-	if nameUpdate || descriptionUpdate || sgUpdate || ncUpdate || privateIPUpdate {
+	if nameUpdate || descriptionUpdate || sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate{
 		var err error
 		simpleRetry(func() error {
 			_, err = clt.ModifyLoadBalancerAttributes(input)
@@ -131,7 +133,7 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 	}
-	if sgUpdate || ncUpdate || privateIPUpdate {
+	if sgUpdate || ncUpdate || privateIPUpdate || httpHeaderSizeUpdate{
 		updateLoadBalancer(qc.String(d.Id()), meta)
 	}
 	return nil
