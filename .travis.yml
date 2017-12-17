@@ -1,8 +1,7 @@
 language: go
 
 go:
-  - 1.8
-  - 1.9
+  - 1.9.x
 
 script:
   - npm install -g codeclimate-test-reporter
@@ -44,6 +43,6 @@ deploy:
        - ./bin/terraform-provider-qingcloud_linux-amd64.tgz
        - ./bin/terraform-provider-qingcloud_windows-amd64.exe.tgz
     skip_cleanup: true
+    overwrite: true
     on:
         tags: true
-        go: '1.9'
