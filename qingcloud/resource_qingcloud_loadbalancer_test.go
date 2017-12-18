@@ -12,6 +12,48 @@ import (
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
+func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
+	var lb qc.DescribeLoadBalancersOutput
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_loadbalancer.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccLBConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "type", "0"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "name", "test"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "description", "test"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "node_count", "1"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "vxnet_id", "vxnet-0"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "http_header_size", "15"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLBConfigBasicTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "type", "1"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "name", "test1"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "description", "test1"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "node_count", "2"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "vxnet_id", "vxnet-0"),
+					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "http_header_size", "10"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
 	lbTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-lb-tag1"
@@ -153,5 +195,28 @@ resource "qingcloud_tag" "test"{
 }
 resource "qingcloud_tag" "test2"{
 	name="%v"
+}
+`
+const testAccLBConfigBasic = `
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_loadbalancer" "foo" {
+	eip_ids =["${qingcloud_eip.foo.id}"]
+    name = "test"
+    description = "test"
+}
+`
+const testAccLBConfigBasicTwo = `
+resource "qingcloud_eip" "foo" {
+    bandwidth = 2
+}
+resource "qingcloud_loadbalancer" "foo" {
+	eip_ids =["${qingcloud_eip.foo.id}"]
+    name = "test1"
+    description = "test1"
+    http_header_size = 10
+    node_count = 2
+    type = 1
 }
 `
