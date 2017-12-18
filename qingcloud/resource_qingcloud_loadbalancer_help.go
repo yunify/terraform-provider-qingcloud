@@ -117,7 +117,7 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 		input.NodeCount, ncUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerNodeCount)
 	}
 	input.HTTPHeaderSize, httpHeaderSizeUpdate = getUpdateIntPointerInfo(d, resourceLoadBalancerHttpHeaderSize)
-	if d.HasChange(resourceLoadBalancerPrivateIPs) {
+	if d.HasChange(resourceLoadBalancerPrivateIPs) && !d.IsNewResource() {
 		privateIPs := d.Get(resourceLoadBalancerPrivateIPs).(*schema.Set).List()
 		if len(privateIPs) != 1 || d.Get(resourceLoadBalancerVxnetID).(string) == BasicNetworkID {
 			return fmt.Errorf("error private_ips info")

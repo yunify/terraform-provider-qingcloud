@@ -118,7 +118,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 	testCheck := func(eipCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			if len(lb.LoadBalancerSet[0].Cluster) < 0 {
-				return fmt.Errorf("no eips: %#v",lb.LoadBalancerSet[0].Cluster)
+				return fmt.Errorf("no eips: %#v", lb.LoadBalancerSet[0].Cluster)
 			}
 
 			if len(lb.LoadBalancerSet[0].Cluster) != eipCount {
@@ -165,8 +165,46 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 	})
 }
 
+func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
+	var lb qc.DescribeLoadBalancersOutput
 
+	testCheck := func(privateIp string) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if qc.StringValue(lb.LoadBalancerSet[0].PrivateIPs[0]) != privateIp {
+				return fmt.Errorf("private ip error: %#v", lb.LoadBalancerSet[0].PrivateIPs)
+			}
+			return nil
+		}
+	}
 
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_loadbalancer.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccLBConfigInternal,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					testCheck("192.168.0.3"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLBConfigInternalTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					testCheck("192.168.0.4"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 	return testAccCheckLoadBalancerDestroyWithProvider(s, testAccProvider)
@@ -319,5 +357,48 @@ resource "qingcloud_eip" "foo3" {
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo1.id}","${qingcloud_eip.foo2.id}"]
+}
+`
+
+const testAccLBConfigInternal = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+	vpc_id = "${qingcloud_vpc.foo.id}"
+	ip_network = "192.168.0.0/24"
+}
+
+resource "qingcloud_loadbalancer" "foo" {
+	vxnet_id = "${qingcloud_vxnet.foo.id}"
+	private_ips = ["192.168.0.3"]
+}
+`
+const testAccLBConfigInternalTwo = `
+
+resource "qingcloud_security_group" "foo" {
+    name = "first_sg"
+}
+resource "qingcloud_vpc" "foo" {
+	security_group_id = "${qingcloud_security_group.foo.id}"
+	vpc_network = "192.168.0.0/16"
+}
+
+resource "qingcloud_vxnet" "foo" {
+    type = 1
+	vpc_id = "${qingcloud_vpc.foo.id}"
+	ip_network = "192.168.0.0/24"
+}
+
+resource "qingcloud_loadbalancer" "foo" {
+	vxnet_id = "${qingcloud_vxnet.foo.id}"
+	private_ips = ["192.168.0.4"]
 }
 `
