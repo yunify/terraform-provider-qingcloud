@@ -70,7 +70,7 @@ func associateEipsToLoadBalancer(lbID *string, eips []*string, meta interface{})
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,
 		qc.StringValue(output.JobID),
-		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+		time.Duration(10)*time.Minute, time.Duration(5)*time.Second)
 	if _, err := LoadBalancerTransitionStateRefresh(clt, lbID); err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func dissociateEipsToLoadBalancer(lbID *string, eips []*string, meta interface{}
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,
 		qc.StringValue(output.JobID),
-		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+		time.Duration(10)*time.Minute, time.Duration(5)*time.Second)
 	if _, err := LoadBalancerTransitionStateRefresh(clt, lbID); err != nil {
 		return err
 	}

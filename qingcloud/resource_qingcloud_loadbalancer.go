@@ -150,6 +150,7 @@ func resourceQingcloudLoadBalancerCreate(d *schema.ResourceData, meta interface{
 	}
 	return resourceQingcloudLoadBalancerUpdate(d, meta)
 }
+
 func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DescribeLoadBalancersInput)

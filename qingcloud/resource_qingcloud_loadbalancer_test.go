@@ -113,6 +113,61 @@ func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 	})
 }
 
+func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
+	var lb qc.DescribeLoadBalancersOutput
+	testCheck := func(eipCount int) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if len(lb.LoadBalancerSet[0].Cluster) < 0 {
+				return fmt.Errorf("no eips: %#v",lb.LoadBalancerSet[0].Cluster)
+			}
+
+			if len(lb.LoadBalancerSet[0].Cluster) != eipCount {
+				return fmt.Errorf("eip count inconformity : %#v", lb.LoadBalancerSet[0].Cluster)
+			}
+
+			return nil
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_loadbalancer.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccLBConfigMutiEips,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					testCheck(1),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLBConfigMutiEipsTwo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					testCheck(3),
+				),
+			},
+			resource.TestStep{
+				Config: testAccLBConfigMutiEipsThree,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(
+						"qingcloud_loadbalancer.foo", &lb),
+					testCheck(2),
+				),
+			},
+		},
+	})
+}
+
+
+
+
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 	return testAccCheckLoadBalancerDestroyWithProvider(s, testAccProvider)
 }
@@ -218,5 +273,51 @@ resource "qingcloud_loadbalancer" "foo" {
     http_header_size = 10
     node_count = 2
     type = 1
+}
+`
+
+const testAccLBConfigMutiEips = `
+resource "qingcloud_eip" "foo1" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo2" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo3" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo4" {
+    bandwidth = 2
+}
+resource "qingcloud_loadbalancer" "foo" {
+	eip_ids =["${qingcloud_eip.foo1.id}"]
+}
+`
+const testAccLBConfigMutiEipsTwo = `
+resource "qingcloud_eip" "foo1" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo2" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo3" {
+    bandwidth = 2
+}
+resource "qingcloud_loadbalancer" "foo" {
+	eip_ids =["${qingcloud_eip.foo1.id}","${qingcloud_eip.foo2.id}","${qingcloud_eip.foo3.id}"]
+}
+`
+const testAccLBConfigMutiEipsThree = `
+resource "qingcloud_eip" "foo1" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo2" {
+    bandwidth = 2
+}
+resource "qingcloud_eip" "foo3" {
+    bandwidth = 2
+}
+resource "qingcloud_loadbalancer" "foo" {
+	eip_ids =["${qingcloud_eip.foo1.id}","${qingcloud_eip.foo2.id}"]
 }
 `
