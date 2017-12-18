@@ -41,7 +41,7 @@ Terraform v0.11.1
 - [x] Vpc
 - [x] Tag
 - [x] VpcStatic
-- [ ] LoadBalancer
+- [x] LoadBalancer
 
 
 
