@@ -55,6 +55,7 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_volume":              resourceQingcloudVolume(),
 			"qingcloud_tag":                 resourceQingcloudTag(),
 			"qingcloud_vpc_static":          resourceQingcloudVpcStatic(),
+			"qingcloud_loadbalancer":        resourceQingcloudLoadBalancer(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

@@ -1204,6 +1204,7 @@ type LoadBalancer struct {
 	Cluster     []*EIP     `json:"cluster" name:"cluster"`
 	CreateTime  *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
 	Description *string    `json:"description" name:"description"`
+	EIPs        []*EIP     `json:"eips" name:"eips"`
 	// IsApplied's available values: 0, 1
 	IsApplied        *int                    `json:"is_applied" name:"is_applied"`
 	Listeners        []*LoadBalancerListener `json:"listeners" name:"listeners"`
@@ -1211,6 +1212,7 @@ type LoadBalancer struct {
 	LoadBalancerName *string                 `json:"loadbalancer_name" name:"loadbalancer_name"`
 	// LoadBalancerType's available values: 0, 1, 2, 3, 4, 5
 	LoadBalancerType *int      `json:"loadbalancer_type" name:"loadbalancer_type"`
+	NodeCount        *int      `json:"node_count" name:"node_count"`
 	PrivateIPs       []*string `json:"private_ips" name:"private_ips"`
 	SecurityGroupID  *string   `json:"security_group_id" name:"security_group_id"`
 	// Status's available values: pending, active, stopped, suspended, deleted, ceased
@@ -1226,6 +1228,14 @@ func (v *LoadBalancer) Validate() error {
 
 	if len(v.Cluster) > 0 {
 		for _, property := range v.Cluster {
+			if err := property.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(v.EIPs) > 0 {
+		for _, property := range v.EIPs {
 			if err := property.Validate(); err != nil {
 				return err
 			}

@@ -348,9 +348,11 @@ func (s *LoadBalancerService) CreateLoadBalancer(i *CreateLoadBalancerInput) (*C
 
 type CreateLoadBalancerInput struct {
 	EIPs             []*string `json:"eips" name:"eips" location:"params"`
+	HTTPHeaderSize   *int      `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancerName *string   `json:"loadbalancer_name" name:"loadbalancer_name" location:"params"`
 	// LoadBalancerType's available values: 0, 1, 2, 3, 4, 5
 	LoadBalancerType *int    `json:"loadbalancer_type" name:"loadbalancer_type" default:"0" location:"params"`
+	NodeCount        *int    `json:"node_count" name:"node_count" location:"params"`
 	PrivateIP        *string `json:"private_ip" name:"private_ip" location:"params"`
 	SecurityGroup    *string `json:"security_group" name:"security_group" location:"params"`
 	VxNet            *string `json:"vxnet" name:"vxnet" location:"params"`
@@ -1269,8 +1271,10 @@ func (s *LoadBalancerService) ModifyLoadBalancerAttributes(i *ModifyLoadBalancer
 
 type ModifyLoadBalancerAttributesInput struct {
 	Description      *string `json:"description" name:"description" location:"params"`
+	HTTPHeaderSize   *int    `json:"http_header_size" name:"http_header_size" location:"params"`
 	LoadBalancer     *string `json:"loadbalancer" name:"loadbalancer" location:"params"` // Required
 	LoadBalancerName *string `json:"loadbalancer_name" name:"loadbalancer_name" location:"params"`
+	NodeCount        *int    `json:"node_count" name:"node_count" location:"params"`
 	PrivateIP        *string `json:"private_ip" name:"private_ip" location:"params"`
 	SecurityGroup    *string `json:"security_group" name:"security_group" location:"params"`
 }

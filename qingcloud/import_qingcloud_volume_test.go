@@ -25,4 +25,3 @@ func TestAccQingcloudVolume_importBasic(t *testing.T) {
 		},
 	})
 }
-

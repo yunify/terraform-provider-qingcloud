@@ -132,3 +132,25 @@ func getUpdateStringPointer(d *schema.ResourceData, key string) *string {
 	}
 	return qc.String(" ")
 }
+
+func getUpdateStringPointerInfo(d *schema.ResourceData, key string) (value *string, update bool) {
+	update = false
+	if d.HasChange(key) {
+		if d.Get(key).(string) != "" {
+			value = qc.String(d.Get(key).(string))
+		} else {
+			value = qc.String(" ")
+		}
+		update = !d.IsNewResource()
+	}
+	return
+}
+
+func getUpdateIntPointerInfo(d *schema.ResourceData, key string) (value *int, update bool) {
+	update = false
+	if d.HasChange(key) {
+		value = qc.Int(d.Get(key).(int))
+		update = !d.IsNewResource()
+	}
+	return
+}

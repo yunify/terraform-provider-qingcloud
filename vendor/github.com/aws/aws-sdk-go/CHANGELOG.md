@@ -1,3 +1,20 @@
+Release v1.12.48 (2017-12-15)
+===
+
+### Service Client Updates
+* `service/appstream`: Updates service API and documentation
+  * This API update is to enable customers to add tags to their Amazon AppStream 2.0 resources
+
+Release v1.12.47 (2017-12-14)
+===
+
+### Service Client Updates
+* `service/apigateway`: Updates service API and documentation
+  * Adds support for Cognito Authorizer scopes at the API method level.
+* `service/email`: Updates service documentation
+  * Added information about the maximum number of transactions per second for the SendCustomVerificationEmail operation.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
 Release v1.12.46 (2017-12-12)
 ===
 
