@@ -142,6 +142,9 @@ func modifyLoadBalancerAttributes(d *schema.ResourceData, meta interface{}) erro
 }
 
 func updateLoadbalancerEips(d *schema.ResourceData, meta interface{}) error {
+	if d.IsNewResource() && d.Get(resourceLoadBalancerVxnetID) == BasicNetworkID {
+		return nil
+	}
 	oldV, newV := d.GetChange(resourceLoadBalancerEipIDs)
 	var newEips []string
 	var oldEips []string
