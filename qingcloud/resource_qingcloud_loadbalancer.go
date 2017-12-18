@@ -177,8 +177,14 @@ func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{})
 	d.Set(resourceLoadBalancerSecurityGroupID, qc.StringValue(lb.SecurityGroupID))
 	d.Set(resourceLoadBalancerNodeCount, qc.IntValue(lb.NodeCount))
 	var eipIDs []string
-	for _, eip := range lb.EIPs {
-		eipIDs = append(eipIDs, qc.StringValue(eip.EIPID))
+	if d.Get(resourceLoadBalancerVxnetID) == BasicNetworkID {
+		for _, eip := range lb.Cluster {
+			eipIDs = append(eipIDs, qc.StringValue(eip.EIPID))
+		}
+	} else {
+		for _, eip := range lb.EIPs {
+			eipIDs = append(eipIDs, qc.StringValue(eip.EIPID))
+		}
 	}
 	d.Set(resourceLoadBalancerEipIDs, eipIDs)
 	resourceSetTag(d, lb.Tags)

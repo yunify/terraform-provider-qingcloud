@@ -37,29 +37,33 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%.2[1]f miles traveled (%[1]f)": 6,
+	"%.2[1]f miles traveled (%[1]f)": 7,
 	"%[1]s is visiting %[3]s!\n":     3,
-	"%d more files remaining!":       4,
-	"%s is out of order!":            5,
+	"%d files remaining!":            4,
+	"%d more files remaining!":       5,
+	"%s is out of order!":            6,
 	"%s is visiting %s!\n":           2,
 	"Hello %s!\n":                    1,
 	"Hello world!\n":                 0,
 }
 
-var deIndex = []uint32{ // 8 elements
+var deIndex = []uint32{ // 9 elements
 	0x00000000, 0x00000011, 0x00000023, 0x0000003d,
-	0x00000057, 0x00000076, 0x00000076, 0x00000076,
-} // Size: 56 bytes
+	0x00000057, 0x00000075, 0x00000094, 0x00000094,
+	0x00000094,
+} // Size: 60 bytes
 
-const deData string = "" + // Size: 118 bytes
+const deData string = "" + // Size: 148 bytes
 	"\x04\x00\x01\x0a\x0c\x02Hallo Welt!\x04\x00\x01\x0a\x0d\x02Hallo %[1]s!" +
 	"\x04\x00\x01\x0a\x15\x02%[1]s besucht %[2]s!\x04\x00\x01\x0a\x15\x02%[1]" +
-	"s besucht %[3]s!\x02Noch %[1]d Bestände zu gehen!"
+	"s besucht %[3]s!\x02Noch zwei Bestände zu gehen!\x02Noch %[1]d Bestände " +
+	"zu gehen!"
 
-var en_USIndex = []uint32{ // 8 elements
+var en_USIndex = []uint32{ // 9 elements
 	0x00000000, 0x00000012, 0x00000024, 0x00000042,
-	0x00000060, 0x000000a3, 0x000000ba, 0x000000d9,
-} // Size: 56 bytes
+	0x00000060, 0x00000060, 0x000000a3, 0x000000ba,
+	0x000000d9,
+} // Size: 60 bytes
 
 const en_USData string = "" + // Size: 217 bytes
 	"\x04\x00\x01\x0a\x0d\x02Hello world!\x04\x00\x01\x0a\x0d\x02Hello %[1]s!" +
@@ -68,11 +72,12 @@ const en_USData string = "" + // Size: 217 bytes
 	"ng!\x00&\x02There are %[1]d more files remaining!\x02%[1]s is out of ord" +
 	"er!\x02%.2[1]f miles traveled (%[1]f)"
 
-var zhIndex = []uint32{ // 8 elements
+var zhIndex = []uint32{ // 9 elements
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-} // Size: 56 bytes
+	0x00000000,
+} // Size: 60 bytes
 
 const zhData string = ""
 
-// Total table size 503 bytes (0KiB); checksum: A968BD6
+// Total table size 545 bytes (0KiB); checksum: 343E0210
