@@ -16,6 +16,7 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -26,6 +27,7 @@ import (
 
 func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 	var vpcStatic qc.DescribeRouterStaticsOutput
+	testTag := "terraform-test-lb-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -37,7 +39,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVpcStaticDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVpcStaticConfig,
+				Config: fmt.Sprintf(testAccVpcStaticConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcStaticExists(
 						"qingcloud_vpc_static.foo", &vpcStatic),
@@ -54,7 +56,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVpcStaticConfigTwo,
+				Config: fmt.Sprintf(testAccVpcStaticConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcStaticExists(
 						"qingcloud_vpc_static.foo", &vpcStatic),
@@ -134,10 +136,15 @@ func testAccCheckVpcStaticDestroyWithProvider(s *terraform.State, provider *sche
 const testAccVpcStaticConfig = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 resource "qingcloud_vpc_static" "foo"{
         vpc_id = "${qingcloud_vpc.foo.id}"
@@ -152,10 +159,15 @@ resource "qingcloud_vpc_static" "foo"{
 const testAccVpcStaticConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 resource "qingcloud_vpc_static" "foo"{
         vpc_id = "${qingcloud_vpc.foo.id}"
