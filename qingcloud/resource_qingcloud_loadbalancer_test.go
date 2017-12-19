@@ -14,6 +14,7 @@ import (
 
 func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
+	testTag := "terraform-test-lb-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -25,7 +26,7 @@ func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccLBConfigBasic,
+				Config: fmt.Sprintf(testAccLBConfigBasic, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -38,7 +39,7 @@ func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccLBConfigBasicTwo,
+				Config: fmt.Sprintf(testAccLBConfigBasicTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -115,6 +116,8 @@ func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 
 func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
+	testTag := "terraform-test-lb-mutiEips" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+
 	testCheck := func(eipCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			if len(lb.LoadBalancerSet[0].Cluster) < 0 {
@@ -138,7 +141,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccLBConfigMutiEips,
+				Config: fmt.Sprintf(testAccLBConfigMutiEips, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -146,7 +149,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccLBConfigMutiEipsTwo,
+				Config: fmt.Sprintf(testAccLBConfigMutiEipsTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -154,7 +157,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccLBConfigMutiEipsThree,
+				Config: fmt.Sprintf(testAccLBConfigMutiEipsThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -167,6 +170,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 
 func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
+	testTag := "terraform-test-lb-inter-privateip-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	testCheck := func(privateIp string) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -187,7 +191,7 @@ func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccLBConfigInternal,
+				Config: fmt.Sprintf(testAccLBConfigInternal, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -195,7 +199,7 @@ func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccLBConfigInternalTwo,
+				Config: fmt.Sprintf(testAccLBConfigInternalTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
 						"qingcloud_loadbalancer.foo", &lb),
@@ -293,16 +297,22 @@ resource "qingcloud_tag" "test2"{
 const testAccLBConfigBasic = `
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo.id}"]
     name = "test"
     description = "test"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccLBConfigBasicTwo = `
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo.id}"]
@@ -311,52 +321,74 @@ resource "qingcloud_loadbalancer" "foo" {
     http_header_size = 10
     node_count = 2
     type = 1
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
 const testAccLBConfigMutiEips = `
 resource "qingcloud_eip" "foo1" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo2" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo3" {
     bandwidth = 2
-}
-resource "qingcloud_eip" "foo4" {
-    bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo1.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccLBConfigMutiEipsTwo = `
 resource "qingcloud_eip" "foo1" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo2" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo3" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo1.id}","${qingcloud_eip.foo2.id}","${qingcloud_eip.foo3.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccLBConfigMutiEipsThree = `
 resource "qingcloud_eip" "foo1" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo2" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo3" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_loadbalancer" "foo" {
 	eip_ids =["${qingcloud_eip.foo1.id}","${qingcloud_eip.foo2.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
@@ -364,41 +396,51 @@ const testAccLBConfigInternal = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_vxnet" "foo" {
     type = 1
 	vpc_id = "${qingcloud_vpc.foo.id}"
 	ip_network = "192.168.0.0/24"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_loadbalancer" "foo" {
 	vxnet_id = "${qingcloud_vxnet.foo.id}"
 	private_ips = ["192.168.0.3"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccLBConfigInternalTwo = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_vxnet" "foo" {
     type = 1
 	vpc_id = "${qingcloud_vpc.foo.id}"
 	ip_network = "192.168.0.0/24"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_loadbalancer" "foo" {
 	vxnet_id = "${qingcloud_vxnet.foo.id}"
 	private_ips = ["192.168.0.4"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
