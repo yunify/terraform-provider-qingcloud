@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 	var vpcStatic qc.DescribeRouterStaticsOutput
-	testTag := "terraform-test-lb-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vpc-static-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
