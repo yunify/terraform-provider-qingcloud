@@ -1,10 +1,11 @@
 package qingcloud
 
 import (
-	"github.com/hashicorp/terraform/helper/resource"
-	"testing"
-	"os"
 	"fmt"
+	"os"
+	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccQingcloudInstance_importBasic(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAccQingcloudInstance_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfig,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfig, testTag),
 			},
 
 			resource.TestStep{

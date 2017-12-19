@@ -38,7 +38,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfig,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
 					resource.TestCheckResourceAttr(
@@ -54,7 +54,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigTwo,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
 					resource.TestCheckResourceAttr(
@@ -165,7 +165,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigKeyPair,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPair, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -173,7 +173,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigKeyPairTwo,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPairTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -181,7 +181,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigKeyPairThree,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPairThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -221,7 +221,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigVolume,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigVolume, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -229,7 +229,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigVolumeTwo,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigVolumeTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -237,7 +237,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigVolumeThree,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigVolumeThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -297,7 +297,7 @@ func TestAccQingcloudInstance_eip(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigEIP,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigEIP, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -305,7 +305,7 @@ func TestAccQingcloudInstance_eip(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccInstanceConfigEIPTwo,testTag),
+				Config: fmt.Sprintf(testAccInstanceConfigEIPTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
