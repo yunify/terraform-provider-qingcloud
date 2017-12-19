@@ -27,6 +27,7 @@ import (
 
 func TestAccQingcloudVxNet_basic(t *testing.T) {
 	var vxnet qc.DescribeVxNetsOutput
+	testTag := "terraform-test-vxnet-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +40,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVxNetConfig,
+				Config: fmt.Sprintf(testAccVxNetConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -48,7 +49,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVxNetConfigTwo,
+				Config: fmt.Sprintf(testAccVxNetConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -61,7 +62,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVxNetConfigThree,
+				Config: fmt.Sprintf(testAccVxNetConfigThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -142,6 +143,7 @@ func TestAccQingcloudVxNet_tag(t *testing.T) {
 
 func TestAccQingcloudVxNet_vpc(t *testing.T) {
 	var vxnet qc.DescribeVxNetsOutput
+	testTag := "terraform-test-vxnet-vpc" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	testVpcAttach := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {
@@ -191,7 +193,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 		CheckDestroy:  testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVxNetConfigVpc,
+				Config: fmt.Sprintf(testAccVxNetConfigVpc, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -199,7 +201,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVxNetConfigVpcTwo,
+				Config: fmt.Sprintf(testAccVxNetConfigVpcTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -207,7 +209,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVxNetConfigVpcThree,
+				Config: fmt.Sprintf(testAccVxNetConfigVpcThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
 						"qingcloud_vxnet.foo", &vxnet),
@@ -275,20 +277,35 @@ func testAccCheckVxNetDestroyWithProvider(s *terraform.State, provider *schema.P
 const testAccVxNetConfig = `
 resource "qingcloud_vxnet" "foo" {
     type = 1
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 
 const testAccVxNetConfigTwo = `
 resource "qingcloud_vxnet" "foo" {
     name = "vxnet"
     description = "vxnet"
 	type = 1
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 const testAccVxNetConfigThree = `
 resource "qingcloud_vxnet" "foo" {
     name = "vxnet"
     description = "vxnet"
 	type = 0
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 
 const testAccVxNetConfigTagTemplate = `
 
@@ -322,16 +339,21 @@ const testAccVxNetConfigVpc = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_vxnet" "foo" {
     type = 1
 	vpc_id = "${qingcloud_vpc.foo.id}"
 	ip_network = "192.168.0.0/24"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
@@ -339,29 +361,39 @@ const testAccVxNetConfigVpcTwo = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_vxnet" "foo" {
     type = 1
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccVxNetConfigVpcThree = `
 
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
-
 resource "qingcloud_vxnet" "foo" {
     type = 1
 	vpc_id = "${qingcloud_vpc.foo.id}"
 	ip_network = "192.168.0.0/24"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
