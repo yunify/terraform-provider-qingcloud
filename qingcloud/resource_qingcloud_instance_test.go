@@ -27,6 +27,8 @@ import (
 
 func TestAccQingcloudInstance_basic(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
+	testTag := "terraform-test-instance-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -36,7 +38,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfig,
+				Config: fmt.Sprintf(testAccInstanceConfig,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
 					resource.TestCheckResourceAttr(
@@ -52,7 +54,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigTwo,
+				Config: fmt.Sprintf(testAccInstanceConfigTwo,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("qingcloud_instance.foo", &instance),
 					resource.TestCheckResourceAttr(
@@ -137,6 +139,8 @@ func TestAccQingcloudInstance_tag(t *testing.T) {
 
 func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
+	testTag := "terraform-test-instance-mutiKepair" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+
 	testCheck := func(kpCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			if len(instance.InstanceSet[0].KeyPairIDs) < 0 {
@@ -161,7 +165,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfigKeyPair,
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPair,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -169,7 +173,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigKeyPairTwo,
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPairTwo,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -177,7 +181,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigKeyPairThree,
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPairThree,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -191,6 +195,8 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 
 func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
+	testTag := "terraform-test-instance-mutiVolume" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+
 	testCheck := func(volCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			if len(instance.InstanceSet[0].Volumes) < 0 {
@@ -215,7 +221,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfigVolume,
+				Config: fmt.Sprintf(testAccInstanceConfigVolume,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -223,7 +229,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigVolumeTwo,
+				Config: fmt.Sprintf(testAccInstanceConfigVolumeTwo,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -231,7 +237,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigVolumeThree,
+				Config: fmt.Sprintf(testAccInstanceConfigVolumeThree,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -245,6 +251,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 
 func TestAccQingcloudInstance_eip(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
+	testTag := "terraform-test-instance-eip" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	testEIP := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {
@@ -290,7 +297,7 @@ func TestAccQingcloudInstance_eip(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfigEIP,
+				Config: fmt.Sprintf(testAccInstanceConfigEIP,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -298,7 +305,7 @@ func TestAccQingcloudInstance_eip(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccInstanceConfigEIPTwo,
+				Config: fmt.Sprintf(testAccInstanceConfigEIPTwo,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						"qingcloud_instance.foo", &instance),
@@ -368,15 +375,24 @@ func testAccCheckInstanceWithProvider(s *terraform.State, provider *schema.Provi
 const testAccInstanceConfig = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 `
 const testAccInstanceConfigTwo = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
@@ -385,6 +401,7 @@ resource "qingcloud_instance" "foo" {
     memory = 2048
 	name = "instance"
 	description = "instance"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 `
 const testAccInstanceConfigTagTemplate = `
@@ -422,139 +439,198 @@ resource "qingcloud_tag" "test2"{
 const testAccInstanceConfigKeyPair = `
 resource "qingcloud_keypair" "foo1"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo2"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo3"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
 const testAccInstanceConfigKeyPairTwo = `
 resource "qingcloud_keypair" "foo1"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo2"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo3"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}","${qingcloud_keypair.foo2.id}","${qingcloud_keypair.foo3.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccInstanceConfigKeyPairThree = `
 resource "qingcloud_keypair" "foo1"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo2"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo3"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}","${qingcloud_keypair.foo2.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
 const testAccInstanceConfigVolume = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo1"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo2"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo3"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	volume_ids = ["${qingcloud_volume.foo1.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
 const testAccInstanceConfigVolumeTwo = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo1"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo2"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo3"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}","${qingcloud_volume.foo3.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccInstanceConfigVolumeThree = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo1"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo2"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_volume" "foo3"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
 	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
 const testAccInstanceConfigEIP = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	image_id = "centos7x64d"
 	eip_id = "${qingcloud_eip.foo.id}"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccInstanceConfigEIPTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_instance" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	image_id = "centos7x64d"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
