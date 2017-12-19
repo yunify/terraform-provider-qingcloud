@@ -27,6 +27,8 @@ import (
 
 func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 	var sg qc.DescribeSecurityGroupsOutput
+	testTag := "terraform-test-sg-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -36,7 +38,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSecurityGroupConfig,
+				Config: fmt.Sprintf(testAccSecurityGroupConfig,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
 					resource.TestCheckResourceAttr(
@@ -44,7 +46,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccSecurityGroupConfigTwo,
+				Config: fmt.Sprintf(testAccSecurityGroupConfigTwo,testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
 					resource.TestCheckResourceAttr(
@@ -167,12 +169,22 @@ func testAccCheckSecurityGroupDestroyWithProvider(s *terraform.State, provider *
 const testAccSecurityGroupConfig = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 const testAccSecurityGroupConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "test"
 	description = "test"
-}`
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 
 const testAccSecurityGroupConfigTagTemplate = `
 
