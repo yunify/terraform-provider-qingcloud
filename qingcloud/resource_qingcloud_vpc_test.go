@@ -27,6 +27,7 @@ import (
 
 func TestAccQingcloudVpc_basic(t *testing.T) {
 	var vpc qc.DescribeRoutersOutput
+	testTag := "terraform-test-vpc-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +40,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVpcConfig,
+				Config: fmt.Sprintf(testAccVpcConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
 						"qingcloud_vpc.foo", &vpc),
@@ -50,7 +51,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVpcConfigTwo,
+				Config: fmt.Sprintf(testAccVpcConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
 						"qingcloud_vpc.foo", &vpc),
@@ -71,6 +72,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 
 func TestAccQingcloudVpc_eip(t *testing.T) {
 	var vpc qc.DescribeRoutersOutput
+	testTag := "terraform-test-vpc-eip" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	testEIP := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {
@@ -115,7 +117,7 @@ func TestAccQingcloudVpc_eip(t *testing.T) {
 		CheckDestroy:  testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVpcConfigEIP,
+				Config: fmt.Sprintf(testAccVpcConfigEIP, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
 						"qingcloud_vpc.foo", &vpc),
@@ -123,7 +125,7 @@ func TestAccQingcloudVpc_eip(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVpcConfigEIPTwo,
+				Config: fmt.Sprintf(testAccVpcConfigEIPTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
 						"qingcloud_vpc.foo", &vpc),
@@ -253,15 +255,21 @@ func testAccCheckVpcDestroyWithProvider(s *terraform.State, provider *schema.Pro
 const testAccVpcConfig = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccVpcConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
@@ -269,6 +277,10 @@ resource "qingcloud_vpc" "foo" {
 	name ="test"
 	description = "test"
 	type = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 
@@ -310,25 +322,37 @@ resource "qingcloud_tag" "test2"{
 const testAccVpcConfigEIP = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	eip_id = "${qingcloud_eip.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccVpcConfigEIPTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_eip" "foo" {
     bandwidth = 2
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 resource "qingcloud_vpc" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	vpc_network = "192.168.0.0/16"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
