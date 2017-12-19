@@ -32,8 +32,8 @@ script:
     find . -name cov_part.out | xargs cat > cov.out
     codeclimate-test-reporter < cov.out
 
-  - make build
-  - make dist
+  - travis_wait make build
+  - travis_wait make dist
 deploy:
     provider: releases
     api_key:
