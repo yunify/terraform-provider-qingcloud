@@ -27,6 +27,7 @@ import (
 
 func TestAccQingcloudEIP_basic(t *testing.T) {
 	var eip qc.DescribeEIPsOutput
+	testTag := "terraform-test-eip-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +40,7 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccEIPConfig,
+				Config: fmt.Sprintf(testAccEIPConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
 						"qingcloud_eip.foo", &eip),
@@ -56,7 +57,7 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccEIPConfigTwo,
+				Config: fmt.Sprintf(testAccEIPConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
 						"qingcloud_eip.foo", &eip),
@@ -76,6 +77,7 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 	})
 
 }
+
 func TestAccQingcloudEIP_tag(t *testing.T) {
 	var eip qc.DescribeEIPsOutput
 	eipTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-eip-tag1"
@@ -197,7 +199,12 @@ resource "qingcloud_eip" "foo" {
     billing_mode = "traffic"
     bandwidth = 2
     need_icp = 0
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 const testAccEIPConfigTwo = `
 resource "qingcloud_eip" "foo" {
     name = "eip"
@@ -205,7 +212,12 @@ resource "qingcloud_eip" "foo" {
     billing_mode = "bandwidth"
     bandwidth = 4
     need_icp = 0
-} `
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+`
 
 const testAccEipConfigTagTemplate = `
 
