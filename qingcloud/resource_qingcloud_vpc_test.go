@@ -137,8 +137,8 @@ func TestAccQingcloudVpc_eip(t *testing.T) {
 
 func TestAccQingcloudVpc_tag(t *testing.T) {
 	var vpc qc.DescribeRoutersOutput
-	vpcTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vpc-tag1"
-	vpcTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vpc-tag2"
+	vpcTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-vpc-tag1"
+	vpcTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-vpc-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := vpc.RouterSet[0].Tags

@@ -78,8 +78,8 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 }
 func TestAccQingcloudEIP_tag(t *testing.T) {
 	var eip qc.DescribeEIPsOutput
-	eipTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-eip-tag1"
-	eipTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-eip-tag2"
+	eipTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-eip-tag1"
+	eipTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-eip-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := eip.EIPSet[0].Tags
