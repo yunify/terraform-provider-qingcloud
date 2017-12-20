@@ -11,7 +11,9 @@ jobs:
     steps:
       - checkout
 
-      # specify any bash command here prefixed with `run: `
+      - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+      - run: sudo apt-get install nodejs
+      - run: sudo npm install -g codeclimate-test-reporter
       - run: |
                  shopt -s globstar;
                  rootdir=`pwd`;
