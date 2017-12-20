@@ -1,0 +1,40 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.8
+    working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
+    steps:
+      - checkout
+
+      # specify any bash command here prefixed with `run: `
+      - run: |
+                 shopt -s globstar;
+                 rootdir=`pwd`;
+
+                 for dir in $(go list ./... |grep -v 'vendor'); do
+                   cd $GOPATH/src/$dir;
+                   exec 5>&1;
+                   out=$(TF_ACC=1 go test -timeout 120m -v -coverprofile=cov_part.out | tee >(cat - >&5))
+                   if [ $? -eq 1 ] ; then
+                     if [ $(cat $out | grep -o 'no buildable Go source files') == "" ] ; then
+                       echo "Tests failed! Exiting..." ; exit 1
+                     fi
+                     if [cat $out | grep -q "FAIL"] ; then
+                       echo "Tests failed! Exiting..." ; exit 1
+                     fi
+                   fi
+                   cd $rootdir
+                 done
+
+                 if [ -z "$CI_NAME" ]; then
+                   echo "CI_NAME is unset. Skipping coverage report!"
+                   exit 0
+                 fi
+
+                 find . -name cov_part.out | xargs cat > cov.out
+                 codeclimate-test-reporter < cov.out
