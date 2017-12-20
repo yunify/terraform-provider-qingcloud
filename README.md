@@ -1,8 +1,8 @@
 # terraform-qingcloud
 
 
-Terraform-Qingcloud-Plugin [![Build Status](https://travis-ci.org/yunify/terraform-provider-qingcloud.svg?branch=master)](https://travis-ci.org/yunify/terraform-provider-qingcloud)
-[![codebeat badge](https://codebeat.co/badges/4559529b-cb96-4120-a489-30ca998c3790)](https://codebeat.co/projects/github-com-yunify-terraform-provider-qingcloud-master)
+Terraform-Qingcloud-Plugin [![CircleCI](https://circleci.com/gh/yunify/terraform-provider-qingcloud/tree/master.svg?style=svg)](https://circleci.com/gh/yunify/terraform-provider-qingcloud/tree/master)
+[![codebeat badge](https://codebeat.co/badges/d6cc83ea-779f-4fce-8091-abc0b719d271)](https://codebeat.co/projects/github-com-yunify-qingcloud-terraform-provider-master-3c5cd450-e81b-4eb1-aaf6-aa9b76158d6f)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fyunify%2Fterraform-provider-qingcloud.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fyunify%2Fterraform-provider-qingcloud?ref=badge_shield)
 
 ## Usage
