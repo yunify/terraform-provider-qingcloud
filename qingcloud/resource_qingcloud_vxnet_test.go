@@ -80,8 +80,8 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 
 func TestAccQingcloudVxNet_tag(t *testing.T) {
 	var vxnet qc.DescribeVxNetsOutput
-	vxnetTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vxnet-tag1"
-	vxnetTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-vxnet-tag2"
+	vxnetTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-vxnet-tag1"
+	vxnetTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-vxnet-tag2"
 
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {

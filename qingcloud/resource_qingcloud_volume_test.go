@@ -61,8 +61,8 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 
 func TestAccQingcloudVolume_tag(t *testing.T) {
 	var volume qc.DescribeVolumesOutput
-	volumeTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-volume-tag1"
-	volumeTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-volume-tag2"
+	volumeTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-volume-tag1"
+	volumeTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-volume-tag2"
 
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {

@@ -56,8 +56,8 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 }
 func TestAccQingcloudKeypair_tag(t *testing.T) {
 	var keypair qc.DescribeKeyPairsOutput
-	keypairTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-kp-tag1"
-	keypairTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-kp-tag2"
+	keypairTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-kp-tag1"
+	keypairTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-kp-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := keypair.KeyPairSet[0].Tags
