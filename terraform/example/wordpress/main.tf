@@ -22,7 +22,7 @@ resource "null_resource" "run_docker_wordpress" {
   depends_on = ["qingcloud_vpc_static.ssh-wordpress",
     "qingcloud_security_group_rule.ssh-wordpress-in",
     "qingcloud_instance.wordpress",
-    "null_resource.run_docker_mysql"
+    "null_resource.run_docker_mysql",
   ]
 
   provisioner "remote-exec" {
@@ -65,7 +65,6 @@ resource "null_resource" "run_docker_mysql" {
     }
   }
 }
-
 
 resource "qingcloud_security_group" "foo" {
   name = "first_sg"
