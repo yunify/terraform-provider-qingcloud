@@ -18,54 +18,6 @@ resource "qingcloud_instance" "mysql" {
   managed_vxnet_id = "${qingcloud_vxnet.foo.id}"
 }
 
-resource "null_resource" "run_docker_wordpress" {
-  depends_on = ["qingcloud_vpc_static.ssh-wordpress",
-    "qingcloud_security_group_rule.ssh-wordpress-in",
-    "qingcloud_instance.wordpress",
-    "null_resource.run_docker_mysql",
-  ]
-
-  provisioner "remote-exec" {
-    inline = [
-      "curl -fsSL get.docker.com -o get-docker.sh",
-      "sh get-docker.sh",
-      "systemctl start docker",
-      "docker run --name wordpress -d -p 80:80 -e WORDPRESS_DB_HOST=${qingcloud_instance.mysql.private_ip} -e WORDPRESS_DB_PASSWORD=wordpress wordpress",
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = "${qingcloud_vpc.foo.public_ip}"
-      private_key = "${file("~/.ssh/id_rsa")}"
-    }
-  }
-}
-
-resource "null_resource" "run_docker_mysql" {
-  depends_on = ["qingcloud_vpc_static.ssh-mysql",
-    "qingcloud_security_group_rule.ssh-mysql-in",
-    "qingcloud_instance.wordpress",
-  ]
-
-  provisioner "remote-exec" {
-    inline = [
-      "curl -fsSL get.docker.com -o get-docker.sh",
-      "sh get-docker.sh",
-      "systemctl start docker",
-      "docker run --name wordpress-mysql -v /datadir:/var/lib/mysql  -p 3306:3306 -e MYSQL_ROOT_PASSWORD=wordpress -d  mysql:5.7",
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = "${qingcloud_vpc.foo.public_ip}"
-      private_key = "${file("~/.ssh/id_rsa")}"
-      port        = 2222
-    }
-  }
-}
-
 resource "qingcloud_security_group" "foo" {
   name = "first_sg"
 }
