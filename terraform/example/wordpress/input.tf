@@ -1,1 +1,3 @@
-variable "wordpress_db_password" {default = "wordpress"}
+variable "wordpress_db_password" {
+  default = "wordpress"
+}

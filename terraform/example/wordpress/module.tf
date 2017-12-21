@@ -11,5 +11,5 @@ module "wordpress" {
   mysql_instance_public_ip  = "${module.qingcloud.public_ip}"
   mysql_public_ssh_port     = "${module.qingcloud.mysql_instance_ssh_port}"
   mysql_instance_private_ip = "${module.qingcloud.mysql_instance_private_ip}"
-  mysql_password = "${var.wordpress_db_password}"
+  mysql_password            = "${var.wordpress_db_password}"
 }
