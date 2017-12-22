@@ -83,6 +83,9 @@ func changeVolumeSize(d *schema.ResourceData, meta interface{}) error {
 }
 
 func waitVolumeLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).volume
 	input := new(qc.DescribeVolumesInput)
 	input.Volumes = []*string{qc.String(d.Id())}
@@ -97,6 +100,6 @@ func waitVolumeLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.VolumeSet[0].CreateTime)
+	WaitForLease(output.VolumeSet[0].StatusTime)
 	return nil
 }

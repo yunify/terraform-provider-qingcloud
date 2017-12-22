@@ -90,6 +90,9 @@ func getEIPResourceMap(data *qc.EIP) map[string]interface{} {
 	return a
 }
 func waitEipLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).eip
 	input := new(qc.DescribeEIPsInput)
 	input.EIPs = []*string{qc.String(d.Id())}
@@ -104,7 +107,7 @@ func waitEipLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.EIPSet[0].CreateTime)
+	WaitForLease(output.EIPSet[0].StatusTime)
 	return nil
 }
 
