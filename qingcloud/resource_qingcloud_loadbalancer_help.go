@@ -180,6 +180,9 @@ func isLoadBalancerDeleted(lbSet []*qc.LoadBalancer) bool {
 }
 
 func waitLoadBalancerLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DescribeLoadBalancersInput)
 	input.LoadBalancers = []*string{qc.String(d.Id())}
