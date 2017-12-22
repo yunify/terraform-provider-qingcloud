@@ -79,8 +79,8 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 
 func TestAccQingcloudInstance_tag(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
-	instanceTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-instance-tag1"
-	instanceTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-instance-tag2"
+	instanceTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-instance-tag1"
+	instanceTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-instance-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := instance.InstanceSet[0].Tags

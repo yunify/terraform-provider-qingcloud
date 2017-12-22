@@ -84,6 +84,6 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.RouterSet[0].CreateTime)
+	WaitForLease(output.RouterSet[0].StatusTime)
 	return nil
 }

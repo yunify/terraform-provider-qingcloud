@@ -194,6 +194,6 @@ func waitLoadBalancerLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.LoadBalancerSet[0].CreateTime)
+	WaitForLease(output.LoadBalancerSet[0].StatusTime)
 	return nil
 }

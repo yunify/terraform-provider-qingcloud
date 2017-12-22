@@ -57,8 +57,8 @@ func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 
 func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
-	lbTag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-lb-tag1"
-	lbTag2Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-lb-tag2"
+	lbTag1Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-lb-tag1"
+	lbTag2Name := "terraform-" + os.Getenv("CIRCLE_BUILD_NUM") + "-lb-tag2"
 	testTagNameValue := func(names ...string) resource.TestCheckFunc {
 		return func(state *terraform.State) error {
 			tags := lb.LoadBalancerSet[0].Tags
