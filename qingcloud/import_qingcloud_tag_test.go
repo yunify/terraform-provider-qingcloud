@@ -10,7 +10,7 @@ import (
 
 func TestAccQingcloudTag_importBasic(t *testing.T) {
 	resourceName := "qingcloud_tag.foo"
-	Tag1Name := os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER") + "-tag1"
+	tagName := os.Getenv("CIRCLE_BUILD_NUM") + "-tag-import"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -18,7 +18,7 @@ func TestAccQingcloudTag_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccTagConfigTempalte, Tag1Name),
+				Config: fmt.Sprintf(testAccTagConfigTempalte, tagName),
 			},
 
 			resource.TestStep{

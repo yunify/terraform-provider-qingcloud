@@ -1,12 +1,16 @@
 package qingcloud
 
 import (
-	"github.com/hashicorp/terraform/helper/resource"
+	"fmt"
+	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccQingcloudKeyPair_importBasic(t *testing.T) {
 	resourceName := "qingcloud_keypair.foo"
+	testTag := "terraform-test-kepair-import-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -14,7 +18,7 @@ func TestAccQingcloudKeyPair_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckKeypairDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccKeypairConfigTwo,
+				Config: fmt.Sprintf(testAccKeypairConfigTwo, testTag),
 			},
 
 			resource.TestStep{

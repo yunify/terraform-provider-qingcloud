@@ -27,6 +27,8 @@ import (
 
 func TestAccQingcloudVolume_basic(t *testing.T) {
 	var volume qc.DescribeVolumesOutput
+	testTag := "terraform-test-volume-basic" + os.Getenv("CIRCLE_BUILD_NUM")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -36,7 +38,7 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccVolumeConfig,
+				Config: fmt.Sprintf(testAccVolumeConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
 					resource.TestCheckResourceAttr(
@@ -44,7 +46,7 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccVolumeConfigTwo,
+				Config: fmt.Sprintf(testAccVolumeConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
 					resource.TestCheckResourceAttr(
@@ -172,6 +174,10 @@ func testAccCheckVolumeDestroyWithProvider(s *terraform.State, provider *schema.
 const testAccVolumeConfig = `
 resource "qingcloud_volume" "foo"{
 	size = 10
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccVolumeConfigTwo = `
@@ -179,6 +185,10 @@ resource "qingcloud_volume" "foo"{
 	size = 20
 	name = "volume"
 	description = "volume"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccVolumeConfigTagTemplate = `

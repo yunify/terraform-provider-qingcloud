@@ -27,6 +27,8 @@ import (
 
 func TestAccQingcloudKeypair_basic(t *testing.T) {
 	var keypair qc.DescribeKeyPairsOutput
+	testTag := "terraform-test-keypair-basic" + os.Getenv("CIRCLE_BUILD_NUM")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -36,13 +38,13 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckKeypairDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccKeypairConfig,
+				Config: fmt.Sprintf(testAccKeypairConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
 				),
 			},
 			resource.TestStep{
-				Config: testAccKeypairConfigTwo,
+				Config: fmt.Sprintf(testAccKeypairConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
 					resource.TestCheckResourceAttr(
@@ -169,6 +171,10 @@ func testAccCheckKeypairDestroyWithProvider(s *terraform.State, provider *schema
 const testAccKeypairConfig = `
 resource "qingcloud_keypair" "foo"{
 	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccKeypairConfigTwo = `
@@ -176,6 +182,10 @@ resource "qingcloud_keypair" "foo"{
 	name="keypair1"
 	description="test"
 	public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCa7DDEP+CR9l26yJ5dAlmZvTwlZoxIZ2yD79dU/UNAlNzhdc+iqaC+aA2afyM4KCx8qtsawj5zzU0714fK+uA27MvQSwB0A25NqnJPgAw3v0WrOfFFG01Ecirc2MmMU2RHUk0cwZ5rVbcg8SUOwSs2tVKlWi98v1XcEw3vuM2ruPLkj8z9/Rf0o6FJ8vkpvsPXigFW82wkmI2WsgczvCbwApklaqdewC7Dxa0dFtA0gcqsgQzD4NR4glrHObyfxP3WRlPeyR7fFJRZFBqoLLELrqS5tYEpp6jVdzlHAf7WqOuLf0AoI+1Qsx57c92M0Rnj2MLs/6QNWKOVjzEfgXTD root@junwuhui.cn"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 `
 const testAccKeypairConfigTagTemplate = `

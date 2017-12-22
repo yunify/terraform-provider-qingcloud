@@ -1,12 +1,16 @@
 package qingcloud
 
 import (
-	"github.com/hashicorp/terraform/helper/resource"
+	"fmt"
+	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccQingcloudInstance_importBasic(t *testing.T) {
 	resourceName := "qingcloud_instance.foo"
+	testTag := "terraform-test-instance-import-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -14,7 +18,7 @@ func TestAccQingcloudInstance_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccInstanceConfigKeyPair,
+				Config: fmt.Sprintf(testAccInstanceConfig, testTag),
 			},
 
 			resource.TestStep{
