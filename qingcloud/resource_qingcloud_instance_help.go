@@ -396,6 +396,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 }
 
 func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
@@ -410,7 +413,7 @@ func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.InstanceSet[0].CreateTime)
+	WaitForLease(output.InstanceSet[0].StatusTime)
 	return nil
 }
 
