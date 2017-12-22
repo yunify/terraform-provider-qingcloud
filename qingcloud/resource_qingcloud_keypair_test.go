@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudKeypair_basic(t *testing.T) {
 	var keypair qc.DescribeKeyPairsOutput
-	testTag := "terraform-test-keypair-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-keypair-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

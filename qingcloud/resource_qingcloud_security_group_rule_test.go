@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 	var sgr qc.DescribeSecurityGroupRulesOutput
-	testTag := "terraform-test-sgr-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-sgr-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

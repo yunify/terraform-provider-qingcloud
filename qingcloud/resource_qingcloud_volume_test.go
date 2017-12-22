@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudVolume_basic(t *testing.T) {
 	var volume qc.DescribeVolumesOutput
-	testTag := "terraform-test-volume-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-volume-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

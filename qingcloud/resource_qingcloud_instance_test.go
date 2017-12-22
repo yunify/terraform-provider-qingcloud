@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudInstance_basic(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
-	testTag := "terraform-test-instance-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-instance-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -139,7 +139,7 @@ func TestAccQingcloudInstance_tag(t *testing.T) {
 
 func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
-	testTag := "terraform-test-instance-mutiKepair" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-instance-mutiKepair" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testCheck := func(kpCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -195,7 +195,7 @@ func TestAccQingcloudInstance_multiKeypairByCount(t *testing.T) {
 
 func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
-	testTag := "terraform-test-instance-mutiVolume" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-instance-mutiVolume" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testCheck := func(volCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -251,7 +251,7 @@ func TestAccQingcloudInstance_multiVolumeByCount(t *testing.T) {
 
 func TestAccQingcloudInstance_eip(t *testing.T) {
 	var instance qc.DescribeInstancesOutput
-	testTag := "terraform-test-instance-eip" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-instance-eip" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testEIP := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {

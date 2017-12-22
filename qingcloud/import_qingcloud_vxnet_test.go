@@ -10,7 +10,7 @@ import (
 
 func TestAccQingcloudVxnet_importBasic(t *testing.T) {
 	resourceName := "qingcloud_vxnet.foo"
-	testTag := "terraform-test-vxnet-import-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vxnet-import-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

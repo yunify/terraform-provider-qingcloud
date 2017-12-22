@@ -14,7 +14,7 @@ import (
 
 func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
-	testTag := "terraform-test-lb-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-lb-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -116,7 +116,7 @@ func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 
 func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
-	testTag := "terraform-test-lb-mutiEips" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-lb-mutiEips" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testCheck := func(eipCount int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -170,7 +170,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 
 func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 	var lb qc.DescribeLoadBalancersOutput
-	testTag := "terraform-test-lb-inter-privateip-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-lb-inter-privateip-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testCheck := func(privateIp string) resource.TestCheckFunc {
 		return func(*terraform.State) error {

@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudVpc_basic(t *testing.T) {
 	var vpc qc.DescribeRoutersOutput
-	testTag := "terraform-test-vpc-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vpc-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -72,7 +72,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 
 func TestAccQingcloudVpc_eip(t *testing.T) {
 	var vpc qc.DescribeRoutersOutput
-	testTag := "terraform-test-vpc-eip" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vpc-eip" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testEIP := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {

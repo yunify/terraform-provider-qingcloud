@@ -10,7 +10,7 @@ import (
 
 func TestAccQingcloudVolume_importBasic(t *testing.T) {
 	resourceName := "qingcloud_volume.foo"
-	testTag := "terraform-test-volume-import-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-volume-import-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

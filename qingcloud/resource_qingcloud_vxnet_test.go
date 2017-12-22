@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudVxNet_basic(t *testing.T) {
 	var vxnet qc.DescribeVxNetsOutput
-	testTag := "terraform-test-vxnet-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vxnet-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -143,7 +143,7 @@ func TestAccQingcloudVxNet_tag(t *testing.T) {
 
 func TestAccQingcloudVxNet_vpc(t *testing.T) {
 	var vxnet qc.DescribeVxNetsOutput
-	testTag := "terraform-test-vxnet-vpc" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-vxnet-vpc" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	testVpcAttach := func() resource.TestCheckFunc {
 		return func(state *terraform.State) error {

@@ -10,7 +10,7 @@ import (
 
 func TestAccQingcloudKeyPair_importBasic(t *testing.T) {
 	resourceName := "qingcloud_keypair.foo"
-	testTag := "terraform-test-kepair-import-basic" + os.Getenv("TRAVIS_BUILD_ID") + "-" + os.Getenv("TRAVIS_JOB_NUMBER")
+	testTag := "terraform-test-kepair-import-basic" + os.Getenv("CIRCLE_BUILD_NUM")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
