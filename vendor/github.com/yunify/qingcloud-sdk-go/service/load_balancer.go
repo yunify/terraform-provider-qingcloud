@@ -471,7 +471,7 @@ func (s *LoadBalancerService) CreateServerCertificate(i *CreateServerCertificate
 		Config:        s.Config,
 		Properties:    s.Properties,
 		APIName:       "CreateServerCertificate",
-		RequestMethod: "GET",
+		RequestMethod: "POST",
 	}
 
 	x := &CreateServerCertificateOutput{}
