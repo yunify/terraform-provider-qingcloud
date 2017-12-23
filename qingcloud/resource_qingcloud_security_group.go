@@ -96,20 +96,9 @@ func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface
 
 func resourceQingcloudSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).securitygroup
-	describeSecurityGroupInput := new(qc.DescribeSecurityGroupsInput)
-	describeSecurityGroupInput.SecurityGroups = []*string{qc.String(d.Id())}
-	describeSecurityGroupInput.Verbose = qc.Int(1)
-	var describeSecurityGroupOutput *qc.DescribeSecurityGroupsOutput
-	var err error
-	simpleRetry(func() error {
-		describeSecurityGroupOutput, err = clt.DescribeSecurityGroups(describeSecurityGroupInput)
-		return isServerBusy(err)
-	})
-	if err != nil {
-		return err
-	}
 	input := new(qc.DeleteSecurityGroupsInput)
 	input.SecurityGroups = []*string{qc.String(d.Id())}
+	var err error
 	var output *qc.DeleteSecurityGroupsOutput
 	simpleRetry(func() error {
 		output, err = clt.DeleteSecurityGroups(input)
