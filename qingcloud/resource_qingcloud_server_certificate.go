@@ -19,7 +19,7 @@ func resourceQingcloudServerCertificate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			resourceDescription: &schema.Schema{
 				Type:     schema.TypeString,
@@ -57,13 +57,13 @@ func resourceQingcloudServerCertificateCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 	d.SetId(qc.StringValue(output.ServerCertificateID))
-	return resourceQingcloudSecurityGroupUpdate(d, meta)
+	return resourceQingcloudServerCertificateUpdate(d, meta)
 }
 
 func resourceQingcloudServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DescribeServerCertificatesInput)
-	input.ServerCertificates = qc.String(d.Id())
+	input.ServerCertificates = []*string{qc.String(d.Id())}
 	var output *qc.DescribeServerCertificatesOutput
 	var err error
 	simpleRetry(func() error {
@@ -86,7 +86,7 @@ func resourceQingcloudServerCertificateUpdate(d *schema.ResourceData, meta inter
 	if err := modifyServerCertificateAttributes(d, meta); err != nil {
 		return err
 	}
-	return resourceQingcloudSecurityGroupRead(d, meta)
+	return resourceQingcloudServerCertificateRead(d, meta)
 }
 
 func resourceQingcloudServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
