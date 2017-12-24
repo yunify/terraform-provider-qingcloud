@@ -27,7 +27,7 @@ import (
 
 func TestAccQingcloudTag_basic(t *testing.T) {
 	var tag qc.DescribeTagsOutput
-	Tag1Name :=os.Getenv("CIRCLE_BUILD_NUM") + "-tag-create"
+	Tag1Name := os.Getenv("CIRCLE_BUILD_NUM") + "-tag-create"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
