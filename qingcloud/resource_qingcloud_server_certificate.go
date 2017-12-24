@@ -16,6 +16,10 @@ func resourceQingcloudServerCertificate() *schema.Resource {
 		Read:   resourceQingcloudServerCertificateRead,
 		Update: resourceQingcloudServerCertificateUpdate,
 		Delete: resourceQingcloudServerCertificateDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
@@ -26,16 +30,18 @@ func resourceQingcloudServerCertificate() *schema.Resource {
 				Optional: true,
 			},
 			resourceServerCertificateContent: &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			resourceServerCertificatePrivateKey: &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 		},
 	}
