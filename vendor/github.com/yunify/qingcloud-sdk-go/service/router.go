@@ -766,6 +766,85 @@ type GetRouterMonitorOutput struct {
 	RetCode    *int     `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
+// Documentation URL: https://docs.qingcloud.com/api/router/get_vpn_certs.html
+func (s *RouterService) GetVPNCerts(i *GetVPNCertsInput) (*GetVPNCertsOutput, error) {
+	if i == nil {
+		i = &GetVPNCertsInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "GetVPNCerts",
+		RequestMethod: "GET",
+	}
+
+	x := &GetVPNCertsOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type GetVPNCertsInput struct {
+
+	// Platform's available values: windows, linux, mac
+	Platform *string `json:"platform" name:"platform" location:"params"`
+	Router   *string `json:"router" name:"router" location:"params"` // Required
+}
+
+func (v *GetVPNCertsInput) Validate() error {
+
+	if v.Platform != nil {
+		platformValidValues := []string{"windows", "linux", "mac"}
+		platformParameterValue := fmt.Sprint(*v.Platform)
+
+		platformIsValid := false
+		for _, value := range platformValidValues {
+			if value == platformParameterValue {
+				platformIsValid = true
+			}
+		}
+
+		if !platformIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "Platform",
+				ParameterValue: platformParameterValue,
+				AllowedValues:  platformValidValues,
+			}
+		}
+	}
+
+	if v.Router == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Router",
+			ParentName:    "GetVPNCertsInput",
+		}
+	}
+
+	return nil
+}
+
+type GetVPNCertsOutput struct {
+	Message           *string `json:"message" name:"message"`
+	Action            *string `json:"action" name:"action" location:"elements"`
+	CaCert            *string `json:"ca_cert" name:"ca_cert" location:"elements"`
+	ClientCrt         *string `json:"client_crt" name:"client_crt" location:"elements"`
+	ClientKey         *string `json:"client_key" name:"client_key" location:"elements"`
+	LinuxConfSample   *string `json:"linux_conf_sample" name:"linux_conf_sample" location:"elements"`
+	MacConfSample     *string `json:"mac_conf_sample" name:"mac_conf_sample" location:"elements"`
+	RetCode           *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	RouterID          *string `json:"router_id" name:"router_id" location:"elements"`
+	StaticKey         *string `json:"static_key" name:"static_key" location:"elements"`
+	WindowsConfSample *string `json:"windows_conf_sample" name:"windows_conf_sample" location:"elements"`
+}
+
 // Documentation URL: https://docs.qingcloud.com/api/router/join_router.html
 func (s *RouterService) JoinRouter(i *JoinRouterInput) (*JoinRouterOutput, error) {
 	if i == nil {
