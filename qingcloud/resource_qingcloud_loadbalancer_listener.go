@@ -16,6 +16,7 @@ const (
 	resourceLoadBalancerListenerHealthCheckMethod   = "healthy_check_method"
 	resourceLoadBalancerListenerHealthCheckOption   = "healthy_check_option"
 	resourceLoadBalancerListenerOption              = "listener_option"
+	resourceLoadBalancerListenerTimeOut             = "timeout"
 )
 
 func resourceQingcloudLoadBalancerListener() *schema.Resource {
@@ -162,7 +163,7 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	input.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
 	input.HealthyCheckMethod = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckMethod)
 	input.HealthyCheckOption = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckOption)
-	//TODO input.ListenerOption =  qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
+	input.ListenerOption =  qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
 	var output *qc.ModifyLoadBalancerListenerAttributesOutput
 	var err error
 	simpleRetry(func() error {

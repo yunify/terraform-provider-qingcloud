@@ -1351,6 +1351,7 @@ type LoadBalancerBackend struct {
 	Port                    *int       `json:"port" name:"port"`
 	ResourceID              *string    `json:"resource_id" name:"resource_id"`
 	Status                  *string    `json:"status" name:"status"`
+	Timeout                 *int       `json:"timeout" name:"timeout"`
 	Weight                  *int       `json:"weight" name:"weight"`
 }
 

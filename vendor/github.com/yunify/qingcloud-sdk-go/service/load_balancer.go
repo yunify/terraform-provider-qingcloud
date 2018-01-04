@@ -1401,6 +1401,7 @@ type ModifyLoadBalancerListenerAttributesInput struct {
 	LoadBalancerListenerName *string `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name" location:"params"`
 	ServerCertificateID      *string `json:"server_certificate_id" name:"server_certificate_id" location:"params"`
 	SessionSticky            *string `json:"session_sticky" name:"session_sticky" location:"params"`
+	Timeout                  *int    `json:"timeout" name:"timeout" location:"params"`
 }
 
 func (v *ModifyLoadBalancerListenerAttributesInput) Validate() error {
