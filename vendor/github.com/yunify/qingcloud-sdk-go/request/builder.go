@@ -251,7 +251,7 @@ func (b *Builder) parseRequestForm() error {
 			(*b.parsedParams)["zone"] = zone
 		}
 		for key, value := range *b.parsedParams {
-			values.Set(key, url.QueryEscape(value))
+			values.Set(key, value)
 		}
 		b.parsedForm = values
 	}

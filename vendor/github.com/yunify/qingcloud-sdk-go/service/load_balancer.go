@@ -471,7 +471,7 @@ func (s *LoadBalancerService) CreateServerCertificate(i *CreateServerCertificate
 		Config:        s.Config,
 		Properties:    s.Properties,
 		APIName:       "CreateServerCertificate",
-		RequestMethod: "GET",
+		RequestMethod: "POST",
 	}
 
 	x := &CreateServerCertificateOutput{}
@@ -1076,11 +1076,11 @@ func (s *LoadBalancerService) DescribeServerCertificates(i *DescribeServerCertif
 }
 
 type DescribeServerCertificatesInput struct {
-	Limit              *int    `json:"limit" name:"limit" default:"20" location:"params"`
-	Offset             *int    `json:"offset" name:"offset" default:"0" location:"params"`
-	SearchWord         *string `json:"search_word" name:"search_word" location:"params"`
-	ServerCertificates *string `json:"server_certificates" name:"server_certificates" location:"params"`
-	Verbose            *int    `json:"verbose" name:"verbose" default:"0" location:"params"`
+	Limit              *int      `json:"limit" name:"limit" default:"20" location:"params"`
+	Offset             *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	SearchWord         *string   `json:"search_word" name:"search_word" location:"params"`
+	ServerCertificates []*string `json:"server_certificates" name:"server_certificates" location:"params"`
+	Verbose            *int      `json:"verbose" name:"verbose" default:"0" location:"params"`
 }
 
 func (v *DescribeServerCertificatesInput) Validate() error {

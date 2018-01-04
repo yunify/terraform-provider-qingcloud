@@ -66,11 +66,11 @@ func testAccCheckTagExists(n string, tag *qc.DescribeTagsOutput) resource.TestCh
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EIP ID is set")
+			return fmt.Errorf("no Tag ID is set")
 		}
 
 		client := testAccProvider.Meta().(*QingCloudClient)
