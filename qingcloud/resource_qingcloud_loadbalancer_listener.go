@@ -71,17 +71,16 @@ func resourceQingcloudLoadBalancerListener() *schema.Resource {
 			resourceLoadBalancerListenerHealthCheckMethod: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "tcp",
 			},
 			resourceLoadBalancerListenerHealthCheckOption: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "10|5|2|5",
 			},
 			resourceLoadBalancerListenerOption: &schema.Schema{
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: withinArrayIntRange(0, 1023),
 			},
 			resourceLoadBalancerListenerTimeOut: &schema.Schema{
