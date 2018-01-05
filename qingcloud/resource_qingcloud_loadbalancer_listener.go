@@ -82,7 +82,12 @@ func resourceQingcloudLoadBalancerListener() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: withinArrayIntRange(0, 15),
+				ValidateFunc: withinArrayIntRange(0, 1023),
+			},
+			resourceLoadBalancerListenerTimeOut: &schema.Schema{
+				Type:     schema.TypeInt,
+				Default:  50,
+				Optional: true,
 			},
 		},
 	}
@@ -104,6 +109,7 @@ func resourceQingcloudLoadBalancerListnerCreate(d *schema.ResourceData, meta int
 	listener.HealthyCheckMethod = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckMethod)
 	listener.HealthyCheckOption = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckOption)
 	listener.ListenerOption = qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
+	listener.Timeout = qc.Int(d.Get(resourceLoadBalancerListenerTimeOut).(int))
 
 	input.Listeners = []*qc.LoadBalancerListener{listener}
 	var output *qc.AddLoadBalancerListenersOutput
@@ -150,6 +156,7 @@ func resourceQingcloudLoadBalancerListenerRead(d *schema.ResourceData, meta inte
 	d.Set(resourceLoadBalancerListenerHealthCheckMethod, qc.StringValue(output.LoadBalancerListenerSet[0].HealthyCheckMethod))
 	d.Set(resourceLoadBalancerListenerHealthCheckOption, qc.StringValue(output.LoadBalancerListenerSet[0].HealthyCheckOption))
 	d.Set(resourceLoadBalancerListenerOption, qc.IntValue(output.LoadBalancerListenerSet[0].ListenerOption))
+	d.Set(resourceLoadBalancerListenerTimeOut, qc.IntValue(output.LoadBalancerListenerSet[0].Timeout))
 	return nil
 }
 
@@ -163,7 +170,8 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	input.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
 	input.HealthyCheckMethod = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckMethod)
 	input.HealthyCheckOption = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckOption)
-	input.ListenerOption =  qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
+	input.ListenerOption = qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
+	input.Timeout = qc.Int(d.Get(resourceLoadBalancerListenerTimeOut).(int))
 	var output *qc.ModifyLoadBalancerListenerAttributesOutput
 	var err error
 	simpleRetry(func() error {

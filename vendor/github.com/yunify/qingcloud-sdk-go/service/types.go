@@ -1351,7 +1351,6 @@ type LoadBalancerBackend struct {
 	Port                    *int       `json:"port" name:"port"`
 	ResourceID              *string    `json:"resource_id" name:"resource_id"`
 	Status                  *string    `json:"status" name:"status"`
-	Timeout                 *int       `json:"timeout" name:"timeout"`
 	Weight                  *int       `json:"weight" name:"weight"`
 }
 
@@ -1377,6 +1376,7 @@ type LoadBalancerListener struct {
 	LoadBalancerListenerName *string    `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name"`
 	ServerCertificateID      *string    `json:"server_certificate_id" name:"server_certificate_id"`
 	SessionSticky            *string    `json:"session_sticky" name:"session_sticky"`
+	Timeout                  *int       `json:"timeout" name:"timeout"`
 }
 
 func (v *LoadBalancerListener) Validate() error {
