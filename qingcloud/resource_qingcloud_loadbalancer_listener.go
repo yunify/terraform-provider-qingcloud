@@ -163,6 +163,7 @@ func resourceQingcloudLoadBalancerListenerRead(d *schema.ResourceData, meta inte
 func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.ModifyLoadBalancerListenerAttributesInput)
+	input.LoadBalancerListener = qc.String(d.Id())
 	input.LoadBalancerListenerName = getSetStringPointer(d, resourceName)
 	input.BalanceMode = getSetStringPointer(d, resourceLoadBalancerListenerBalancerMode)
 	input.ServerCertificateID = getSetStringPointer(d, resourceLoadBalancerListenerServerCertificateId)
@@ -184,7 +185,7 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	if err := updateLoadBalancer(qc.String(d.Get(resourceLoadBalancerListenerLBId).(string)), meta); err != nil {
 		return nil
 	}
-	return resourceQingcloudVpcStaticRead(d, meta)
+	return resourceQingcloudLoadBalancerListenerRead(d, meta)
 }
 
 func resourceQingcloudLoadBalancerListnerDestroy(d *schema.ResourceData, meta interface{}) error {
