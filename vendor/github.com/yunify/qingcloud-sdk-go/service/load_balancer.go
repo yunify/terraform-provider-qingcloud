@@ -1330,8 +1330,8 @@ type ModifyLoadBalancerBackendAttributesInput struct {
 	LoadBalancerBackend     *string `json:"loadbalancer_backend" name:"loadbalancer_backend" location:"params"`
 	LoadBalancerBackendName *string `json:"loadbalancer_backend_name" name:"loadbalancer_backend_name" location:"params"`
 	LoadBalancerPolicyID    *string `json:"loadbalancer_policy_id" name:"loadbalancer_policy_id" location:"params"`
-	Port                    *string `json:"port" name:"port" location:"params"`
-	Weight                  *string `json:"weight" name:"weight" location:"params"`
+	Port                    *int    `json:"port" name:"port" location:"params"`
+	Weight                  *int    `json:"weight" name:"weight" location:"params"`
 }
 
 func (v *ModifyLoadBalancerBackendAttributesInput) Validate() error {
