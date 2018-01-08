@@ -74,22 +74,147 @@ func (s *ClusterService) AddClusterNodes(i *AddClusterNodesInput) (*AddClusterNo
 }
 
 type AddClusterNodesInput struct {
-	Cluster    *string   `json:"cluster" name:"cluster" location:"params"`
-	NodeCount  *int      `json:"node_count" name:"node_count" location:"params"`
-	NodeName   *string   `json:"node_name" name:"node_name" location:"params"`
-	NodeRole   *string   `json:"node_role" name:"node_role" location:"params"`
-	PrivateIPs []*string `json:"private_ips" name:"private_ips" location:"params"`
+	Cluster      *string   `json:"cluster" name:"cluster" location:"params"`       // Required
+	NodeCount    *int      `json:"node_count" name:"node_count" location:"params"` // Required
+	NodeName     *string   `json:"node_name" name:"node_name" location:"params"`
+	NodeRole     *string   `json:"node_role" name:"node_role" location:"params"`
+	PrivateIPs   []*string `json:"private_ips" name:"private_ips" location:"params"`
+	ResourceConf *string   `json:"resource_conf" name:"resource_conf" location:"params"`
 }
 
 func (v *AddClusterNodesInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "AddClusterNodesInput",
+		}
+	}
+
+	if v.NodeCount == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "NodeCount",
+			ParentName:    "AddClusterNodesInput",
+		}
+	}
 
 	return nil
 }
 
 type AddClusterNodesOutput struct {
+	Message    *string   `json:"message" name:"message"`
+	Action     *string   `json:"action" name:"action" location:"elements"`
+	ClusterID  *string   `json:"cluster_id" name:"cluster_id" location:"elements"`
+	JobID      *string   `json:"job_id" name:"job_id" location:"elements"`
+	NewNodeIDs []*string `json:"new_node_ids" name:"new_node_ids" location:"elements"`
+	RetCode    *int      `json:"ret_code" name:"ret_code" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/associate_eip_to_cluster_node.html
+func (s *ClusterService) AssociateEIPToClusterNode(i *AssociateEIPToClusterNodeInput) (*AssociateEIPToClusterNodeOutput, error) {
+	if i == nil {
+		i = &AssociateEIPToClusterNodeInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "AssociateEipToClusterNode",
+		RequestMethod: "GET",
+	}
+
+	x := &AssociateEIPToClusterNodeOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type AssociateEIPToClusterNodeInput struct {
+	ClusterNode *string `json:"cluster_node" name:"cluster_node" location:"params"` // Required
+	EIP         *string `json:"eip" name:"eip" location:"params"`                   // Required
+	NIC         *string `json:"nic" name:"nic" location:"params"`
+}
+
+func (v *AssociateEIPToClusterNodeInput) Validate() error {
+
+	if v.ClusterNode == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "ClusterNode",
+			ParentName:    "AssociateEIPToClusterNodeInput",
+		}
+	}
+
+	if v.EIP == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "EIP",
+			ParentName:    "AssociateEIPToClusterNodeInput",
+		}
+	}
+
+	return nil
+}
+
+type AssociateEIPToClusterNodeOutput struct {
 	Message *string `json:"message" name:"message"`
 	Action  *string `json:"action" name:"action" location:"elements"`
+	JobID   *string `json:"job_id" name:"job_id" location:"elements"`
 	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/cease_clusters.html
+func (s *ClusterService) CeaseClusters(i *CeaseClustersInput) (*CeaseClustersOutput, error) {
+	if i == nil {
+		i = &CeaseClustersInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "CeaseClusters",
+		RequestMethod: "GET",
+	}
+
+	x := &CeaseClustersOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type CeaseClustersInput struct {
+	Clusters []*string `json:"clusters" name:"clusters" location:"params"` // Required
+}
+
+func (v *CeaseClustersInput) Validate() error {
+
+	if len(v.Clusters) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Clusters",
+			ParentName:    "CeaseClustersInput",
+		}
+	}
+
+	return nil
+}
+
+type CeaseClustersOutput struct {
+	Message *string            `json:"message" name:"message"`
+	Action  *string            `json:"action" name:"action" location:"elements"`
+	JobIDs  map[string]*string `json:"job_ids" name:"job_ids" location:"elements"`
+	RetCode *int               `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/change_cluster_vxnet.html
@@ -119,24 +244,41 @@ func (s *ClusterService) ChangeClusterVxNet(i *ChangeClusterVxNetInput) (*Change
 }
 
 type ChangeClusterVxNetInput struct {
-	Cluster    *string     `json:"cluster" name:"cluster" location:"params"`
+	Cluster    *string     `json:"cluster" name:"cluster" location:"params"` // Required
 	PrivateIPs interface{} `json:"private_ips" name:"private_ips" location:"params"`
 	Roles      []*string   `json:"roles" name:"roles" location:"params"`
-	VxNet      *string     `json:"vxnet" name:"vxnet" location:"params"`
+	VxNet      *string     `json:"vxnet" name:"vxnet" location:"params"` // Required
 }
 
 func (v *ChangeClusterVxNetInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "ChangeClusterVxNetInput",
+		}
+	}
+
+	if v.VxNet == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "VxNet",
+			ParentName:    "ChangeClusterVxNetInput",
+		}
+	}
 
 	return nil
 }
 
 type ChangeClusterVxNetOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message   *string `json:"message" name:"message"`
+	Action    *string `json:"action" name:"action" location:"elements"`
+	ClusterID *string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	JobID     *string `json:"job_id" name:"job_id" location:"elements"`
+	RetCode   *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	VxNetID   *string `json:"vxnet_id" name:"vxnet_id" location:"elements"`
 }
 
-// Documentation URL: https://docs.qingcloud.com/api/cluster/create_clusters.html
+// Documentation URL: https://docs.qingcloud.com/api/cluster/create_cluster.html
 func (s *ClusterService) CreateCluster(i *CreateClusterInput) (*CreateClusterOutput, error) {
 	if i == nil {
 		i = &CreateClusterInput{}
@@ -179,9 +321,79 @@ func (v *CreateClusterInput) Validate() error {
 }
 
 type CreateClusterOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message     *string   `json:"message" name:"message"`
+	Action      *string   `json:"action" name:"action" location:"elements"`
+	AppID       *string   `json:"app_id" name:"app_id" location:"elements"`
+	AppVersion  *string   `json:"app_version" name:"app_version" location:"elements"`
+	ClusterID   *string   `json:"cluster_id" name:"cluster_id" location:"elements"`
+	ClusterName *string   `json:"cluster_name" name:"cluster_name" location:"elements"`
+	JobID       *string   `json:"job_id" name:"job_id" location:"elements"`
+	NodeIDs     []*string `json:"node_ids" name:"node_ids" location:"elements"`
+	RetCode     *int      `json:"ret_code" name:"ret_code" location:"elements"`
+	VxNetID     *string   `json:"vxnet_id" name:"vxnet_id" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/create_cluster_from_snapshot.html
+func (s *ClusterService) CreateClusterFromSnapshot(i *CreateClusterFromSnapshotInput) (*CreateClusterFromSnapshotOutput, error) {
+	if i == nil {
+		i = &CreateClusterFromSnapshotInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "CreateClusterFromSnapshot",
+		RequestMethod: "GET",
+	}
+
+	x := &CreateClusterFromSnapshotOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type CreateClusterFromSnapshotInput struct {
+	Conf       *string `json:"conf" name:"conf" location:"params"`               // Required
+	SnapshotID *string `json:"snapshot_id" name:"snapshot_id" location:"params"` // Required
+}
+
+func (v *CreateClusterFromSnapshotInput) Validate() error {
+
+	if v.Conf == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Conf",
+			ParentName:    "CreateClusterFromSnapshotInput",
+		}
+	}
+
+	if v.SnapshotID == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "SnapshotID",
+			ParentName:    "CreateClusterFromSnapshotInput",
+		}
+	}
+
+	return nil
+}
+
+type CreateClusterFromSnapshotOutput struct {
+	Message     *string   `json:"message" name:"message"`
+	Action      *string   `json:"action" name:"action" location:"elements"`
+	AppID       *string   `json:"app_id" name:"app_id" location:"elements"`
+	AppVersion  *string   `json:"app_version" name:"app_version" location:"elements"`
+	ClusterID   *string   `json:"cluster_id" name:"cluster_id" location:"elements"`
+	ClusterName *string   `json:"cluster_name" name:"cluster_name" location:"elements"`
+	JobID       *string   `json:"job_id" name:"job_id" location:"elements"`
+	NodeIDs     []*string `json:"node_ids" name:"node_ids" location:"elements"`
+	RetCode     *int      `json:"ret_code" name:"ret_code" location:"elements"`
+	VxNetID     *string   `json:"vxnet_id" name:"vxnet_id" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/delete_cluster_nodes.html
@@ -211,20 +423,37 @@ func (s *ClusterService) DeleteClusterNodes(i *DeleteClusterNodesInput) (*Delete
 }
 
 type DeleteClusterNodesInput struct {
-	Cluster *string   `json:"cluster" name:"cluster" location:"params"`
+	Cluster *string   `json:"cluster" name:"cluster" location:"params"` // Required
 	Force   *int      `json:"force" name:"force" location:"params"`
-	Nodes   []*string `json:"nodes" name:"nodes" location:"params"`
+	Nodes   []*string `json:"nodes" name:"nodes" location:"params"` // Required
 }
 
 func (v *DeleteClusterNodesInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "DeleteClusterNodesInput",
+		}
+	}
+
+	if len(v.Nodes) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Nodes",
+			ParentName:    "DeleteClusterNodesInput",
+		}
+	}
 
 	return nil
 }
 
 type DeleteClusterNodesOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message        *string   `json:"message" name:"message"`
+	Action         *string   `json:"action" name:"action" location:"elements"`
+	ClusterID      *string   `json:"cluster_id" name:"cluster_id" location:"elements"`
+	DeletedNodeIDs []*string `json:"deleted_node_ids" name:"deleted_node_ids" location:"elements"`
+	JobID          *string   `json:"job_id" name:"job_id" location:"elements"`
+	RetCode        *int      `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/delete_clusters.html
@@ -254,18 +483,85 @@ func (s *ClusterService) DeleteClusters(i *DeleteClustersInput) (*DeleteClusters
 }
 
 type DeleteClustersInput struct {
-	Clusters []*string `json:"clusters" name:"clusters" location:"params"`
+	Clusters []*string `json:"clusters" name:"clusters" location:"params"` // Required
+	Force    *int      `json:"force" name:"force" location:"params"`
 }
 
 func (v *DeleteClustersInput) Validate() error {
+
+	if len(v.Clusters) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Clusters",
+			ParentName:    "DeleteClustersInput",
+		}
+	}
 
 	return nil
 }
 
 type DeleteClustersOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message *string            `json:"message" name:"message"`
+	Action  *string            `json:"action" name:"action" location:"elements"`
+	JobIDs  map[string]*string `json:"job_ids" name:"job_ids" location:"elements"`
+	RetCode *int               `json:"ret_code" name:"ret_code" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/describe_cluster_display_tabs.html
+func (s *ClusterService) DescribeClusterDisplayTabs(i *DescribeClusterDisplayTabsInput) (*DescribeClusterDisplayTabsOutput, error) {
+	if i == nil {
+		i = &DescribeClusterDisplayTabsInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "DescribeClusterDisplayTabs",
+		RequestMethod: "GET",
+	}
+
+	x := &DescribeClusterDisplayTabsOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type DescribeClusterDisplayTabsInput struct {
+	Cluster     *string `json:"cluster" name:"cluster" location:"params"`           // Required
+	DisplayTabs *string `json:"display_tabs" name:"display_tabs" location:"params"` // Required
+	Role        *string `json:"role" name:"role" location:"params"`
+}
+
+func (v *DescribeClusterDisplayTabsInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "DescribeClusterDisplayTabsInput",
+		}
+	}
+
+	if v.DisplayTabs == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "DisplayTabs",
+			ParentName:    "DescribeClusterDisplayTabsInput",
+		}
+	}
+
+	return nil
+}
+
+type DescribeClusterDisplayTabsOutput struct {
+	Message     *string            `json:"message" name:"message"`
+	Action      *string            `json:"action" name:"action" location:"elements"`
+	DisplayTabs map[string]*string `json:"display_tabs" name:"display_tabs" location:"elements"`
+	RetCode     *int               `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/describe_cluster_nodes.html
@@ -295,9 +591,18 @@ func (s *ClusterService) DescribeClusterNodes(i *DescribeClusterNodesInput) (*De
 }
 
 type DescribeClusterNodesInput struct {
-	Cluster      *string   `json:"cluster" name:"cluster" location:"params"`
-	ClusterNodes []*string `json:"cluster_nodes" name:"cluster_nodes" location:"params"`
-	Role         *string   `json:"role" name:"role" location:"params"`
+	Cluster    *string   `json:"cluster" name:"cluster" location:"params"`
+	Console    *string   `json:"console" name:"console" location:"params"`
+	Limit      *int      `json:"limit" name:"limit" location:"params"`
+	Nodes      []*string `json:"nodes" name:"nodes" location:"params"`
+	Offset     *int      `json:"offset" name:"offset" location:"params"`
+	Owner      *string   `json:"owner" name:"owner" location:"params"`
+	Reverse    *int      `json:"reverse" name:"reverse" location:"params"`
+	Role       *string   `json:"role" name:"role" location:"params"`
+	SearchWord *string   `json:"search_word" name:"search_word" location:"params"`
+	SortKey    *string   `json:"sort_key" name:"sort_key" location:"params"`
+	Status     *string   `json:"status" name:"status" location:"params"`
+	Verbose    *int      `json:"verbose" name:"verbose" location:"params"`
 }
 
 func (v *DescribeClusterNodesInput) Validate() error {
@@ -341,21 +646,39 @@ func (s *ClusterService) DescribeClusterUsers(i *DescribeClusterUsersInput) (*De
 
 type DescribeClusterUsersInput struct {
 	AppVersions   []*string `json:"app_versions" name:"app_versions" location:"params"`
-	Apps          []*string `json:"apps" name:"apps" location:"params"`
+	Apps          []*string `json:"apps" name:"apps" location:"params"` // Required
 	ClusterStatus []*string `json:"cluster_status" name:"cluster_status" location:"params"`
+	Limit         *int      `json:"limit" name:"limit" default:"20" location:"params"`
+	Offset        *int      `json:"offset" name:"offset" default:"0" location:"params"`
 	Users         []*string `json:"users" name:"users" location:"params"`
-	Zones         []*string `json:"zones" name:"zones" location:"params"`
+	Zones         []*string `json:"zones" name:"zones" location:"params"` // Required
 }
 
 func (v *DescribeClusterUsersInput) Validate() error {
+
+	if len(v.Apps) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Apps",
+			ParentName:    "DescribeClusterUsersInput",
+		}
+	}
+
+	if len(v.Zones) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Zones",
+			ParentName:    "DescribeClusterUsersInput",
+		}
+	}
 
 	return nil
 }
 
 type DescribeClusterUsersOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message *string            `json:"message" name:"message"`
+	Action  *string            `json:"action" name:"action" location:"elements"`
+	Apps    []*string          `json:"apps" name:"apps" location:"elements"`
+	RetCode *int               `json:"ret_code" name:"ret_code" location:"elements"`
+	Users   map[string]*string `json:"users" name:"users" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/describe_clusters.html
@@ -385,13 +708,28 @@ func (s *ClusterService) DescribeClusters(i *DescribeClustersInput) (*DescribeCl
 }
 
 type DescribeClustersInput struct {
-	AppID      []*string `json:"app_id" name:"app_id" location:"params"`
-	AppVersion []*string `json:"app_version" name:"app_version" location:"params"`
-	Clusters   []*string `json:"clusters" name:"clusters" location:"params"`
-	Role       *string   `json:"role" name:"role" location:"params"`
+	AppVersions       []*string `json:"app_versions" name:"app_versions" location:"params"`
+	Apps              []*string `json:"apps" name:"apps" location:"params"`
+	CfgmgmtID         *string   `json:"cfgmgmt_id" name:"cfgmgmt_id" location:"params"`
+	Clusters          []*string `json:"clusters" name:"clusters" location:"params"`
+	Console           *string   `json:"console" name:"console" location:"params"`
+	ExternalClusterID *string   `json:"external_cluster_id" name:"external_cluster_id" location:"params"`
+	Limit             *int      `json:"limit" name:"limit" location:"params"`
+	Link              *string   `json:"link" name:"link" location:"params"`
+	Name              *string   `json:"name" name:"name" location:"params"`
+	Offset            *int      `json:"offset" name:"offset" location:"params"`
+	Owner             *string   `json:"owner" name:"owner" location:"params"`
+	Reverse           *int      `json:"reverse" name:"reverse" location:"params"`
+	Role              *string   `json:"role" name:"role" location:"params"`
 	// Scope's available values: all, cfgmgmt
-	Scope *string   `json:"scope" name:"scope" location:"params"`
-	Users []*string `json:"users" name:"users" location:"params"`
+	Scope            *string   `json:"scope" name:"scope" location:"params"`
+	SearchWord       *string   `json:"search_word" name:"search_word" location:"params"`
+	SortKey          *string   `json:"sort_key" name:"sort_key" location:"params"`
+	Status           *string   `json:"status" name:"status" location:"params"`
+	TransitionStatus *string   `json:"transition_status" name:"transition_status" location:"params"`
+	Users            []*string `json:"users" name:"users" location:"params"`
+	Verbose          *int      `json:"verbose" name:"verbose" location:"params"`
+	VxNet            *string   `json:"vxnet" name:"vxnet" location:"params"`
 }
 
 func (v *DescribeClustersInput) Validate() error {
@@ -427,19 +765,19 @@ type DescribeClustersOutput struct {
 	TotalCount *int       `json:"total_count" name:"total_count" location:"elements"`
 }
 
-// Documentation URL: https://docs.qingcloud.com/api/cluster/get_clusters_stats.html
-func (s *ClusterService) GetClustersStats(i *GetClustersStatsInput) (*GetClustersStatsOutput, error) {
+// Documentation URL: https://docs.qingcloud.com/api/cluster/dissociate_eip_from_cluster_node.html
+func (s *ClusterService) DissociateEIPFromClusterNode(i *DissociateEIPFromClusterNodeInput) (*DissociateEIPFromClusterNodeOutput, error) {
 	if i == nil {
-		i = &GetClustersStatsInput{}
+		i = &DissociateEIPFromClusterNodeInput{}
 	}
 	o := &data.Operation{
 		Config:        s.Config,
 		Properties:    s.Properties,
-		APIName:       "GetClustersStats",
+		APIName:       "DissociateEipFromClusterNode",
 		RequestMethod: "GET",
 	}
 
-	x := &GetClustersStatsOutput{}
+	x := &DissociateEIPFromClusterNodeOutput{}
 	r, err := request.New(o, i, x)
 	if err != nil {
 		return nil, err
@@ -453,18 +791,26 @@ func (s *ClusterService) GetClustersStats(i *GetClustersStatsInput) (*GetCluster
 	return x, err
 }
 
-type GetClustersStatsInput struct {
-	Zones []*string `json:"zones" name:"zones" location:"params"`
+type DissociateEIPFromClusterNodeInput struct {
+	EIPs []*string `json:"eips" name:"eips" location:"params"` // Required
 }
 
-func (v *GetClustersStatsInput) Validate() error {
+func (v *DissociateEIPFromClusterNodeInput) Validate() error {
+
+	if len(v.EIPs) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "EIPs",
+			ParentName:    "DissociateEIPFromClusterNodeInput",
+		}
+	}
 
 	return nil
 }
 
-type GetClustersStatsOutput struct {
+type DissociateEIPFromClusterNodeOutput struct {
 	Message *string `json:"message" name:"message"`
 	Action  *string `json:"action" name:"action" location:"elements"`
+	JobID   *string `json:"job_id" name:"job_id" location:"elements"`
 	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
@@ -495,12 +841,20 @@ func (s *ClusterService) ModifyClusterAttributes(i *ModifyClusterAttributesInput
 }
 
 type ModifyClusterAttributesInput struct {
-	Cluster     *string `json:"cluster" name:"cluster" location:"params"`
-	Description *string `json:"description" name:"description" location:"params"`
-	Name        *string `json:"name" name:"name" location:"params"`
+	AutoBackupTime *int    `json:"auto_backup_time" name:"auto_backup_time" location:"params"`
+	Cluster        *string `json:"cluster" name:"cluster" location:"params"` // Required
+	Description    *string `json:"description" name:"description" location:"params"`
+	Name           *string `json:"name" name:"name" location:"params"`
 }
 
 func (v *ModifyClusterAttributesInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "ModifyClusterAttributesInput",
+		}
+	}
 
 	return nil
 }
@@ -538,17 +892,64 @@ func (s *ClusterService) ModifyClusterNodeAttributes(i *ModifyClusterNodeAttribu
 }
 
 type ModifyClusterNodeAttributesInput struct {
-	Cluster     *string `json:"cluster" name:"cluster" location:"params"`
-	ClusterNode *string `json:"cluster_node" name:"cluster_node" location:"params"`
+	ClusterNode *string `json:"cluster_node" name:"cluster_node" location:"params"` // Required
 	Name        *string `json:"name" name:"name" location:"params"`
 }
 
 func (v *ModifyClusterNodeAttributesInput) Validate() error {
 
+	if v.ClusterNode == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "ClusterNode",
+			ParentName:    "ModifyClusterNodeAttributesInput",
+		}
+	}
+
 	return nil
 }
 
 type ModifyClusterNodeAttributesOutput struct {
+	Message *string `json:"message" name:"message"`
+	Action  *string `json:"action" name:"action" location:"elements"`
+	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/recover_clusters.html
+func (s *ClusterService) RecoverClusters(i *RecoverClustersInput) (*RecoverClustersOutput, error) {
+	if i == nil {
+		i = &RecoverClustersInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "Lease",
+		RequestMethod: "GET",
+	}
+
+	x := &RecoverClustersOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type RecoverClustersInput struct {
+	Resources []*string `json:"resources" name:"resources" location:"params"`
+}
+
+func (v *RecoverClustersInput) Validate() error {
+
+	return nil
+}
+
+type RecoverClustersOutput struct {
 	Message *string `json:"message" name:"message"`
 	Action  *string `json:"action" name:"action" location:"elements"`
 	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
@@ -581,8 +982,9 @@ func (s *ClusterService) ResizeCluster(i *ResizeClusterInput) (*ResizeClusterOut
 }
 
 type ResizeClusterInput struct {
-	Cluster     *string `json:"cluster" name:"cluster" location:"params"`
+	Cluster     *string `json:"cluster" name:"cluster" location:"params"` // Required
 	CPU         *int    `json:"cpu" name:"cpu" location:"params"`
+	Gpu         *int    `json:"gpu" name:"gpu" location:"params"`
 	Memory      *int    `json:"memory" name:"memory" location:"params"`
 	NodeRole    *string `json:"node_role" name:"node_role" location:"params"`
 	StorageSize *int    `json:"storage_size" name:"storage_size" location:"params"`
@@ -590,13 +992,27 @@ type ResizeClusterInput struct {
 
 func (v *ResizeClusterInput) Validate() error {
 
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "ResizeClusterInput",
+		}
+	}
+
 	return nil
 }
 
 type ResizeClusterOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message     *string `json:"message" name:"message"`
+	Action      *string `json:"action" name:"action" location:"elements"`
+	ClusterID   *string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	CPU         *int    `json:"cpu" name:"cpu" location:"elements"`
+	Gpu         *int    `json:"gpu" name:"gpu" location:"elements"`
+	JobID       *string `json:"job_id" name:"job_id" location:"elements"`
+	Memory      *int    `json:"memory" name:"memory" location:"elements"`
+	RetCode     *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Role        *string `json:"role" name:"role" location:"elements"`
+	StorageSize *int    `json:"storage_size" name:"storage_size" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/restart_cluster_service.html
@@ -636,9 +1052,135 @@ func (v *RestartClusterServiceInput) Validate() error {
 }
 
 type RestartClusterServiceOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message   *string `json:"message" name:"message"`
+	Action    *string `json:"action" name:"action" location:"elements"`
+	ClusterID *string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	JobID     *string `json:"job_id" name:"job_id" location:"elements"`
+	RetCode   *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Role      *string `json:"role" name:"role" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/restore_cluster_from_snapshot.html
+func (s *ClusterService) RestoreClusterFromSnapshot(i *RestoreClusterFromSnapshotInput) (*RestoreClusterFromSnapshotOutput, error) {
+	if i == nil {
+		i = &RestoreClusterFromSnapshotInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "RestoreClusterFromSnapshot",
+		RequestMethod: "GET",
+	}
+
+	x := &RestoreClusterFromSnapshotOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type RestoreClusterFromSnapshotInput struct {
+	Cluster       *string `json:"cluster" name:"cluster" location:"params"` // Required
+	ServiceParams *string `json:"service_params" name:"service_params" location:"params"`
+	Snapshot      *string `json:"snapshot" name:"snapshot" location:"params"` // Required
+}
+
+func (v *RestoreClusterFromSnapshotInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "RestoreClusterFromSnapshotInput",
+		}
+	}
+
+	if v.Snapshot == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Snapshot",
+			ParentName:    "RestoreClusterFromSnapshotInput",
+		}
+	}
+
+	return nil
+}
+
+type RestoreClusterFromSnapshotOutput struct {
+	Message       *string `json:"message" name:"message"`
+	Action        *string `json:"action" name:"action" location:"elements"`
+	ClusterID     *string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	JobID         *string `json:"job_id" name:"job_id" location:"elements"`
+	RetCode       *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	ServiceParams *string `json:"service_params" name:"service_params" location:"elements"`
+	SnapshotID    *string `json:"snapshot_id" name:"snapshot_id" location:"elements"`
+}
+
+// Documentation URL: https://docs.qingcloud.com/api/cluster/run_cluster_custom_service.html
+func (s *ClusterService) RunClusterCustomService(i *RunClusterCustomServiceInput) (*RunClusterCustomServiceOutput, error) {
+	if i == nil {
+		i = &RunClusterCustomServiceInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "RunClusterCustomService",
+		RequestMethod: "GET",
+	}
+
+	x := &RunClusterCustomServiceOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type RunClusterCustomServiceInput struct {
+	Cluster       *string `json:"cluster" name:"cluster" location:"params"` // Required
+	Role          *string `json:"role" name:"role" location:"params"`
+	Service       *string `json:"service" name:"service" location:"params"` // Required
+	ServiceParams *string `json:"service_params" name:"service_params" location:"params"`
+}
+
+func (v *RunClusterCustomServiceInput) Validate() error {
+
+	if v.Cluster == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Cluster",
+			ParentName:    "RunClusterCustomServiceInput",
+		}
+	}
+
+	if v.Service == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Service",
+			ParentName:    "RunClusterCustomServiceInput",
+		}
+	}
+
+	return nil
+}
+
+type RunClusterCustomServiceOutput struct {
+	Message   *string `json:"message" name:"message"`
+	Action    *string `json:"action" name:"action" location:"elements"`
+	ClusterID *string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	JobID     *string `json:"job_id" name:"job_id" location:"elements"`
+	RetCode   *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Role      *string `json:"role" name:"role" location:"elements"`
+	Service   *string `json:"service" name:"service" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/start_clusters.html
@@ -668,10 +1210,17 @@ func (s *ClusterService) StartClusters(i *StartClustersInput) (*StartClustersOut
 }
 
 type StartClustersInput struct {
-	Clusters []*string `json:"clusters" name:"clusters" location:"params"`
+	Clusters []*string `json:"clusters" name:"clusters" location:"params"` // Required
 }
 
 func (v *StartClustersInput) Validate() error {
+
+	if len(v.Clusters) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Clusters",
+			ParentName:    "StartClustersInput",
+		}
+	}
 
 	return nil
 }
@@ -710,11 +1259,18 @@ func (s *ClusterService) StopClusters(i *StopClustersInput) (*StopClustersOutput
 }
 
 type StopClustersInput struct {
-	Clusters []*string `json:"clusters" name:"clusters" location:"params"`
+	Clusters []*string `json:"clusters" name:"clusters" location:"params"` // Required
 	Force    *int      `json:"force" name:"force" location:"params"`
 }
 
 func (v *StopClustersInput) Validate() error {
+
+	if len(v.Clusters) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Clusters",
+			ParentName:    "StopClustersInput",
+		}
+	}
 
 	return nil
 }
@@ -724,47 +1280,6 @@ type StopClustersOutput struct {
 	Action  *string            `json:"action" name:"action" location:"elements"`
 	JobIDs  map[string]*string `json:"job_ids" name:"job_ids" location:"elements"`
 	RetCode *int               `json:"ret_code" name:"ret_code" location:"elements"`
-}
-
-// Documentation URL: https://docs.qingcloud.com/api/cluster/suspend_clusters.html
-func (s *ClusterService) SuspendClusters(i *SuspendClustersInput) (*SuspendClustersOutput, error) {
-	if i == nil {
-		i = &SuspendClustersInput{}
-	}
-	o := &data.Operation{
-		Config:        s.Config,
-		Properties:    s.Properties,
-		APIName:       "SuspendClusters",
-		RequestMethod: "GET",
-	}
-
-	x := &SuspendClustersOutput{}
-	r, err := request.New(o, i, x)
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.Send()
-	if err != nil {
-		return nil, err
-	}
-
-	return x, err
-}
-
-type SuspendClustersInput struct {
-	Clusters []*string `json:"clusters" name:"clusters" location:"params"`
-}
-
-func (v *SuspendClustersInput) Validate() error {
-
-	return nil
-}
-
-type SuspendClustersOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/cluster/update_cluster_environment.html
@@ -837,8 +1352,9 @@ func (s *ClusterService) UpgradeClusters(i *UpgradeClustersInput) (*UpgradeClust
 }
 
 type UpgradeClustersInput struct {
-	AppVersion *string   `json:"app_version" name:"app_version" location:"params"`
-	Clusters   []*string `json:"clusters" name:"clusters" location:"params"`
+	AppVersion    *string   `json:"app_version" name:"app_version" location:"params"`
+	Clusters      []*string `json:"clusters" name:"clusters" location:"params"`
+	ServiceParams *string   `json:"service_params" name:"service_params" location:"params"`
 }
 
 func (v *UpgradeClustersInput) Validate() error {
@@ -847,7 +1363,8 @@ func (v *UpgradeClustersInput) Validate() error {
 }
 
 type UpgradeClustersOutput struct {
-	Message *string `json:"message" name:"message"`
-	Action  *string `json:"action" name:"action" location:"elements"`
-	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	Message   *string   `json:"message" name:"message"`
+	Action    *string   `json:"action" name:"action" location:"elements"`
+	ClusterID []*string `json:"cluster_id" name:"cluster_id" location:"elements"`
+	RetCode   *int      `json:"ret_code" name:"ret_code" location:"elements"`
 }

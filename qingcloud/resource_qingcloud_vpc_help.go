@@ -70,6 +70,9 @@ func applyRouterUpdate(routerId *string, meta interface{}) error {
 }
 
 func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.DescribeRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
@@ -84,6 +87,6 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.RouterSet[0].CreateTime)
+	WaitForLease(output.RouterSet[0].StatusTime)
 	return nil
 }

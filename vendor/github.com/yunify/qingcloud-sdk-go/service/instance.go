@@ -623,8 +623,8 @@ type RunInstancesInput struct {
 	NeedUserdata  *int    `json:"need_userdata" name:"need_userdata" default:"0" location:"params"`
 	SecurityGroup *string `json:"security_group" name:"security_group" location:"params"`
 	UIType        *string `json:"ui_type" name:"ui_type" location:"params"`
-	UserdataFile  *string `json:"userdata_file" name:"userdata_file" default:"etc/rc.local" location:"params"`
-	UserdataPath  *string `json:"userdata_path" name:"userdata_path" default:"etc/qingcloud/userdata" location:"params"`
+	UserdataFile  *string `json:"userdata_file" name:"userdata_file" default:"/etc/rc.local" location:"params"`
+	UserdataPath  *string `json:"userdata_path" name:"userdata_path" default:"/etc/qingcloud/userdata" location:"params"`
 	// UserdataType's available values: plain, exec, tar
 	UserdataType  *string   `json:"userdata_type" name:"userdata_type" location:"params"`
 	UserdataValue *string   `json:"userdata_value" name:"userdata_value" location:"params"`

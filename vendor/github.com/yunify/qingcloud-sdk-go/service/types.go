@@ -396,38 +396,62 @@ func (v *CachePrivateIP) Validate() error {
 }
 
 type Cluster struct {
-	AppID                      *string    `json:"app_id" name:"app_id"`
-	AppVersion                 *string    `json:"app_version" name:"app_version"`
-	AutoBackupTime             *int       `json:"auto_backup_time" name:"auto_backup_time"`
-	CfgmgmtID                  *string    `json:"cfgmgmt_id" name:"cfgmgmt_id"`
-	ClusterID                  *string    `json:"cluster_id" name:"cluster_id"`
-	ClusterType                *int       `json:"cluster_type" name:"cluster_type"`
-	ConsoleID                  *string    `json:"console_id" name:"console_id"`
-	Controller                 *string    `json:"controller" name:"controller"`
-	CreateTime                 *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
-	Debug                      *int       `json:"debug" name:"debug"`
-	Description                *string    `json:"description" name:"description"`
-	GlobalUUID                 *string    `json:"global_uuid" name:"global_uuid"`
-	IncrementalBackupSupported *int       `json:"incremental_backup_supported" name:"incremental_backup_supported"`
-	LatestSnapshotTime         *string    `json:"latest_snapshot_time" name:"latest_snapshot_time"`
-	MetadataRootAccess         *int       `json:"metadata_root_access" name:"metadata_root_access"`
-	Name                       *string    `json:"name" name:"name"`
-	NodeCount                  *int       `json:"node_count" name:"node_count"`
-	Owner                      *string    `json:"owner" name:"owner"`
-	PartnerAccess              *int       `json:"partner_access" name:"partner_access"`
-	ReuseHyper                 *int       `json:"reuse_hyper" name:"reuse_hyper"`
-	Roles                      []*string  `json:"roles" name:"roles"`
-	RootUserID                 *string    `json:"root_user_id" name:"root_user_id"`
-	Status                     *string    `json:"status" name:"status"`
-	StatusTime                 *time.Time `json:"status_time" name:"status_time" format:"ISO 8601"`
-	SubCode                    *int       `json:"sub_code" name:"sub_code"`
-	TransitionStatus           *string    `json:"transition_status" name:"transition_status"`
-	UpgradeStatus              *string    `json:"upgrade_status" name:"upgrade_status"`
-	UpgradeTime                *time.Time `json:"upgrade_time" name:"upgrade_time" format:"ISO 8601"`
-	VxNet                      *VxNet     `json:"vxnet" name:"vxnet"`
+	AdvancedActions            map[string]*string `json:"advanced_actions" name:"advanced_actions"`
+	AppID                      *string            `json:"app_id" name:"app_id"`
+	AppInfo                    interface{}        `json:"app_info" name:"app_info"`
+	AppVersion                 *string            `json:"app_version" name:"app_version"`
+	AppVersionInfo             interface{}        `json:"app_version_info" name:"app_version_info"`
+	AutoBackupTime             *int               `json:"auto_backup_time" name:"auto_backup_time"`
+	Backup                     map[string]*bool   `json:"backup" name:"backup"`
+	BackupPolicy               *string            `json:"backup_policy" name:"backup_policy"`
+	BackupService              interface{}        `json:"backup_service" name:"backup_service"`
+	CfgmgmtID                  *string            `json:"cfgmgmt_id" name:"cfgmgmt_id"`
+	ClusterID                  *string            `json:"cluster_id" name:"cluster_id"`
+	ClusterType                *int               `json:"cluster_type" name:"cluster_type"`
+	ConsoleID                  *string            `json:"console_id" name:"console_id"`
+	Controller                 *string            `json:"controller" name:"controller"`
+	CreateTime                 *time.Time         `json:"create_time" name:"create_time" format:"ISO 8601"`
+	CustomService              interface{}        `json:"custom_service" name:"custom_service"`
+	Debug                      *bool              `json:"debug" name:"debug"`
+	Description                *string            `json:"description" name:"description"`
+	DisplayTabs                interface{}        `json:"display_tabs" name:"display_tabs"`
+	Endpoints                  interface{}        `json:"endpoints" name:"endpoints"`
+	GlobalUUID                 *string            `json:"global_uuid" name:"global_uuid"`
+	HealthCheckEnablement      map[string]*bool   `json:"health_check_enablement" name:"health_check_enablement"`
+	IncrementalBackupSupported *bool              `json:"incremental_backup_supported" name:"incremental_backup_supported"`
+	LatestSnapshotTime         *string            `json:"latest_snapshot_time" name:"latest_snapshot_time"`
+	Links                      map[string]*string `json:"links" name:"links"`
+	MetadataRootAccess         *int               `json:"metadata_root_access" name:"metadata_root_access"`
+	Name                       *string            `json:"name" name:"name"`
+	NodeCount                  *int               `json:"node_count" name:"node_count"`
+	Nodes                      []*ClusterNode     `json:"nodes" name:"nodes"`
+	Owner                      *string            `json:"owner" name:"owner"`
+	PartnerAccess              *bool              `json:"partner_access" name:"partner_access"`
+	RestoreService             interface{}        `json:"restore_service" name:"restore_service"`
+	ReuseHyper                 *int               `json:"reuse_hyper" name:"reuse_hyper"`
+	RoleCount                  map[string]*int    `json:"role_count" name:"role_count"`
+	Roles                      []*string          `json:"roles" name:"roles"`
+	RootUserID                 *string            `json:"root_user_id" name:"root_user_id"`
+	SecurityGroupID            *string            `json:"security_group_id" name:"security_group_id"`
+	Status                     *string            `json:"status" name:"status"`
+	StatusTime                 *time.Time         `json:"status_time" name:"status_time" format:"ISO 8601"`
+	SubCode                    *int               `json:"sub_code" name:"sub_code"`
+	TransitionStatus           *string            `json:"transition_status" name:"transition_status"`
+	UpgradePolicy              []*string          `json:"upgrade_policy" name:"upgrade_policy"`
+	UpgradeStatus              *string            `json:"upgrade_status" name:"upgrade_status"`
+	UpgradeTime                *time.Time         `json:"upgrade_time" name:"upgrade_time" format:"ISO 8601"`
+	VxNet                      *VxNet             `json:"vxnet" name:"vxnet"`
 }
 
 func (v *Cluster) Validate() error {
+
+	if len(v.Nodes) > 0 {
+		for _, property := range v.Nodes {
+			if err := property.Validate(); err != nil {
+				return err
+			}
+		}
+	}
 
 	if v.VxNet != nil {
 		if err := v.VxNet.Validate(); err != nil {
@@ -439,52 +463,68 @@ func (v *Cluster) Validate() error {
 }
 
 type ClusterNode struct {
-	AgentInstalled             *int       `json:"agent_installed" name:"agent_installed"`
-	AlarmStatus                *string    `json:"alarm_status" name:"alarm_status"`
-	AppID                      *string    `json:"app_id" name:"app_id"`
-	AppVersion                 *string    `json:"app_version" name:"app_version"`
-	AutoBackup                 *int       `json:"auto_backup" name:"auto_backup"`
-	ClusterID                  *string    `json:"cluster_id" name:"cluster_id"`
-	ConsoleID                  *string    `json:"console_id" name:"console_id"`
-	Controller                 *string    `json:"controller" name:"controller"`
-	CPU                        *int       `json:"cpu" name:"cpu"`
-	CreateTime                 *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
-	CustomService              *string    `json:"custom_service" name:"custom_service"`
-	Debug                      *int       `json:"debug" name:"debug"`
-	GlobalServerID             *int       `json:"global_server_id" name:"global_server_id"`
-	GroupID                    *int       `json:"group_id" name:"group_id"`
-	HealthCheck                *string    `json:"health_check" name:"health_check"`
-	HealthStatus               *string    `json:"health_status" name:"health_status"`
-	Hypervisor                 *string    `json:"hypervisor" name:"hypervisor"`
-	ImageID                    *string    `json:"image_id" name:"image_id"`
-	IncrementalBackupSupported *int       `json:"incremental_backup_supported" name:"incremental_backup_supported"`
-	InitService                *string    `json:"init_service" name:"init_service"`
-	InstanceID                 *string    `json:"instance_id" name:"instance_id"`
-	IsBackup                   *int       `json:"is_backup" name:"is_backup"`
-	Memory                     *int       `json:"memory" name:"memory"`
-	Monitor                    *string    `json:"monitor" name:"monitor"`
-	Name                       *string    `json:"name" name:"name"`
-	NodeID                     *string    `json:"node_id" name:"node_id"`
-	Owner                      *string    `json:"owner" name:"owner"`
-	PrivateIP                  *string    `json:"private_ip" name:"private_ip"`
-	Repl                       *string    `json:"repl" name:"repl"`
-	RestartService             *string    `json:"restart_service" name:"restart_service"`
-	Role                       *string    `json:"role" name:"role"`
-	RootUserID                 *string    `json:"root_user_id" name:"root_user_id"`
-	ScaleInService             *string    `json:"scale_in_service" name:"scale_in_service"`
-	ScaleOutService            *string    `json:"scale_out_service" name:"scale_out_service"`
-	ServerID                   *int       `json:"server_id" name:"server_id"`
-	SingleNodeRepl             *string    `json:"single_node_repl" name:"single_node_repl"`
-	StartService               *string    `json:"start_service" name:"start_service"`
-	Status                     *string    `json:"status" name:"status"`
-	StatusTime                 *time.Time `json:"status_time" name:"status_time" format:"ISO 8601"`
-	StopService                *string    `json:"stop_service" name:"stop_service"`
-	StorageSize                *int       `json:"storage_size" name:"storage_size"`
-	TransitionStatus           *string    `json:"transition_status" name:"transition_status"`
-	UserAccess                 *string    `json:"user_access" name:"user_access"`
-	VerticalScalingPolicy      *string    `json:"vertical_scaling_policy" name:"vertical_scaling_policy"`
-	VolumeIDs                  *string    `json:"volume_ids" name:"volume_ids"`
-	VxNetID                    *string    `json:"vxnet_id" name:"vxnet_id"`
+	AdvancedActions            *string     `json:"advanced_actions" name:"advanced_actions"`
+	AgentInstalled             *bool       `json:"agent_installed" name:"agent_installed"`
+	AlarmStatus                *string     `json:"alarm_status" name:"alarm_status"`
+	AppID                      *string     `json:"app_id" name:"app_id"`
+	AppVersion                 *string     `json:"app_version" name:"app_version"`
+	AutoBackup                 *int        `json:"auto_backup" name:"auto_backup"`
+	BackupPolicy               *string     `json:"backup_policy" name:"backup_policy"`
+	BackupService              interface{} `json:"backup_service" name:"backup_service"`
+	ClusterID                  *string     `json:"cluster_id" name:"cluster_id"`
+	ConsoleID                  *string     `json:"console_id" name:"console_id"`
+	Controller                 *string     `json:"controller" name:"controller"`
+	CPU                        *int        `json:"cpu" name:"cpu"`
+	CreateTime                 *time.Time  `json:"create_time" name:"create_time" format:"ISO 8601"`
+	CustomMetadataScript       interface{} `json:"custom_metadata_script" name:"custom_metadata_script"`
+	CustomService              interface{} `json:"custom_service" name:"custom_service"`
+	Debug                      *bool       `json:"debug" name:"debug"`
+	DestroyService             interface{} `json:"destroy_service" name:"destroy_service"`
+	DisplayTabs                interface{} `json:"display_tabs" name:"display_tabs"`
+	EIP                        *string     `json:"eip" name:"eip"`
+	Env                        *string     `json:"env" name:"env"`
+	GlobalServerID             *int        `json:"global_server_id" name:"global_server_id"`
+	Gpu                        *int        `json:"gpu" name:"gpu"`
+	GpuClass                   *int        `json:"gpu_class" name:"gpu_class"`
+	GroupID                    *int        `json:"group_id" name:"group_id"`
+	HealthCheck                interface{} `json:"health_check" name:"health_check"`
+	HealthStatus               *string     `json:"health_status" name:"health_status"`
+	Hypervisor                 *string     `json:"hypervisor" name:"hypervisor"`
+	ImageID                    *string     `json:"image_id" name:"image_id"`
+	IncrementalBackupSupported *bool       `json:"incremental_backup_supported" name:"incremental_backup_supported"`
+	InitService                interface{} `json:"init_service" name:"init_service"`
+	InstanceID                 *string     `json:"instance_id" name:"instance_id"`
+	IsBackup                   *int        `json:"is_backup" name:"is_backup"`
+	Memory                     *int        `json:"memory" name:"memory"`
+	Monitor                    interface{} `json:"monitor" name:"monitor"`
+	Name                       *string     `json:"name" name:"name"`
+	NodeID                     *string     `json:"node_id" name:"node_id"`
+	Owner                      *string     `json:"owner" name:"owner"`
+	Passphraseless             *string     `json:"passphraseless" name:"passphraseless"`
+	PrivateIP                  *string     `json:"private_ip" name:"private_ip"`
+	Repl                       *string     `json:"repl" name:"repl"`
+	ResourceClass              *int        `json:"resource_class" name:"resource_class"`
+	RestartService             interface{} `json:"restart_service" name:"restart_service"`
+	RestoreService             interface{} `json:"restore_service" name:"restore_service"`
+	Role                       *string     `json:"role" name:"role"`
+	RootUserID                 *string     `json:"root_user_id" name:"root_user_id"`
+	ScaleInService             interface{} `json:"scale_in_service" name:"scale_in_service"`
+	ScaleOutService            interface{} `json:"scale_out_service" name:"scale_out_service"`
+	SecurityGroup              *string     `json:"security_group" name:"security_group"`
+	ServerID                   *int        `json:"server_id" name:"server_id"`
+	ServerIDUpperBound         *int        `json:"server_id_upper_bound" name:"server_id_upper_bound"`
+	SingleNodeRepl             *string     `json:"single_node_repl" name:"single_node_repl"`
+	StartService               interface{} `json:"start_service" name:"start_service"`
+	Status                     *string     `json:"status" name:"status"`
+	StatusTime                 *time.Time  `json:"status_time" name:"status_time" format:"ISO 8601"`
+	StopService                interface{} `json:"stop_service" name:"stop_service"`
+	StorageSize                *int        `json:"storage_size" name:"storage_size"`
+	TransitionStatus           *string     `json:"transition_status" name:"transition_status"`
+	UserAccess                 *int        `json:"user_access" name:"user_access"`
+	VerticalScalingPolicy      *string     `json:"vertical_scaling_policy" name:"vertical_scaling_policy"`
+	VolumeIDs                  *string     `json:"volume_ids" name:"volume_ids"`
+	VolumeType                 *int        `json:"volume_type" name:"volume_type"`
+	VxNetID                    *string     `json:"vxnet_id" name:"vxnet_id"`
 }
 
 func (v *ClusterNode) Validate() error {
@@ -1164,6 +1204,7 @@ type LoadBalancer struct {
 	Cluster     []*EIP     `json:"cluster" name:"cluster"`
 	CreateTime  *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
 	Description *string    `json:"description" name:"description"`
+	EIPs        []*EIP     `json:"eips" name:"eips"`
 	// IsApplied's available values: 0, 1
 	IsApplied        *int                    `json:"is_applied" name:"is_applied"`
 	Listeners        []*LoadBalancerListener `json:"listeners" name:"listeners"`
@@ -1171,6 +1212,7 @@ type LoadBalancer struct {
 	LoadBalancerName *string                 `json:"loadbalancer_name" name:"loadbalancer_name"`
 	// LoadBalancerType's available values: 0, 1, 2, 3, 4, 5
 	LoadBalancerType *int      `json:"loadbalancer_type" name:"loadbalancer_type"`
+	NodeCount        *int      `json:"node_count" name:"node_count"`
 	PrivateIPs       []*string `json:"private_ips" name:"private_ips"`
 	SecurityGroupID  *string   `json:"security_group_id" name:"security_group_id"`
 	// Status's available values: pending, active, stopped, suspended, deleted, ceased
@@ -1186,6 +1228,14 @@ func (v *LoadBalancer) Validate() error {
 
 	if len(v.Cluster) > 0 {
 		for _, property := range v.Cluster {
+			if err := property.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(v.EIPs) > 0 {
+		for _, property := range v.EIPs {
 			if err := property.Validate(); err != nil {
 				return err
 			}
@@ -1326,6 +1376,7 @@ type LoadBalancerListener struct {
 	LoadBalancerListenerName *string    `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name"`
 	ServerCertificateID      *string    `json:"server_certificate_id" name:"server_certificate_id"`
 	SessionSticky            *string    `json:"session_sticky" name:"session_sticky"`
+	Timeout                  *int       `json:"timeout" name:"timeout"`
 }
 
 func (v *LoadBalancerListener) Validate() error {

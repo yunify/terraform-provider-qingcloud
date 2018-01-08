@@ -30,7 +30,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/transport"
@@ -163,7 +162,7 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 		if ct != encoding.Identity {
 			comp = encoding.GetCompressor(ct)
 			if comp == nil {
-				return nil, Errorf(codes.Internal, "grpc: Compressor is not installed for requested grpc-encoding %q", ct)
+				return nil, status.Errorf(codes.Internal, "grpc: Compressor is not installed for requested grpc-encoding %q", ct)
 			}
 		}
 	} else if cc.dopts.cp != nil {
@@ -253,10 +252,7 @@ func newClientStream(ctx context.Context, desc *StreamDesc, cc *ClientConn, meth
 		break
 	}
 
-	// Set callInfo.peer object from stream's context.
-	if peer, ok := peer.FromContext(s.Context()); ok {
-		c.peer = peer
-	}
+	c.stream = s
 	cs := &clientStream{
 		opts:   opts,
 		c:      c,
@@ -400,10 +396,10 @@ func (cs *clientStream) SendMsg(m interface{}) (err error) {
 		return err
 	}
 	if cs.c.maxSendMessageSize == nil {
-		return Errorf(codes.Internal, "callInfo maxSendMessageSize field uninitialized(nil)")
+		return status.Errorf(codes.Internal, "callInfo maxSendMessageSize field uninitialized(nil)")
 	}
 	if len(data) > *cs.c.maxSendMessageSize {
-		return Errorf(codes.ResourceExhausted, "trying to send message larger than max (%d vs. %d)", len(data), *cs.c.maxSendMessageSize)
+		return status.Errorf(codes.ResourceExhausted, "trying to send message larger than max (%d vs. %d)", len(data), *cs.c.maxSendMessageSize)
 	}
 	err = cs.t.Write(cs.s, hdr, data, &transport.Options{Last: false})
 	if err == nil && outPayload != nil {
@@ -421,7 +417,7 @@ func (cs *clientStream) RecvMsg(m interface{}) (err error) {
 		}
 	}
 	if cs.c.maxReceiveMessageSize == nil {
-		return Errorf(codes.Internal, "callInfo maxReceiveMessageSize field uninitialized(nil)")
+		return status.Errorf(codes.Internal, "callInfo maxReceiveMessageSize field uninitialized(nil)")
 	}
 	if !cs.decompSet {
 		// Block until we receive headers containing received message encoding.
@@ -463,7 +459,7 @@ func (cs *clientStream) RecvMsg(m interface{}) (err error) {
 		// Special handling for client streaming rpc.
 		// This recv expects EOF or errors, so we don't collect inPayload.
 		if cs.c.maxReceiveMessageSize == nil {
-			return Errorf(codes.Internal, "callInfo maxReceiveMessageSize field uninitialized(nil)")
+			return status.Errorf(codes.Internal, "callInfo maxReceiveMessageSize field uninitialized(nil)")
 		}
 		err = recv(cs.p, cs.codec, cs.s, cs.dc, m, *cs.c.maxReceiveMessageSize, nil, cs.decomp)
 		cs.closeTransportStream(err)
@@ -660,7 +656,7 @@ func (ss *serverStream) SendMsg(m interface{}) (err error) {
 		return err
 	}
 	if len(data) > ss.maxSendMessageSize {
-		return Errorf(codes.ResourceExhausted, "trying to send message larger than max (%d vs. %d)", len(data), ss.maxSendMessageSize)
+		return status.Errorf(codes.ResourceExhausted, "trying to send message larger than max (%d vs. %d)", len(data), ss.maxSendMessageSize)
 	}
 	if err := ss.t.Write(ss.s, hdr, data, &transport.Options{Last: false}); err != nil {
 		return toRPCErr(err)
@@ -700,7 +696,7 @@ func (ss *serverStream) RecvMsg(m interface{}) (err error) {
 			return err
 		}
 		if err == io.ErrUnexpectedEOF {
-			err = Errorf(codes.Internal, io.ErrUnexpectedEOF.Error())
+			err = status.Errorf(codes.Internal, io.ErrUnexpectedEOF.Error())
 		}
 		return toRPCErr(err)
 	}

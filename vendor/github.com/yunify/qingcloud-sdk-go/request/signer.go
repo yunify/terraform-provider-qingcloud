@@ -99,6 +99,7 @@ func (is *Signer) BuildStringToSign(request *http.Request) (string, error) {
 	}
 	return "", fmt.Errorf("Requset Type Not Support For Sign ")
 }
+
 // BuildStringToSignByValues build the string to sign.
 func (is *Signer) BuildStringToSignByValues(requestDate string, requestMethod string, requestPath string, requestParams url.Values) (string, error) {
 	requestParams.Set("access_key_id", is.AccessKeyID)

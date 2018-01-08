@@ -19,9 +19,10 @@ import (
 )
 
 type Config struct {
-	ID     string
-	Secret string
-	Zone   string
+	ID       string
+	Secret   string
+	Zone     string
+	EndPoint string
 }
 
 type QingCloudClient struct {
@@ -40,11 +41,11 @@ type QingCloudClient struct {
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
-	cfg, err := config.New(c.ID, c.Secret)
-	cfg.LogLevel = "debug"
+	cfg, err := config.NewWithEndpoint(c.ID, c.Secret, c.EndPoint)
 	if err != nil {
 		return nil, err
 	}
+	cfg.LogLevel = "debug"
 	clt, err := qc.Init(cfg)
 	if err != nil {
 		return nil, err

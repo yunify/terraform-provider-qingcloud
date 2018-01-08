@@ -16,16 +16,19 @@ package qingcloud
 import (
 	"fmt"
 	"log"
+	"os"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
-	"testing"
 )
 
 func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 	var sgr qc.DescribeSecurityGroupRulesOutput
+	testTag := "terraform-test-sgr-basic" + os.Getenv("CIRCLE_BUILD_NUM")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -35,7 +38,7 @@ func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckSecurityGroupRuleDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccSecurityGroupRuleConfig,
+				Config: fmt.Sprintf(testAccSecurityGroupRuleConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("qingcloud_security_group_rule.foo", &sgr),
 					resource.TestCheckResourceAttr(
@@ -53,7 +56,7 @@ func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccSecurityGroupRuleConfigTwo,
+				Config: fmt.Sprintf(testAccSecurityGroupRuleConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("qingcloud_security_group_rule.foo", &sgr),
 					resource.TestCheckResourceAttr(
@@ -127,6 +130,10 @@ func testAccCheckSecurityGroupRuleDestroyWithProvider(s *terraform.State, provid
 const testAccSecurityGroupRuleConfig = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 
 resource "qingcloud_security_group_rule" "foo"{
@@ -142,6 +149,10 @@ resource "qingcloud_security_group_rule" "foo"{
 const testAccSecurityGroupRuleConfigTwo = `
 resource "qingcloud_security_group" "foo" {
     name = "first_sg"
+	tag_ids = ["${qingcloud_tag.test.id}"]
+}
+resource "qingcloud_tag" "test"{
+	name="%v"
 }
 
 resource "qingcloud_security_group_rule" "foo"{

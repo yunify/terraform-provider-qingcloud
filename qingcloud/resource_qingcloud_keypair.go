@@ -30,6 +30,10 @@ func resourceQingcloudKeypair() *schema.Resource {
 		Read:   resourceQingcloudKeypairRead,
 		Update: resourceQingcloudKeypairUpdate,
 		Delete: resourceQingcluodKeypairDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
@@ -42,7 +46,11 @@ func resourceQingcloudKeypair() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					switch v.(type) {
 					case string:
-						return strings.TrimSpace(v.(string))
+						keypair := strings.Split(strings.TrimSpace(v.(string)), " ")
+						if len(keypair) >= 2 {
+							return keypair[0] + " " + keypair[1]
+						}
+						return ""
 					default:
 						return ""
 					}
@@ -98,6 +106,7 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	kp := output.KeyPairSet[0]
 	d.Set(resourceName, qc.StringValue(kp.KeyPairName))
 	d.Set(resourceDescription, qc.StringValue(kp.Description))
+	d.Set(resourceKeyPairPublicKey, qc.StringValue(kp.EncryptMethod)+" "+qc.StringValue(kp.PubKey))
 	resourceSetTag(d, kp.Tags)
 	return nil
 }

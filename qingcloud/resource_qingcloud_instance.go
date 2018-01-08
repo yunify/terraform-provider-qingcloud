@@ -40,6 +40,10 @@ func resourceQingcloudInstance() *schema.Resource {
 		Read:   resourceQingcloudInstanceRead,
 		Update: resourceQingcloudInstanceUpdate,
 		Delete: resourceQingcloudInstanceDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,
@@ -76,7 +80,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			resourceInstanceManagedVxnetID: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "vxnet-0",
+				Default:  BasicNetworkID,
 			},
 			resourceInstancePrivateIP: &schema.Schema{
 				Type:     schema.TypeString,
@@ -198,7 +202,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 				d.Set(resourceInstanceManagedVxnetID, qc.StringValue(vxnet.VxNetID))
 				d.Set(resourceInstancePrivateIP, qc.StringValue(vxnet.PrivateIP))
 			} else {
-				d.Set(resourceInstanceManagedVxnetID, "vxnet-0")
+				d.Set(resourceInstanceManagedVxnetID, BasicNetworkID)
 				d.Set(resourceInstancePrivateIP, qc.StringValue(vxnet.PrivateIP))
 			}
 		}

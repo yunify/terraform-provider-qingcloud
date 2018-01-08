@@ -98,7 +98,7 @@ func instanceUpdateChangeManagedVxNet(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("can not use selfManaged ip as Managed ip")
 		}
 		joinVxnetInput := new(qc.JoinVxNetInput)
-		if newV.(string) != "vxnet-0" && d.HasChange(resourceInstancePrivateIP) && d.Get(resourceInstancePrivateIP).(string) != "" {
+		if newV.(string) != BasicNetworkID && d.HasChange(resourceInstancePrivateIP) && d.Get(resourceInstancePrivateIP).(string) != "" {
 			newV = fmt.Sprintf("%s|%s", newV.(string), d.Get(resourceInstancePrivateIP).(string))
 		}
 		joinVxnetInput.Instances = []*string{qc.String(d.Id())}
@@ -417,6 +417,9 @@ func updateInstanceVolume(d *schema.ResourceData, meta interface{}) error {
 }
 
 func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		return nil
+	}
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.DescribeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
@@ -431,7 +434,7 @@ func waitInstanceLease(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	//wait for lease info
-	WaitForLease(output.InstanceSet[0].CreateTime)
+	WaitForLease(output.InstanceSet[0].StatusTime)
 	return nil
 }
 

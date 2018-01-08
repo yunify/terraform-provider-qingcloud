@@ -36,6 +36,10 @@ func resourceQingcloudEip() *schema.Resource {
 		Read:   resourceQingcloudEipRead,
 		Update: resourceQingcloudEipUpdate,
 		Delete: resourceQingcloudEipDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			resourceName: &schema.Schema{
 				Type:     schema.TypeString,

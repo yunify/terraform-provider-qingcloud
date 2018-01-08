@@ -38,18 +38,26 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				Description: descriptions["zone"],
 			},
+			"endpoint": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["endpoint"],
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"qingcloud_eip":                 resourceQingcloudEip(),
-			"qingcloud_keypair":             resourceQingcloudKeypair(),
-			"qingcloud_security_group":      resourceQingcloudSecurityGroup(),
-			"qingcloud_security_group_rule": resourceQingcloudSecurityGroupRule(),
-			"qingcloud_vxnet":               resourceQingcloudVxnet(),
-			"qingcloud_vpc":                 resourceQingcloudVpc(),
-			"qingcloud_instance":            resourceQingcloudInstance(),
-			"qingcloud_volume":              resourceQingcloudVolume(),
-			"qingcloud_tag":                 resourceQingcloudTag(),
-			"qingcloud_vpc_static":          resourceQingcloudVpcStatic(),
+			"qingcloud_eip":                   resourceQingcloudEip(),
+			"qingcloud_keypair":               resourceQingcloudKeypair(),
+			"qingcloud_security_group":        resourceQingcloudSecurityGroup(),
+			"qingcloud_security_group_rule":   resourceQingcloudSecurityGroupRule(),
+			"qingcloud_vxnet":                 resourceQingcloudVxnet(),
+			"qingcloud_vpc":                   resourceQingcloudVpc(),
+			"qingcloud_instance":              resourceQingcloudInstance(),
+			"qingcloud_volume":                resourceQingcloudVolume(),
+			"qingcloud_tag":                   resourceQingcloudTag(),
+			"qingcloud_vpc_static":            resourceQingcloudVpcStatic(),
+			"qingcloud_loadbalancer":          resourceQingcloudLoadBalancer(),
+			"qingcloud_loadbalancer_listener": resourceQingcloudLoadBalancerListener(),
+			"qingcloud_server_certificate":    resourceQingcloudServerCertificate(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -71,10 +79,19 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 			zone = DEFAULT_ZONE
 		}
 	}
+	endpoint, ok := d.GetOk("endpoint")
+	if !ok {
+		endpoint = os.Getenv("QINGCLOUD_ENDPOINT")
+		if endpoint == "" {
+			endpoint = DEFAULT_ENDPOINT
+		}
+	}
+
 	config := Config{
-		ID:     accesskey.(string),
-		Secret: secretkey.(string),
-		Zone:   zone.(string),
+		ID:       accesskey.(string),
+		Secret:   secretkey.(string),
+		Zone:     zone.(string),
+		EndPoint: endpoint.(string),
 	}
 	return config.Client()
 }
@@ -86,5 +103,6 @@ func init() {
 		"access_key": "qingcloud access key ID ",
 		"secret_key": "qingcloud access key secret",
 		"zone":       "qingcloud reigon zone",
+		"endpoint":   "qingcloud api endpoint",
 	}
 }

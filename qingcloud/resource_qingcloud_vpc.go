@@ -132,6 +132,7 @@ func resourceQingcloudVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set(resourceVpcPrivateIP, qc.StringValue(rtr.PrivateIP))
 	d.Set(resourceVpcEipID, qc.StringValue(rtr.EIP.EIPID))
 	d.Set(resourceVpcPublicIP, qc.StringValue(rtr.EIP.EIPAddr))
+	resourceSetTag(d, rtr.Tags)
 	return nil
 }
 
