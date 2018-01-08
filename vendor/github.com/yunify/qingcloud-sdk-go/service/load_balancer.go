@@ -842,12 +842,12 @@ func (s *LoadBalancerService) DescribeLoadBalancerBackends(i *DescribeLoadBalanc
 }
 
 type DescribeLoadBalancerBackendsInput struct {
-	Limit                *int    `json:"limit" name:"limit" default:"20" location:"params"`
-	LoadBalancer         *string `json:"loadbalancer" name:"loadbalancer" location:"params"`
-	LoadBalancerBackends *string `json:"loadbalancer_backends" name:"loadbalancer_backends" location:"params"`
-	LoadBalancerListener *string `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"`
-	Offset               *int    `json:"offset" name:"offset" default:"0" location:"params"`
-	Verbose              *int    `json:"verbose" name:"verbose" location:"params"`
+	Limit                *int      `json:"limit" name:"limit" default:"20" location:"params"`
+	LoadBalancer         *string   `json:"loadbalancer" name:"loadbalancer" location:"params"`
+	LoadBalancerBackends []*string `json:"loadbalancer_backends" name:"loadbalancer_backends" location:"params"`
+	LoadBalancerListener *string   `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"`
+	Offset               *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Verbose              *int      `json:"verbose" name:"verbose" location:"params"`
 }
 
 func (v *DescribeLoadBalancerBackendsInput) Validate() error {
