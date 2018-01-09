@@ -44,6 +44,9 @@ func Provider() terraform.ResourceProvider {
 				Description: descriptions["endpoint"],
 			},
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"qingcloud_vpn_cert": dataSourceQingcloudVpnCert(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
 			"qingcloud_eip":                   resourceQingcloudEip(),
 			"qingcloud_keypair":               resourceQingcloudKeypair(),
