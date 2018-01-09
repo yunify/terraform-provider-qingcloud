@@ -74,8 +74,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-The following arguments are supported:  
-
 * `load_balancer_id` - load balancer id .  
 * `name` - The name of load balancer listener.  
 * `listener_port` -  Listening port.  

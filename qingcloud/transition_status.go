@@ -45,9 +45,9 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 		Pending:    []string{"associating", "dissociating", "suspending", "resuming", "releasing"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -76,9 +76,9 @@ func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}
 		Pending:    []string{"creating", "attaching", "detaching", "suspending", "suspending", "resuming", "deleting", "recovering"}, // creating, attaching, detaching, suspending，resuming，deleting，recovering
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -104,9 +104,9 @@ func VolumeDeleteTransitionStateRefresh(clt *qc.VolumeService, id string) (inter
 		Pending:    []string{"pending", "in-use", "suspended", "deleted", "ceased"},
 		Target:     []string{"available"},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -138,9 +138,9 @@ func RouterTransitionStateRefresh(clt *qc.RouterService, id string) (interface{}
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -179,9 +179,9 @@ func InstanceTransitionStateRefresh(clt *qc.InstanceService, id string) (interfa
 		Pending:    []string{"creating", "updating", "suspending", "resuming", "poweroffing", "poweroning", "deleting", "stopping", "starting", "terminating"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -217,9 +217,9 @@ func VxnetLeaveRouterTransitionStateRefresh(clt *qc.VxNetService, id string) (in
 		Pending:    []string{"vxnet_not_leave_router"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -247,9 +247,9 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id *
 		Pending:    []string{"not_updated"},
 		Target:     []string{"updated"},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
@@ -283,9 +283,9 @@ func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id *string)
 		Pending:    []string{"creating", "starting", "stopping", "updating", "suspending", "resuming", "deleting"},
 		Target:     []string{""},
 		Refresh:    refreshFunc,
-		Timeout:    2 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
 	}
 	return stateConf.WaitForState()
 }
