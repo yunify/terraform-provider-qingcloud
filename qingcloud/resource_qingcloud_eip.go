@@ -187,7 +187,7 @@ func resourceQingcloudEipDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 	client.WaitJob(meta.(*QingCloudClient).job,
 		qc.StringValue(output.JobID),
-		time.Duration(10)*time.Second, time.Duration(1)*time.Second)
+		time.Duration(waitJobTimeOutDefault)*time.Second, time.Duration(waitJobIntervalDefault)*time.Second)
 	d.SetId("")
 	return nil
 }
