@@ -9,7 +9,7 @@ const (
 	resourceLoadBalancerBackendResrourceId = "resource_id"
 	resourceLoadBalancerBackendPort        = "port"
 	resourceLoadBalancerBackendWeight      = "weight"
-	resourceLoadBalancerBackendListenerId  = "loadbalancer_listener"
+	resourceLoadBalancerBackendListenerId  = "loadbalancer_listener_id"
 )
 
 func resourceQingcloudLoadBalancerBackend() *schema.Resource {
@@ -40,8 +40,10 @@ func resourceQingcloudLoadBalancerBackend() *schema.Resource {
 				ForceNew: true,
 			},
 			resourceLoadBalancerBackendWeight: &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: withinArrayIntRange(1, 100),
 			},
 		},
 	}
@@ -66,7 +68,11 @@ func resourceQingcloudLoadBalancerBackendCreate(d *schema.ResourceData, meta int
 	if err != nil {
 		return err
 	}
-	if err := updateLoadBalancer(getLBIdFromLBB(d, meta)); err != nil {
+	lbId, err := getLBIdFromLBB(output.LoadBalancerBackends[0], meta)
+	if err != nil {
+		return err
+	}
+	if err := updateLoadBalancer(lbId, meta); err != nil {
 		return nil
 	}
 	d.SetId(qc.StringValue(output.LoadBalancerBackends[0]))
@@ -74,10 +80,14 @@ func resourceQingcloudLoadBalancerBackendCreate(d *schema.ResourceData, meta int
 }
 func resourceQingcloudLoadBalancerBackendDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).loadbalancer
-	input := new(qc.DeleteLoadBalancerBackendsInput)
-	input.LoadBalancerBackends = []*string{qc.String(d.Id())}
 	var output *qc.DeleteLoadBalancerBackendsOutput
 	var err error
+	lbId, err := getLBIdFromLBB(qc.String(d.Id()), meta)
+	if err != nil {
+		return err
+	}
+	input := new(qc.DeleteLoadBalancerBackendsInput)
+	input.LoadBalancerBackends = []*string{qc.String(d.Id())}
 	simpleRetry(func() error {
 		output, err = clt.DeleteLoadBalancerBackends(input)
 		return isServerBusy(err)
@@ -85,7 +95,7 @@ func resourceQingcloudLoadBalancerBackendDelete(d *schema.ResourceData, meta int
 	if err != nil {
 		return err
 	}
-	if err := updateLoadBalancer(getLBIdFromLBB(d, meta)); err != nil {
+	if err := updateLoadBalancer(lbId, meta); err != nil {
 		return nil
 	}
 	d.SetId("")
@@ -135,18 +145,18 @@ func resourceQingcloudLoadBalancerBackendUpdate(d *schema.ResourceData, meta int
 	if err != nil {
 		return err
 	}
-	if err := updateLoadBalancer(qc.String(d.Get(resourceLoadBalancerListenerLBId).(string)), meta); err != nil {
+	if err := updateLoadBalancer(qc.String(d.Get(resourceLoadBalancerBackendListenerId).(string)), meta); err != nil {
 		return nil
 	}
 	return resourceQingcloudLoadBalancerListenerRead(d, meta)
 
 }
 
-func getLBIdFromLBB(d *schema.ResourceData, meta interface{}) (*string, error) {
+func getLBIdFromLBB(lbbId *string, meta interface{}) (*string, error) {
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DescribeLoadBalancerBackendsInput)
 	input.Verbose = qc.Int(1)
-	input.LoadBalancerBackends = []*string{qc.String(d.Id())}
+	input.LoadBalancerBackends = []*string{lbbId}
 	var output *qc.DescribeLoadBalancerBackendsOutput
 	var err error
 	simpleRetry(func() error {
