@@ -1,6 +1,7 @@
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 VETARGS?=-all
 TEST?=$$(go list ./... |grep -v 'vendor')
+RELEASE_TAG=$$(git describe --abbrev=0 --tags)
 
 
 all: build test
@@ -42,11 +43,12 @@ dist-tools:
 
 dist: dist-tools
 	rm -rf ./bin/*
-	gox -osarch="linux/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
-	gox -osarch="darwin/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
-	gox -osarch="windows/amd64" -output=terraform-provider-qingcloud_{{.OS}}-{{.Arch}}
-	mkdir -p ./bin
-	mv terraform-provider-qingcloud_* ./bin
+	mkdir -p ./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)
+	mkdir -p ./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
+	mkdir -p ./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)
+	gox -osarch="linux/amd64" -output=./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
+	gox -osarch="darwin/amd64" -output=./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
+	gox -osarch="windows/amd64" -output=./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
 
 .PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist
