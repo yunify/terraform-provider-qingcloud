@@ -94,6 +94,17 @@ resource "qingcloud_instance" "foo" {
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 }
 ```
+```hcl
+# Create a new Instance with userdata
+resource "qingcloud_instance" "foo" {
+  image_id         = "centos73x64"
+  keypair_ids      = ["${qingcloud_keypair.foo.id}"]
+  userdata = "${base64encode(file("./hello.zip"))}"
+}
+resource "qingcloud_keypair" "foo"{
+	public_key = "    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyLSPqVIdXGH0QlGeWcPwa1fjTRKl6WtMiaSsP8/GnwjakDSKILUCoNe1yIpiK8F0/gmL71xaDQyfl7k6aE+gn6lSLUjpDmucAF1luGg6l7CIN+6hCqY3YqlAI05Tqwu0PdLAwCbGwdHcaWfECcbROJk5D0zpCTHmissrrAxdOv72g9Ple8KJ6C7F1tz6wmG0zUeineguGjW/PvfZiBDWZ/CyXGPeMDJxv3lrIiLa/ShgnQOxFTdHJPCw+F0/XlSzlIzP3gfni1vXxJWvYjdE9ULo7Z1DLWgZ73FCbeAvX/0e9C9jwT21Qa5RUy4pSP8m4WXSJgw2f9IpY1vIJFSZP root@centos1    "
+}
+```
 
 ## Argument Reference
 
@@ -111,6 +122,8 @@ The following arguments are supported:
 * `security_group_id` - (Optional) security group id , instance wants to use.
 * `eip_id` - (Optional) eip id , instance wants to use.
 * `volume_ids` - (Optional) List of volume ids , instance wants to use.
+* `userdata` - (Optional, ForceNew)Maximum 2M  Upload an archive(zip,tar,tgz,tbz), it would be extract in `/` , need base64-encode. 
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -128,3 +141,4 @@ The following attributes are exported:
 * `eip_id` - eip id , instance wants to use.
 * `volume_ids` - List of volume ids , instance wants to use.
 * `public_ip` - Public ip of instance.
+* `userdata` - An archive's base64 code.
