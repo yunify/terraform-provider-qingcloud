@@ -111,6 +111,8 @@ The following arguments are supported:
 * `security_group_id` - (Optional) security group id , instance wants to use.
 * `eip_id` - (Optional) eip id , instance wants to use.
 * `volume_ids` - (Optional) List of volume ids , instance wants to use.
+* `userdata` - (Optional, ForceNew)Maximum 2M  Upload an archive(zip,tar,tgz,tbz), it would be extract in `/` , need base64-encode. 
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -128,3 +130,4 @@ The following attributes are exported:
 * `eip_id` - eip id , instance wants to use.
 * `volume_ids` - List of volume ids , instance wants to use.
 * `public_ip` - Public ip of instance.
+* `userdata` - An archive's base64 code.
