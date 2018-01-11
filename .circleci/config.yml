@@ -59,7 +59,7 @@ workflows:
               only: /.*/
       - release:
           requires:
-            - go-run
+            - test
           filters:
             tags:
               only: /^v.*/
