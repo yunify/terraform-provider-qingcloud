@@ -3,14 +3,13 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  test:
     docker:
       # specify the version
       - image: circleci/golang:1.8
     working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
     steps:
       - checkout
-
       - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
       - run: sudo apt-get install nodejs
       - run: sudo npm install -g codeclimate-test-reporter
@@ -40,3 +39,29 @@ jobs:
 
                  find . -name cov_part.out | xargs cat > cov.out
                  codeclimate-test-reporter < cov.out
+  release:
+    docker:
+      - image: circleci/golang:1.8
+    working_directory: /go/src/github.com/runzexia/circleci-ghr
+    steps:
+      - checkout
+      - run: git config --global user.name runzexia
+      - run: make dist
+      - run: make release
+
+workflows:
+  version: 2
+  test_release:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /.*/
+      - release:
+          requires:
+            - go-run
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

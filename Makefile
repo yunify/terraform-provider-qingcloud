@@ -51,4 +51,10 @@ dist: dist-tools
 	gox -osarch="windows/amd64" -output=./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
 
-.PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist
+release-tools:
+	@go get github.com/tcnksm/ghr
+
+release: release-tools
+	ghr $(RELEASE_TAG) ./bin/
+
+.PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist release-tools release
