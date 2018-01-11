@@ -37,6 +37,7 @@ type QingCloudClient struct {
 	volume        *qc.VolumeService
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
+	userdata      *qc.UserDataService
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -90,6 +91,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	userdata, err := clt.UserData(c.Zone)
 
 	return &QingCloudClient{
 		zone:          c.Zone,
@@ -103,5 +105,6 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		volume:        volume,
 		loadbalancer:  loadbalancer,
 		tag:           tag,
+		userdata:      userdata,
 	}, nil
 }
