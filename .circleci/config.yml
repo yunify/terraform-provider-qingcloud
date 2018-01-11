@@ -42,7 +42,7 @@ jobs:
   release:
     docker:
       - image: circleci/golang:1.8
-    working_directory: /go/src/github.com/runzexia/circleci-ghr
+    working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
     steps:
       - checkout
       - run: git config --global user.name runzexia
