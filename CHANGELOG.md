@@ -24,3 +24,21 @@ IMPROVEMENTS:
 * resource/qingcloud_tag add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
 * resource/qingcloud_volume add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
 * resource/qingcloud_vxnet add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
+
+##1.2 (January 11, 2018)
+
+FEATURES:
+
+* **New Resource**: `qingcloud_loadbalancer`([#115](https://github.com/yunify/terraform-provider-qingcloud/pull/115))
+* **New Resource**: `qingcloud_server_certificate`([#128](https://github.com/yunify/terraform-provider-qingcloud/pull/128))
+* **New Resource**: `qingcloud_loadbalancer_listener`([#129](https://github.com/yunify/terraform-provider-qingcloud/pull/129))
+* **New Resource**: `qingcloud_loadbalancer_backend`([#132](https://github.com/yunify/terraform-provider-qingcloud/pull/132))
+* **New Data Source**: `qingcloud_vpn_cert`([#134](https://github.com/yunify/terraform-provider-qingcloud/pull/134))
+
+IMPROVEMENTS:
+
+* provider: Add version info to help debug.
+* resource/qingcloud_instance Add instance userdata ([#133](https://github.com/yunify/terraform-provider-qingcloud/pull/115))
+* provider: wait resource create finshed time ([#126](https://github.com/yunify/terraform-provider-qingcloud/pull/126))
+* provider: Add ACC test resource tag ([#125](https://github.com/yunify/terraform-provider-qingcloud/pull/125))
+* provider: Use circle ci to run test and release
