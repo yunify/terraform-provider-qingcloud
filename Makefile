@@ -50,11 +50,15 @@ dist: dist-tools
 	gox -osarch="darwin/amd64" -output=./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	gox -osarch="windows/amd64" -output=./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
+	rm -rf ./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)
+	rm -rf ./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
+	rm -rf ./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)
+
 
 release-tools:
 	@go get github.com/tcnksm/ghr
 
 release: release-tools
-	ghr $(RELEASE_TAG) ./bin/
+	ghr -u yunify $(RELEASE_TAG) ./bin/
 
 .PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist release-tools release
