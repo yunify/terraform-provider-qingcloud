@@ -10,6 +10,8 @@ description: |-
 
 Provides a  EIP resource.
 
+Resource can be imported.
+
 ## Example Usage
 
 ```

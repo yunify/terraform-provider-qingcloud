@@ -10,6 +10,8 @@ description: |-
 
 Provides a  Keypair resource.
 
+Resource can be imported.
+
 ## Example Usage
 
 ```

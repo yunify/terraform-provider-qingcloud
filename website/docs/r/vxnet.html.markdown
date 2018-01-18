@@ -10,6 +10,8 @@ description: |-
 
 Provides a  VxNet resource.  
 
+Resource can be imported.
+
 ## Example Usage
 
 ```
