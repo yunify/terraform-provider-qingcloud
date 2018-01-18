@@ -10,6 +10,8 @@ description: |-
 
 Provides a  TAG resource.
 
+Resource can be imported.
+
 ## Example Usage
 
 ```

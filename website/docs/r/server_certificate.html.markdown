@@ -10,6 +10,8 @@ description: |-
 
 Provides a Server Certificate resource.
 
+Resource can be imported.
+
 ## Example Usage
 
 ```
