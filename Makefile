@@ -49,7 +49,9 @@ dist: dist-tools
 	gox -osarch="linux/amd64" -output=./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	gox -osarch="darwin/amd64" -output=./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
 	gox -osarch="windows/amd64" -output=./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
-	cd bin && ls --color=no | xargs -I {} tar -czf {}.tgz {}
+	cd bin && zip -r terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG).zip terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG) \
+	&& tar -czf terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG).tgz terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG) \
+	&& tar -czf terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG).tgz terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
 	rm -rf ./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)
 	rm -rf ./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
 	rm -rf ./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)
