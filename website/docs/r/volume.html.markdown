@@ -10,6 +10,8 @@ description: |-
 
 Provides a  Volume resource.  
 
+Resource can be imported.
+
 ## Example Usage
 
 ```

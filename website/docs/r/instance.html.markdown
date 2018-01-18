@@ -10,6 +10,8 @@ description: |-
 
 Provides a  Instance resource.
 
+Resource can be imported.
+
 ## Example Usage
 
 ```hcl
