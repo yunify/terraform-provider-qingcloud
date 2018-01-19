@@ -1,11 +1,9 @@
-package docs
-
 ---
 layout: "qingcloud"
 page_title: "Provider: qingcloud"
 sidebar_current: "docs-qingcloud-index"
 description: |-
-The Qingcloud provider is used to interact with many resources supported by Qingcloud. The provider needs to be configured with the proper credentials before it can be used.
+  The Qingcloud provider is used to interact with many resources supported by Qingcloud. The provider needs to be configured with the proper credentials before it can be used..
 ---
 
 # Qingcloud Provider
