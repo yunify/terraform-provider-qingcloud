@@ -1,5 +1,3 @@
-package docs
-
 ---
 layout: "qingcloud"
 page_title: "Provider: qingcloud"
