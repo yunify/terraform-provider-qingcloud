@@ -12,6 +12,15 @@ resource "qingcloud_security_group" "basic"{
   description = "这是第一个防火墙"
 }
 
+resource "qingcloud_security_group_rule" "ssh-wordpress-in" {
+  security_group_id = "${qingcloud_security_group.basic.id}"
+  protocol = "tcp"
+  priority = 0
+  action = "accept"
+  direction = 0
+  from_port = 22
+  to_port = 22
+}
 
 # qingcloud_keypair upload an SSH public key
 # In this example, upload ~/.ssh/id_rsa.pub content.
