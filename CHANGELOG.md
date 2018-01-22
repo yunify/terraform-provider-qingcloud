@@ -25,7 +25,7 @@ IMPROVEMENTS:
 * resource/qingcloud_volume add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
 * resource/qingcloud_vxnet add importer ([#105](https://github.com/yunify/terraform-provider-qingcloud/issues/105))
 
-##1.2 (January 11, 2018)
+## 1.2.0 (January 11, 2018)
 
 FEATURES:
 
@@ -42,3 +42,4 @@ IMPROVEMENTS:
 * provider: wait resource create finshed time ([#126](https://github.com/yunify/terraform-provider-qingcloud/pull/126))
 * provider: Add ACC test resource tag ([#125](https://github.com/yunify/terraform-provider-qingcloud/pull/125))
 * provider: Use circle ci to run test and release
+
