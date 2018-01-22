@@ -2,6 +2,9 @@ resource "qingcloud_eip" "foo" {
   bandwidth = 2
 }
 
+# qingcloud_keypair upload an SSH public key
+# In this example, upload ~/.ssh/id_rsa.pub content.
+# You may not have this file in your system, you will need to create your own SSH key.
 resource "qingcloud_keypair" "foo" {
   public_key = "${file("~/.ssh/id_rsa.pub")}"
 }

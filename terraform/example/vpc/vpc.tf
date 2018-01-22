@@ -57,10 +57,12 @@ resource "qingcloud_security_group_rule" "allow-in-81"{
 #    /\ \L\ \/\ \L\ \ \ \ \ \ 
 #    \ `\____\ `\____\ \_\ \_\
 #     \/_____/\/_____/\/_/\/_/
-                            
+
+# qingcloud_keypair upload an SSH public key
+# In this example, upload ~/.ssh/id_rsa.pub content.
+# You may not have this file in your system, you will need to create your own SSH key.
 resource "qingcloud_keypair" "arthur"{
   name = "arthur"
-  description = "sdfafd"
   public_key = "${file("~/.ssh/id_rsa.pub")}"
 }
 

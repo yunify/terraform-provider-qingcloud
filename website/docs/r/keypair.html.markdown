@@ -8,7 +8,7 @@ description: |-
 
 # Qingcloud\_keypair
 
-Provides a  Keypair resource.
+Uploads an SSH public key.
 
 Resource can be imported.
 
@@ -43,6 +43,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of keypair.
 * `description`- (Optional) The description of keypair.
 * `tag_ids` - (Optional) tag ids , keypair wants to use.
+
 ## Attributes Reference
 
 The following attributes are exported:
