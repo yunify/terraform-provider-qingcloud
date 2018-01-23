@@ -139,7 +139,6 @@ func isBase64Encoded(data []byte) bool {
 	return err == nil
 }
 
-
 func getUpdateStringPointerInfo(d *schema.ResourceData, key string) (value *string, update bool) {
 	update = false
 	if d.HasChange(key) {
