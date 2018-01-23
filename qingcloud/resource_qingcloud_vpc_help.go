@@ -90,3 +90,10 @@ func waitRouterLease(d *schema.ResourceData, meta interface{}) error {
 	WaitForLease(output.RouterSet[0].StatusTime)
 	return nil
 }
+
+func isRouterDeleted(routerSet []*qc.Router) bool {
+	if len(routerSet) == 0 || qc.StringValue(routerSet[0].Status) == "deleted" || qc.StringValue(routerSet[0].Status) == "ceased" {
+		return true
+	}
+	return false
+}
