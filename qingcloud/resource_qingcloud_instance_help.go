@@ -15,8 +15,10 @@ package qingcloud
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/yunify/qingcloud-sdk-go/client"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
@@ -283,15 +285,22 @@ func instanceUpdateResize(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	//  resize instance
+	var output *qc.ResizeInstancesOutput
 	input := new(qc.ResizeInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	input.CPU = qc.Int(d.Get(resourceInstanceCPU).(int))
 	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
 	simpleRetry(func() error {
-		_, err = clt.ResizeInstances(input)
+		output, err = clt.ResizeInstances(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
+		return err
+	}
+	client.WaitJob(meta.(*QingCloudClient).job,
+		qc.StringValue(output.JobID),
+		time.Duration(waitJobTimeOutDefault)*time.Second, time.Duration(waitJobIntervalDefault)*time.Second)
+	if _, err := InstanceTransitionStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	// start instance
