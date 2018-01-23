@@ -244,7 +244,7 @@ func testAccCheckVpcDestroyWithProvider(s *terraform.State, provider *schema.Pro
 		input.Routers = []*string{qc.String(rs.Primary.ID)}
 		output, err := client.router.DescribeRouters(input)
 		if err == nil {
-			if isRouterDeleted(output.RouterSet) {
+			if !isRouterDeleted(output.RouterSet) {
 				return fmt.Errorf("Found  Router: %s", rs.Primary.ID)
 			}
 		}
