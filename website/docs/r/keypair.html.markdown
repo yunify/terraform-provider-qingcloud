@@ -12,6 +12,42 @@ Uploads an SSH public key.
 
 Resource can be imported.
 
+For use this resource, user needs to create SSH key in local first, then put the public key's content into public_key to create qingcloud_keypair.  
+
+## Creating an SSH key on Windows
+
+The simplest way to create SSH key on Windows is to use [PuTTYgen](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html).
+
+* Download and run PuTTYgen.
+* Click the "Generate" button.
+* For additional security, you can enter a key passphrase. This will be required to use the SSH key, and will prevent someone with access to your key file from using the key.
+* Once the key has been generated, click "Save Private Key". Make sure you save this somewhere safe, as it is not possible to recover this file if it gets lost
+* Select all of the text in the "Public key for pasting into OpenSSH `authorized_keys file`, and put it into public_key
+
+## Creating an SSH key on Linux or Mac
+
+* Run: `ssh-keygen -t rsa`. 
+* Press enter when asked where you want to save the key (this will use the default location).
+* Enter a passphrase for your key.
+* Run `cat ~/.ssh/id_rsa.pub` - this will give you the key in the proper format to paste into public_key.
+* Make sure you backup the `~/.ssh/id_rsa file`. This cannot be recovered if it is lost.
+
+## Connecting to a server using an SSH key from a Windows client
+
+* Download and run the PuTTY SSH client.
+* Type the IP address or Username + IP address ( `user@x.x.x.x` ) of the destination server under the "Host Name" field on the "Session" category.
+* Navigate to the "Connection -> SSH -> Auth" category (left-hand side).
+* Click "Browse..." near "Private key file for authentication". Choose the private key file (ending in `.ppk`) that you generated earlier with PuTTYgen.
+* Click "Open" to initiate the connection.
+* When finished, end your session by pressing `Ctrl+d`.
+
+## Connecting to a server using an SSH key from a Linux or Mac client
+
+* Check that your Linux operating system has an SSH client installed ( which ssh ). If a client is not installed, you will need to install one.
+* nitiate a connection: `ssh -i /path/to/id_rsa user@x.x.x.x`
+* When finished, end your session by pressing `Ctrl+d`.
+
+
 ## Example Usage
 
 ```
