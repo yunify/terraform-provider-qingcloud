@@ -43,7 +43,7 @@ IMPROVEMENTS:
 * provider: Add ACC test resource tag ([#125](https://github.com/yunify/terraform-provider-qingcloud/pull/125))
 * provider: Use circle ci to run test and release
 
-## 1.2.1 (January 12, 2018)
+## 1.2.1 (January 24, 2018)
 
 IMPROVEMENTS:
 
