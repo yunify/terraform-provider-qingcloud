@@ -43,3 +43,12 @@ IMPROVEMENTS:
 * provider: Add ACC test resource tag ([#125](https://github.com/yunify/terraform-provider-qingcloud/pull/125))
 * provider: Use circle ci to run test and release
 
+## 1.2.1 (January 12, 2018)
+
+IMPROVEMENTS:
+
+* release: Optimize packaging type ([#145](https://github.com/yunify/terraform-provider-qingcloud/pull/145))
+* docs: Add docs to use resource keypair ([#147](https://github.com/yunify/terraform-provider-qingcloud/pull/147))
+* resource/qingcloud_instance Add wait job for resize instance ([#148](https://github.com/yunify/terraform-provider-qingcloud/pull/148))
+* resource/qingcloud_vpc Add has been deleted status ([#149](https://github.com/yunify/terraform-provider-qingcloud/pull/149))
+
