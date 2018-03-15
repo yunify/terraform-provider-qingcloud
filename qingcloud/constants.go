@@ -27,6 +27,7 @@ const (
 	DEFAULT_ENDPOINT       = "https://api.qingcloud.com:443/iaas"
 	waitJobTimeOutDefault  = 240
 	waitJobIntervalDefault = 5
+	waitLeaseSecond        = 30
 
 	resourceName        = "name"
 	resourceDescription = "description"
