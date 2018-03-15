@@ -152,6 +152,7 @@ func testAccCheckEIPExists(n string, eip *qc.DescribeEIPsOutput) resource.TestCh
 		client := testAccProvider.Meta().(*QingCloudClient)
 		input := new(qc.DescribeEIPsInput)
 		input.EIPs = []*string{qc.String(rs.Primary.ID)}
+		input.Verbose = qc.Int(1)
 		d, err := client.eip.DescribeEIPs(input)
 
 		log.Printf("[WARN] eip id %#v", rs.Primary.ID)

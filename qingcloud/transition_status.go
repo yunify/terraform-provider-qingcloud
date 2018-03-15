@@ -257,8 +257,8 @@ func SecurityGroupApplyTransitionStateRefresh(clt *qc.SecurityGroupService, id *
 func WaitForLease(CreateTime *time.Time) {
 	now := time.Now()
 	subS := now.Sub(qc.TimeValue(CreateTime)).Seconds()
-	if subS < float64(30) {
-		time.Sleep(time.Second * time.Duration(30))
+	if subS < float64(waitLeaseSecond) {
+		time.Sleep(time.Second * time.Duration(waitLeaseSecond))
 	}
 }
 func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id *string) (interface{}, error) {
