@@ -15,9 +15,11 @@ package qingcloud
 
 import (
 	"os"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
 
 func Provider() terraform.ResourceProvider {
@@ -96,6 +98,31 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Secret:   secretkey.(string),
 		Zone:     zone.(string),
 		EndPoint: endpoint.(string),
+	}
+	client, err := config.Client()
+	if err != nil {
+		return nil, err
+	}
+	// check zone & endpoint
+	describeZonesOutput, err := client.qingcloud.DescribeZones(nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(describeZonesOutput.ZoneSet) == 0{
+		return nil, fmt.Errorf("can not get zone info")
+	}
+	i := 0
+	for _, az := range describeZonesOutput.ZoneSet {
+		if qc.StringValue(az.ZoneID) == zone {
+			if qc.StringValue(az.Status) != StatusActive {
+				return nil, fmt.Errorf(" zone: %s", qc.StringValue(az.Status))
+			}
+			break
+		}
+		i++
+	}
+	if i == len(describeZonesOutput.ZoneSet) {
+		return nil, fmt.Errorf("can not find zone: %s", zone)
 	}
 	return config.Client()
 }
