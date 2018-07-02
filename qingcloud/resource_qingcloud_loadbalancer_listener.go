@@ -67,8 +67,10 @@ func resourceQingcloudLoadBalancerListener() *schema.Resource {
 				ValidateFunc: withinArrayString("roundrobin", "leastconn", "source"),
 			},
 			resourceLoadBalancerListenerServerCertificateId: &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeSet,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			resourceLoadBalancerListenerSessionSticky: &schema.Schema{
 				Type:     schema.TypeString,
@@ -115,7 +117,13 @@ func resourceQingcloudLoadBalancerListnerCreate(d *schema.ResourceData, meta int
 	listener.ListenerProtocol = getSetStringPointer(d, resourceLoadBalancerListenerProtocol)
 	listener.BackendProtocol = getSetStringPointer(d, resourceLoadBalancerListenerProtocol)
 	listener.BalanceMode = getSetStringPointer(d, resourceLoadBalancerListenerBalancerMode)
-	listener.ServerCertificateID = getSetStringPointer(d, resourceLoadBalancerListenerServerCertificateId)
+	if d.HasChange(resourceLoadBalancerListenerServerCertificateId){
+		var scIDs []*string
+		for _, value := range d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List() {
+			scIDs = append(scIDs, qc.String(value.(string)))
+		}
+		listener.ServerCertificateID = scIDs
+	}
 	listener.SessionSticky = getSetStringPointer(d, resourceLoadBalancerListenerSessionSticky)
 	listener.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
 	listener.HealthyCheckMethod = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckMethod)
@@ -162,7 +170,7 @@ func resourceQingcloudLoadBalancerListenerRead(d *schema.ResourceData, meta inte
 	d.Set(resourceLoadBalancerListenerPort, qc.IntValue(output.LoadBalancerListenerSet[0].ListenerPort))
 	d.Set(resourceLoadBalancerListenerProtocol, qc.StringValue(output.LoadBalancerListenerSet[0].ListenerProtocol))
 	d.Set(resourceLoadBalancerListenerBalancerMode, qc.StringValue(output.LoadBalancerListenerSet[0].BalanceMode))
-	d.Set(resourceLoadBalancerListenerServerCertificateId, qc.StringValue(output.LoadBalancerListenerSet[0].ServerCertificateID))
+	d.Set(resourceLoadBalancerListenerServerCertificateId, qc.StringValueSlice(output.LoadBalancerListenerSet[0].ServerCertificateID))
 	d.Set(resourceLoadBalancerListenerSessionSticky, qc.StringValue(output.LoadBalancerListenerSet[0].SessionSticky))
 	d.Set(resourceLoadBalancerListenerForwardfor, qc.IntValue(output.LoadBalancerListenerSet[0].Forwardfor))
 	d.Set(resourceLoadBalancerListenerHealthCheckMethod, qc.StringValue(output.LoadBalancerListenerSet[0].HealthyCheckMethod))
@@ -178,7 +186,13 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	input.LoadBalancerListener = qc.String(d.Id())
 	input.LoadBalancerListenerName = getSetStringPointer(d, resourceName)
 	input.BalanceMode = getSetStringPointer(d, resourceLoadBalancerListenerBalancerMode)
-	input.ServerCertificateID = getSetStringPointer(d, resourceLoadBalancerListenerServerCertificateId)
+	if d.HasChange(resourceLoadBalancerListenerServerCertificateId){
+		var scIDs []*string
+		for _, value := range d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List() {
+			scIDs = append(scIDs, qc.String(value.(string)))
+		}
+		input.ServerCertificateID = scIDs
+	}
 	input.SessionSticky = getSetStringPointer(d, resourceLoadBalancerListenerSessionSticky)
 	input.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
 	input.HealthyCheckMethod = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckMethod)
