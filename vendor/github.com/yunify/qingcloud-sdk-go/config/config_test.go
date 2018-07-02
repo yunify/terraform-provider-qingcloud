@@ -116,5 +116,5 @@ func TestNewWithEndpoint(t *testing.T) {
 	assert.Equal(t, "test.qingcloud.com", config.Host)
 	assert.Equal(t, 444, config.Port)
 	assert.Equal(t, "/iaas", config.URI)
-	
+
 }

@@ -71,8 +71,8 @@ func NewWithEndpoint(accessKeyID, secretAccessKey, endpoint string) (*Config, er
 	if err != nil {
 		return nil, err
 	}
-	if qcURL.Opaque != ""{
-		return nil , fmt.Errorf("wrong URL format")
+	if qcURL.Opaque != "" {
+		return nil, fmt.Errorf("wrong URL format")
 	}
 
 	if !strings.Contains(qcURL.Host, ":") {
