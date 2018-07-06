@@ -14,8 +14,8 @@
 package qingcloud
 
 import (
-	"os"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -108,7 +108,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(describeZonesOutput.ZoneSet) == 0{
+	if len(describeZonesOutput.ZoneSet) == 0 {
 		return nil, fmt.Errorf("can not get zone info")
 	}
 	i := 0

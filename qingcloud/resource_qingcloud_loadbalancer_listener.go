@@ -117,12 +117,10 @@ func resourceQingcloudLoadBalancerListnerCreate(d *schema.ResourceData, meta int
 	listener.ListenerProtocol = getSetStringPointer(d, resourceLoadBalancerListenerProtocol)
 	listener.BackendProtocol = getSetStringPointer(d, resourceLoadBalancerListenerProtocol)
 	listener.BalanceMode = getSetStringPointer(d, resourceLoadBalancerListenerBalancerMode)
-	if d.HasChange(resourceLoadBalancerListenerServerCertificateId){
-		var scIDs []*string
+	if len(d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List()) > 0 {
 		for _, value := range d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List() {
-			scIDs = append(scIDs, qc.String(value.(string)))
+			listener.ServerCertificateID = append(listener.ServerCertificateID, qc.String(value.(string)))
 		}
-		listener.ServerCertificateID = scIDs
 	}
 	listener.SessionSticky = getSetStringPointer(d, resourceLoadBalancerListenerSessionSticky)
 	listener.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
@@ -186,12 +184,13 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	input.LoadBalancerListener = qc.String(d.Id())
 	input.LoadBalancerListenerName = getSetStringPointer(d, resourceName)
 	input.BalanceMode = getSetStringPointer(d, resourceLoadBalancerListenerBalancerMode)
-	if d.HasChange(resourceLoadBalancerListenerServerCertificateId){
-		var scIDs []*string
-		for _, value := range d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List() {
-			scIDs = append(scIDs, qc.String(value.(string)))
+	if d.HasChange(resourceLoadBalancerListenerServerCertificateId) {
+		if len(d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List()) == 0 {
+			input.ServerCertificateID = append(input.ServerCertificateID, qc.String(" "))
 		}
-		input.ServerCertificateID = scIDs
+		for _, value := range d.Get(resourceLoadBalancerListenerServerCertificateId).(*schema.Set).List() {
+			input.ServerCertificateID = append(input.ServerCertificateID, qc.String(value.(string)))
+		}
 	}
 	input.SessionSticky = getSetStringPointer(d, resourceLoadBalancerListenerSessionSticky)
 	input.Forwardfor = qc.Int(d.Get(resourceLoadBalancerListenerForwardfor).(int))
