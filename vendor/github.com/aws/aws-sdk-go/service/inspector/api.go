@@ -17,7 +17,7 @@ const opAddAttributesToFindings = "AddAttributesToFindings"
 
 // AddAttributesToFindingsRequest generates a "aws/request.Request" representing the
 // client's request for the AddAttributesToFindings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -108,7 +108,7 @@ const opCreateAssessmentTarget = "CreateAssessmentTarget"
 
 // CreateAssessmentTargetRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssessmentTarget operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -182,6 +182,10 @@ func (c *Inspector) CreateAssessmentTargetRequest(input *CreateAssessmentTargetI
 //   The request was rejected because it referenced an entity that does not exist.
 //   The error code describes the entity.
 //
+//   * ErrCodeInvalidCrossAccountRoleException "InvalidCrossAccountRoleException"
+//   Amazon Inspector cannot assume the cross-account role that it needs to list
+//   your EC2 instances during the assessment run.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateAssessmentTarget
 func (c *Inspector) CreateAssessmentTarget(input *CreateAssessmentTargetInput) (*CreateAssessmentTargetOutput, error) {
 	req, out := c.CreateAssessmentTargetRequest(input)
@@ -208,7 +212,7 @@ const opCreateAssessmentTemplate = "CreateAssessmentTemplate"
 
 // CreateAssessmentTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the CreateAssessmentTemplate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -302,11 +306,107 @@ func (c *Inspector) CreateAssessmentTemplateWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opCreateExclusionsPreview = "CreateExclusionsPreview"
+
+// CreateExclusionsPreviewRequest generates a "aws/request.Request" representing the
+// client's request for the CreateExclusionsPreview operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateExclusionsPreview for more information on using the CreateExclusionsPreview
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateExclusionsPreviewRequest method.
+//    req, resp := client.CreateExclusionsPreviewRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateExclusionsPreview
+func (c *Inspector) CreateExclusionsPreviewRequest(input *CreateExclusionsPreviewInput) (req *request.Request, output *CreateExclusionsPreviewOutput) {
+	op := &request.Operation{
+		Name:       opCreateExclusionsPreview,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateExclusionsPreviewInput{}
+	}
+
+	output = &CreateExclusionsPreviewOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateExclusionsPreview API operation for Amazon Inspector.
+//
+// Starts the generation of an exclusions preview for the specified assessment
+// template. The exclusions preview lists the potential exclusions (ExclusionPreview)
+// that Inspector can detect before it runs the assessment.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation CreateExclusionsPreview for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * ErrCodePreviewGenerationInProgressException "PreviewGenerationInProgressException"
+//   The request is rejected. The specified assessment template is currently generating
+//   an exclusions preview.
+//
+//   * ErrCodeInternalException "InternalException"
+//   Internal server error.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to access the requested resource.
+//
+//   * ErrCodeNoSuchEntityException "NoSuchEntityException"
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateExclusionsPreview
+func (c *Inspector) CreateExclusionsPreview(input *CreateExclusionsPreviewInput) (*CreateExclusionsPreviewOutput, error) {
+	req, out := c.CreateExclusionsPreviewRequest(input)
+	return out, req.Send()
+}
+
+// CreateExclusionsPreviewWithContext is the same as CreateExclusionsPreview with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateExclusionsPreview for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) CreateExclusionsPreviewWithContext(ctx aws.Context, input *CreateExclusionsPreviewInput, opts ...request.Option) (*CreateExclusionsPreviewOutput, error) {
+	req, out := c.CreateExclusionsPreviewRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateResourceGroup = "CreateResourceGroup"
 
 // CreateResourceGroupRequest generates a "aws/request.Request" representing the
 // client's request for the CreateResourceGroup operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -399,7 +499,7 @@ const opDeleteAssessmentRun = "DeleteAssessmentRun"
 
 // DeleteAssessmentRunRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAssessmentRun operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -496,7 +596,7 @@ const opDeleteAssessmentTarget = "DeleteAssessmentTarget"
 
 // DeleteAssessmentTargetRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAssessmentTarget operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -593,7 +693,7 @@ const opDeleteAssessmentTemplate = "DeleteAssessmentTemplate"
 
 // DeleteAssessmentTemplateRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteAssessmentTemplate operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -690,7 +790,7 @@ const opDescribeAssessmentRuns = "DescribeAssessmentRuns"
 
 // DescribeAssessmentRunsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssessmentRuns operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -774,7 +874,7 @@ const opDescribeAssessmentTargets = "DescribeAssessmentTargets"
 
 // DescribeAssessmentTargetsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssessmentTargets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -858,7 +958,7 @@ const opDescribeAssessmentTemplates = "DescribeAssessmentTemplates"
 
 // DescribeAssessmentTemplatesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeAssessmentTemplates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -942,7 +1042,7 @@ const opDescribeCrossAccountAccessRole = "DescribeCrossAccountAccessRole"
 
 // DescribeCrossAccountAccessRoleRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeCrossAccountAccessRole operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1017,11 +1117,94 @@ func (c *Inspector) DescribeCrossAccountAccessRoleWithContext(ctx aws.Context, i
 	return out, req.Send()
 }
 
+const opDescribeExclusions = "DescribeExclusions"
+
+// DescribeExclusionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeExclusions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeExclusions for more information on using the DescribeExclusions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeExclusionsRequest method.
+//    req, resp := client.DescribeExclusionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeExclusions
+func (c *Inspector) DescribeExclusionsRequest(input *DescribeExclusionsInput) (req *request.Request, output *DescribeExclusionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeExclusions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeExclusionsInput{}
+	}
+
+	output = &DescribeExclusionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeExclusions API operation for Amazon Inspector.
+//
+// Describes the exclusions that are specified by the exclusions' ARNs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeExclusions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalException "InternalException"
+//   Internal server error.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeExclusions
+func (c *Inspector) DescribeExclusions(input *DescribeExclusionsInput) (*DescribeExclusionsOutput, error) {
+	req, out := c.DescribeExclusionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeExclusionsWithContext is the same as DescribeExclusions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeExclusions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) DescribeExclusionsWithContext(ctx aws.Context, input *DescribeExclusionsInput, opts ...request.Option) (*DescribeExclusionsOutput, error) {
+	req, out := c.DescribeExclusionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeFindings = "DescribeFindings"
 
 // DescribeFindingsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeFindings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1104,7 +1287,7 @@ const opDescribeResourceGroups = "DescribeResourceGroups"
 
 // DescribeResourceGroupsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeResourceGroups operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1188,7 +1371,7 @@ const opDescribeRulesPackages = "DescribeRulesPackages"
 
 // DescribeRulesPackagesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeRulesPackages operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1272,7 +1455,7 @@ const opGetAssessmentReport = "GetAssessmentReport"
 
 // GetAssessmentReportRequest generates a "aws/request.Request" representing the
 // client's request for the GetAssessmentReport operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1370,11 +1553,159 @@ func (c *Inspector) GetAssessmentReportWithContext(ctx aws.Context, input *GetAs
 	return out, req.Send()
 }
 
+const opGetExclusionsPreview = "GetExclusionsPreview"
+
+// GetExclusionsPreviewRequest generates a "aws/request.Request" representing the
+// client's request for the GetExclusionsPreview operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetExclusionsPreview for more information on using the GetExclusionsPreview
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetExclusionsPreviewRequest method.
+//    req, resp := client.GetExclusionsPreviewRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetExclusionsPreview
+func (c *Inspector) GetExclusionsPreviewRequest(input *GetExclusionsPreviewInput) (req *request.Request, output *GetExclusionsPreviewOutput) {
+	op := &request.Operation{
+		Name:       opGetExclusionsPreview,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &GetExclusionsPreviewInput{}
+	}
+
+	output = &GetExclusionsPreviewOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetExclusionsPreview API operation for Amazon Inspector.
+//
+// Retrieves the exclusions preview (a list of ExclusionPreview objects) specified
+// by the preview token. You can obtain the preview token by running the CreateExclusionsPreview
+// API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation GetExclusionsPreview for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * ErrCodeInternalException "InternalException"
+//   Internal server error.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to access the requested resource.
+//
+//   * ErrCodeNoSuchEntityException "NoSuchEntityException"
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetExclusionsPreview
+func (c *Inspector) GetExclusionsPreview(input *GetExclusionsPreviewInput) (*GetExclusionsPreviewOutput, error) {
+	req, out := c.GetExclusionsPreviewRequest(input)
+	return out, req.Send()
+}
+
+// GetExclusionsPreviewWithContext is the same as GetExclusionsPreview with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetExclusionsPreview for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) GetExclusionsPreviewWithContext(ctx aws.Context, input *GetExclusionsPreviewInput, opts ...request.Option) (*GetExclusionsPreviewOutput, error) {
+	req, out := c.GetExclusionsPreviewRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// GetExclusionsPreviewPages iterates over the pages of a GetExclusionsPreview operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetExclusionsPreview method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetExclusionsPreview operation.
+//    pageNum := 0
+//    err := client.GetExclusionsPreviewPages(params,
+//        func(page *GetExclusionsPreviewOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Inspector) GetExclusionsPreviewPages(input *GetExclusionsPreviewInput, fn func(*GetExclusionsPreviewOutput, bool) bool) error {
+	return c.GetExclusionsPreviewPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetExclusionsPreviewPagesWithContext same as GetExclusionsPreviewPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) GetExclusionsPreviewPagesWithContext(ctx aws.Context, input *GetExclusionsPreviewInput, fn func(*GetExclusionsPreviewOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetExclusionsPreviewInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetExclusionsPreviewRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetExclusionsPreviewOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opGetTelemetryMetadata = "GetTelemetryMetadata"
 
 // GetTelemetryMetadataRequest generates a "aws/request.Request" representing the
 // client's request for the GetTelemetryMetadata operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1465,7 +1796,7 @@ const opListAssessmentRunAgents = "ListAssessmentRunAgents"
 
 // ListAssessmentRunAgentsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssessmentRunAgents operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1612,7 +1943,7 @@ const opListAssessmentRuns = "ListAssessmentRuns"
 
 // ListAssessmentRunsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssessmentRuns operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1759,7 +2090,7 @@ const opListAssessmentTargets = "ListAssessmentTargets"
 
 // ListAssessmentTargetsRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssessmentTargets operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -1903,7 +2234,7 @@ const opListAssessmentTemplates = "ListAssessmentTemplates"
 
 // ListAssessmentTemplatesRequest generates a "aws/request.Request" representing the
 // client's request for the ListAssessmentTemplates operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2050,7 +2381,7 @@ const opListEventSubscriptions = "ListEventSubscriptions"
 
 // ListEventSubscriptionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListEventSubscriptions operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2194,11 +2525,157 @@ func (c *Inspector) ListEventSubscriptionsPagesWithContext(ctx aws.Context, inpu
 	return p.Err()
 }
 
+const opListExclusions = "ListExclusions"
+
+// ListExclusionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListExclusions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListExclusions for more information on using the ListExclusions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListExclusionsRequest method.
+//    req, resp := client.ListExclusionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListExclusions
+func (c *Inspector) ListExclusionsRequest(input *ListExclusionsInput) (req *request.Request, output *ListExclusionsOutput) {
+	op := &request.Operation{
+		Name:       opListExclusions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListExclusionsInput{}
+	}
+
+	output = &ListExclusionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListExclusions API operation for Amazon Inspector.
+//
+// List exclusions that are generated by the assessment run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListExclusions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalException "InternalException"
+//   Internal server error.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to access the requested resource.
+//
+//   * ErrCodeNoSuchEntityException "NoSuchEntityException"
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListExclusions
+func (c *Inspector) ListExclusions(input *ListExclusionsInput) (*ListExclusionsOutput, error) {
+	req, out := c.ListExclusionsRequest(input)
+	return out, req.Send()
+}
+
+// ListExclusionsWithContext is the same as ListExclusions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListExclusions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) ListExclusionsWithContext(ctx aws.Context, input *ListExclusionsInput, opts ...request.Option) (*ListExclusionsOutput, error) {
+	req, out := c.ListExclusionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListExclusionsPages iterates over the pages of a ListExclusions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListExclusions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListExclusions operation.
+//    pageNum := 0
+//    err := client.ListExclusionsPages(params,
+//        func(page *ListExclusionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Inspector) ListExclusionsPages(input *ListExclusionsInput, fn func(*ListExclusionsOutput, bool) bool) error {
+	return c.ListExclusionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListExclusionsPagesWithContext same as ListExclusionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Inspector) ListExclusionsPagesWithContext(ctx aws.Context, input *ListExclusionsInput, fn func(*ListExclusionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListExclusionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListExclusionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListExclusionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListFindings = "ListFindings"
 
 // ListFindingsRequest generates a "aws/request.Request" representing the
 // client's request for the ListFindings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2345,7 +2822,7 @@ const opListRulesPackages = "ListRulesPackages"
 
 // ListRulesPackagesRequest generates a "aws/request.Request" representing the
 // client's request for the ListRulesPackages operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2487,7 +2964,7 @@ const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2577,7 +3054,7 @@ const opPreviewAgents = "PreviewAgents"
 
 // PreviewAgentsRequest generates a "aws/request.Request" representing the
 // client's request for the PreviewAgents operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2728,7 +3205,7 @@ const opRegisterCrossAccountAccessRole = "RegisterCrossAccountAccessRole"
 
 // RegisterCrossAccountAccessRoleRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterCrossAccountAccessRole operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2821,7 +3298,7 @@ const opRemoveAttributesFromFindings = "RemoveAttributesFromFindings"
 
 // RemoveAttributesFromFindingsRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveAttributesFromFindings operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -2913,7 +3390,7 @@ const opSetTagsForResource = "SetTagsForResource"
 
 // SetTagsForResourceRequest generates a "aws/request.Request" representing the
 // client's request for the SetTagsForResource operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3006,7 +3483,7 @@ const opStartAssessmentRun = "StartAssessmentRun"
 
 // StartAssessmentRunRequest generates a "aws/request.Request" representing the
 // client's request for the StartAssessmentRun operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3110,7 +3587,7 @@ const opStopAssessmentRun = "StopAssessmentRun"
 
 // StopAssessmentRunRequest generates a "aws/request.Request" representing the
 // client's request for the StopAssessmentRun operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3202,7 +3679,7 @@ const opSubscribeToEvent = "SubscribeToEvent"
 
 // SubscribeToEventRequest generates a "aws/request.Request" representing the
 // client's request for the SubscribeToEvent operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3299,7 +3776,7 @@ const opUnsubscribeFromEvent = "UnsubscribeFromEvent"
 
 // UnsubscribeFromEventRequest generates a "aws/request.Request" representing the
 // client's request for the UnsubscribeFromEvent operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3392,7 +3869,7 @@ const opUpdateAssessmentTarget = "UpdateAssessmentTarget"
 
 // UpdateAssessmentTargetRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateAssessmentTarget operation. The "output" return
-// value will be populated with the request's response once the request complets
+// value will be populated with the request's response once the request completes
 // successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
@@ -3481,7 +3958,6 @@ func (c *Inspector) UpdateAssessmentTargetWithContext(ctx aws.Context, input *Up
 	return out, req.Send()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AddAttributesToFindingsRequest
 type AddAttributesToFindingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3547,7 +4023,6 @@ func (s *AddAttributesToFindingsInput) SetFindingArns(v []*string) *AddAttribute
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AddAttributesToFindingsResponse
 type AddAttributesToFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3577,7 +4052,6 @@ func (s *AddAttributesToFindingsOutput) SetFailedItems(v map[string]*FailedItemD
 // Used in the exception error that is thrown if you start an assessment run
 // for an assessment target that includes an EC2 instance that is already participating
 // in another started assessment run.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AgentAlreadyRunningAssessment
 type AgentAlreadyRunningAssessment struct {
 	_ struct{} `type:"structure"`
 
@@ -3617,7 +4091,6 @@ func (s *AgentAlreadyRunningAssessment) SetAssessmentRunArn(v string) *AgentAlre
 
 // Contains information about an Amazon Inspector agent. This data type is used
 // as a request parameter in the ListAssessmentRunAgents action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AgentFilter
 type AgentFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -3672,7 +4145,6 @@ func (s *AgentFilter) SetAgentHealths(v []*string) *AgentFilter {
 }
 
 // Used as a response element in the PreviewAgents action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AgentPreview
 type AgentPreview struct {
 	_ struct{} `type:"structure"`
 
@@ -3768,7 +4240,6 @@ func (s *AgentPreview) SetOperatingSystem(v string) *AgentPreview {
 // of the assessment run .
 //
 // Used as the response element in the DescribeAssessmentRuns action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentRun
 type AssessmentRun struct {
 	_ struct{} `type:"structure"`
 
@@ -3950,7 +4421,6 @@ func (s *AssessmentRun) SetUserAttributesForFindings(v []*Attribute) *Assessment
 
 // Contains information about an Amazon Inspector agent. This data type is used
 // as a response element in the ListAssessmentRunAgents action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentRunAgent
 type AssessmentRunAgent struct {
 	_ struct{} `type:"structure"`
 
@@ -4040,7 +4510,6 @@ func (s *AssessmentRunAgent) SetTelemetryMetadata(v []*TelemetryMetadata) *Asses
 }
 
 // Used as the request parameter in the ListAssessmentRuns action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentRunFilter
 type AssessmentRunFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -4153,7 +4622,6 @@ func (s *AssessmentRunFilter) SetStates(v []*string) *AssessmentRunFilter {
 }
 
 // Used as one of the elements of the AssessmentRun data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentRunNotification
 type AssessmentRunNotification struct {
 	_ struct{} `type:"structure"`
 
@@ -4229,7 +4697,6 @@ func (s *AssessmentRunNotification) SetSnsTopicArn(v string) *AssessmentRunNotif
 }
 
 // Used as one of the elements of the AssessmentRun data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentRunStateChange
 type AssessmentRunStateChange struct {
 	_ struct{} `type:"structure"`
 
@@ -4268,7 +4735,6 @@ func (s *AssessmentRunStateChange) SetStateChangedAt(v time.Time) *AssessmentRun
 
 // Contains information about an Amazon Inspector application. This data type
 // is used as the response element in the DescribeAssessmentTargets action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentTarget
 type AssessmentTarget struct {
 	_ struct{} `type:"structure"`
 
@@ -4289,9 +4755,7 @@ type AssessmentTarget struct {
 
 	// The ARN that specifies the resource group that is associated with the assessment
 	// target.
-	//
-	// ResourceGroupArn is a required field
-	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string"`
 
 	// The time at which UpdateAssessmentTarget is called.
 	//
@@ -4340,7 +4804,6 @@ func (s *AssessmentTarget) SetUpdatedAt(v time.Time) *AssessmentTarget {
 }
 
 // Used as the request parameter in the ListAssessmentTargets action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentTargetFilter
 type AssessmentTargetFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -4382,7 +4845,6 @@ func (s *AssessmentTargetFilter) SetAssessmentTargetNamePattern(v string) *Asses
 // Contains information about an Amazon Inspector assessment template. This
 // data type is used as the response element in the DescribeAssessmentTemplates
 // action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentTemplate
 type AssessmentTemplate struct {
 	_ struct{} `type:"structure"`
 
@@ -4407,7 +4869,7 @@ type AssessmentTemplate struct {
 	// CreatedAt is a required field
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// The duration in seconds specified for this assessment tempate. The default
+	// The duration in seconds specified for this assessment template. The default
 	// value is 3600 seconds (one hour). The maximum value is 86400 seconds (one
 	// day).
 	//
@@ -4416,7 +4878,7 @@ type AssessmentTemplate struct {
 
 	// The Amazon Resource Name (ARN) of the most recent assessment run associated
 	// with this assessment template. This value exists only when the value of assessmentRunCount
-	// is greater than zero.
+	// is greaterpa than zero.
 	LastAssessmentRunArn *string `locationName:"lastAssessmentRunArn" min:"1" type:"string"`
 
 	// The name of the assessment template.
@@ -4501,7 +4963,6 @@ func (s *AssessmentTemplate) SetUserAttributesForFindings(v []*Attribute) *Asses
 }
 
 // Used as the request parameter in the ListAssessmentTemplates action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssessmentTemplateFilter
 type AssessmentTemplateFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -4568,7 +5029,6 @@ func (s *AssessmentTemplateFilter) SetRulesPackageArns(v []*string) *AssessmentT
 }
 
 // A collection of attributes of the host from which the finding is generated.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/AssetAttributes
 type AssetAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -4643,7 +5103,6 @@ func (s *AssetAttributes) SetSchemaVersion(v int64) *AssetAttributes {
 
 // This data type is used as a request parameter in the AddAttributesToFindings
 // and CreateAssessmentTemplate actions.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/Attribute
 type Attribute struct {
 	_ struct{} `type:"structure"`
 
@@ -4697,7 +5156,6 @@ func (s *Attribute) SetValue(v string) *Attribute {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateAssessmentTargetRequest
 type CreateAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4709,9 +5167,7 @@ type CreateAssessmentTargetInput struct {
 
 	// The ARN that specifies the resource group that is used to create the assessment
 	// target.
-	//
-	// ResourceGroupArn is a required field
-	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -4732,9 +5188,6 @@ func (s *CreateAssessmentTargetInput) Validate() error {
 	}
 	if s.AssessmentTargetName != nil && len(*s.AssessmentTargetName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetName", 1))
-	}
-	if s.ResourceGroupArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("ResourceGroupArn"))
 	}
 	if s.ResourceGroupArn != nil && len(*s.ResourceGroupArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupArn", 1))
@@ -4758,7 +5211,6 @@ func (s *CreateAssessmentTargetInput) SetResourceGroupArn(v string) *CreateAsses
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateAssessmentTargetResponse
 type CreateAssessmentTargetOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4784,7 +5236,6 @@ func (s *CreateAssessmentTargetOutput) SetAssessmentTargetArn(v string) *CreateA
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateAssessmentTemplateRequest
 type CreateAssessmentTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4902,7 +5353,6 @@ func (s *CreateAssessmentTemplateInput) SetUserAttributesForFindings(v []*Attrib
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateAssessmentTemplateResponse
 type CreateAssessmentTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4928,7 +5378,75 @@ func (s *CreateAssessmentTemplateOutput) SetAssessmentTemplateArn(v string) *Cre
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateResourceGroupRequest
+type CreateExclusionsPreviewInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that specifies the assessment template for which you want to create
+	// an exclusions preview.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateExclusionsPreviewInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateExclusionsPreviewInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateExclusionsPreviewInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateExclusionsPreviewInput"}
+	if s.AssessmentTemplateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateArn"))
+	}
+	if s.AssessmentTemplateArn != nil && len(*s.AssessmentTemplateArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssessmentTemplateArn sets the AssessmentTemplateArn field's value.
+func (s *CreateExclusionsPreviewInput) SetAssessmentTemplateArn(v string) *CreateExclusionsPreviewInput {
+	s.AssessmentTemplateArn = &v
+	return s
+}
+
+type CreateExclusionsPreviewOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the unique identifier of the requested exclusions preview. You
+	// can use the unique identifier to retrieve the exclusions preview when running
+	// the GetExclusionsPreview API.
+	//
+	// PreviewToken is a required field
+	PreviewToken *string `locationName:"previewToken" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateExclusionsPreviewOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateExclusionsPreviewOutput) GoString() string {
+	return s.String()
+}
+
+// SetPreviewToken sets the PreviewToken field's value.
+func (s *CreateExclusionsPreviewOutput) SetPreviewToken(v string) *CreateExclusionsPreviewOutput {
+	s.PreviewToken = &v
+	return s
+}
+
 type CreateResourceGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4982,7 +5500,6 @@ func (s *CreateResourceGroupInput) SetResourceGroupTags(v []*ResourceGroupTag) *
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/CreateResourceGroupResponse
 type CreateResourceGroupOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5008,7 +5525,6 @@ func (s *CreateResourceGroupOutput) SetResourceGroupArn(v string) *CreateResourc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentRunRequest
 type DeleteAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5050,7 +5566,6 @@ func (s *DeleteAssessmentRunInput) SetAssessmentRunArn(v string) *DeleteAssessme
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentRunOutput
 type DeleteAssessmentRunOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5065,7 +5580,6 @@ func (s DeleteAssessmentRunOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentTargetRequest
 type DeleteAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5107,7 +5621,6 @@ func (s *DeleteAssessmentTargetInput) SetAssessmentTargetArn(v string) *DeleteAs
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentTargetOutput
 type DeleteAssessmentTargetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5122,7 +5635,6 @@ func (s DeleteAssessmentTargetOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentTemplateRequest
 type DeleteAssessmentTemplateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5164,7 +5676,6 @@ func (s *DeleteAssessmentTemplateInput) SetAssessmentTemplateArn(v string) *Dele
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DeleteAssessmentTemplateOutput
 type DeleteAssessmentTemplateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5179,7 +5690,6 @@ func (s DeleteAssessmentTemplateOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentRunsRequest
 type DescribeAssessmentRunsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5221,7 +5731,6 @@ func (s *DescribeAssessmentRunsInput) SetAssessmentRunArns(v []*string) *Describ
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentRunsResponse
 type DescribeAssessmentRunsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5259,7 +5768,6 @@ func (s *DescribeAssessmentRunsOutput) SetFailedItems(v map[string]*FailedItemDe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentTargetsRequest
 type DescribeAssessmentTargetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5301,7 +5809,6 @@ func (s *DescribeAssessmentTargetsInput) SetAssessmentTargetArns(v []*string) *D
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentTargetsResponse
 type DescribeAssessmentTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5339,7 +5846,6 @@ func (s *DescribeAssessmentTargetsOutput) SetFailedItems(v map[string]*FailedIte
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentTemplatesRequest
 type DescribeAssessmentTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5379,7 +5885,6 @@ func (s *DescribeAssessmentTemplatesInput) SetAssessmentTemplateArns(v []*string
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeAssessmentTemplatesResponse
 type DescribeAssessmentTemplatesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5417,7 +5922,6 @@ func (s *DescribeAssessmentTemplatesOutput) SetFailedItems(v map[string]*FailedI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeCrossAccountAccessRoleInput
 type DescribeCrossAccountAccessRoleInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5432,7 +5936,6 @@ func (s DescribeCrossAccountAccessRoleInput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeCrossAccountAccessRoleResponse
 type DescribeCrossAccountAccessRoleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5482,7 +5985,94 @@ func (s *DescribeCrossAccountAccessRoleOutput) SetValid(v bool) *DescribeCrossAc
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeFindingsRequest
+type DescribeExclusionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of ARNs that specify the exclusions that you want to describe.
+	//
+	// ExclusionArns is a required field
+	ExclusionArns []*string `locationName:"exclusionArns" min:"1" type:"list" required:"true"`
+
+	// The locale into which you want to translate the exclusion's title, description,
+	// and recommendation.
+	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
+}
+
+// String returns the string representation
+func (s DescribeExclusionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeExclusionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeExclusionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeExclusionsInput"}
+	if s.ExclusionArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExclusionArns"))
+	}
+	if s.ExclusionArns != nil && len(s.ExclusionArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ExclusionArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExclusionArns sets the ExclusionArns field's value.
+func (s *DescribeExclusionsInput) SetExclusionArns(v []*string) *DescribeExclusionsInput {
+	s.ExclusionArns = v
+	return s
+}
+
+// SetLocale sets the Locale field's value.
+func (s *DescribeExclusionsInput) SetLocale(v string) *DescribeExclusionsInput {
+	s.Locale = &v
+	return s
+}
+
+type DescribeExclusionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the exclusions.
+	//
+	// Exclusions is a required field
+	Exclusions map[string]*Exclusion `locationName:"exclusions" min:"1" type:"map" required:"true"`
+
+	// Exclusion details that cannot be described. An error code is provided for
+	// each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeExclusionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeExclusionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetExclusions sets the Exclusions field's value.
+func (s *DescribeExclusionsOutput) SetExclusions(v map[string]*Exclusion) *DescribeExclusionsOutput {
+	s.Exclusions = v
+	return s
+}
+
+// SetFailedItems sets the FailedItems field's value.
+func (s *DescribeExclusionsOutput) SetFailedItems(v map[string]*FailedItemDetails) *DescribeExclusionsOutput {
+	s.FailedItems = v
+	return s
+}
+
 type DescribeFindingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5534,7 +6124,6 @@ func (s *DescribeFindingsInput) SetLocale(v string) *DescribeFindingsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeFindingsResponse
 type DescribeFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5572,7 +6161,6 @@ func (s *DescribeFindingsOutput) SetFindings(v []*Finding) *DescribeFindingsOutp
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeResourceGroupsRequest
 type DescribeResourceGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5614,7 +6202,6 @@ func (s *DescribeResourceGroupsInput) SetResourceGroupArns(v []*string) *Describ
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeResourceGroupsResponse
 type DescribeResourceGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5652,7 +6239,6 @@ func (s *DescribeResourceGroupsOutput) SetResourceGroups(v []*ResourceGroup) *De
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeRulesPackagesRequest
 type DescribeRulesPackagesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5703,7 +6289,6 @@ func (s *DescribeRulesPackagesInput) SetRulesPackageArns(v []*string) *DescribeR
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DescribeRulesPackagesResponse
 type DescribeRulesPackagesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5742,7 +6327,6 @@ func (s *DescribeRulesPackagesOutput) SetRulesPackages(v []*RulesPackage) *Descr
 }
 
 // This data type is used in the AssessmentTemplateFilter data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/DurationRange
 type DurationRange struct {
 	_ struct{} `type:"structure"`
 
@@ -5793,7 +6377,6 @@ func (s *DurationRange) SetMinSeconds(v int64) *DurationRange {
 }
 
 // This data type is used in the Subscription data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/EventSubscription
 type EventSubscription struct {
 	_ struct{} `type:"structure"`
 
@@ -5831,8 +6414,155 @@ func (s *EventSubscription) SetSubscribedAt(v time.Time) *EventSubscription {
 	return s
 }
 
+// Contains information about what was excluded from an assessment run.
+type Exclusion struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that specifies the exclusion.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// The system-defined attributes for the exclusion.
+	Attributes []*Attribute `locationName:"attributes" type:"list"`
+
+	// The description of the exclusion.
+	//
+	// Description is a required field
+	Description *string `locationName:"description" type:"string" required:"true"`
+
+	// The recommendation for the exclusion.
+	//
+	// Recommendation is a required field
+	Recommendation *string `locationName:"recommendation" type:"string" required:"true"`
+
+	// The AWS resources for which the exclusion pertains.
+	//
+	// Scopes is a required field
+	Scopes []*Scope `locationName:"scopes" min:"1" type:"list" required:"true"`
+
+	// The name of the exclusion.
+	//
+	// Title is a required field
+	Title *string `locationName:"title" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Exclusion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Exclusion) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Exclusion) SetArn(v string) *Exclusion {
+	s.Arn = &v
+	return s
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *Exclusion) SetAttributes(v []*Attribute) *Exclusion {
+	s.Attributes = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *Exclusion) SetDescription(v string) *Exclusion {
+	s.Description = &v
+	return s
+}
+
+// SetRecommendation sets the Recommendation field's value.
+func (s *Exclusion) SetRecommendation(v string) *Exclusion {
+	s.Recommendation = &v
+	return s
+}
+
+// SetScopes sets the Scopes field's value.
+func (s *Exclusion) SetScopes(v []*Scope) *Exclusion {
+	s.Scopes = v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *Exclusion) SetTitle(v string) *Exclusion {
+	s.Title = &v
+	return s
+}
+
+// Contains information about what is excluded from an assessment run given
+// the current state of the assessment template.
+type ExclusionPreview struct {
+	_ struct{} `type:"structure"`
+
+	// The system-defined attributes for the exclusion preview.
+	Attributes []*Attribute `locationName:"attributes" type:"list"`
+
+	// The description of the exclusion preview.
+	//
+	// Description is a required field
+	Description *string `locationName:"description" type:"string" required:"true"`
+
+	// The recommendation for the exclusion preview.
+	//
+	// Recommendation is a required field
+	Recommendation *string `locationName:"recommendation" type:"string" required:"true"`
+
+	// The AWS resources for which the exclusion preview pertains.
+	//
+	// Scopes is a required field
+	Scopes []*Scope `locationName:"scopes" min:"1" type:"list" required:"true"`
+
+	// The name of the exclusion preview.
+	//
+	// Title is a required field
+	Title *string `locationName:"title" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ExclusionPreview) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExclusionPreview) GoString() string {
+	return s.String()
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *ExclusionPreview) SetAttributes(v []*Attribute) *ExclusionPreview {
+	s.Attributes = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ExclusionPreview) SetDescription(v string) *ExclusionPreview {
+	s.Description = &v
+	return s
+}
+
+// SetRecommendation sets the Recommendation field's value.
+func (s *ExclusionPreview) SetRecommendation(v string) *ExclusionPreview {
+	s.Recommendation = &v
+	return s
+}
+
+// SetScopes sets the Scopes field's value.
+func (s *ExclusionPreview) SetScopes(v []*Scope) *ExclusionPreview {
+	s.Scopes = v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *ExclusionPreview) SetTitle(v string) *ExclusionPreview {
+	s.Title = &v
+	return s
+}
+
 // Includes details about the failed items.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/FailedItemDetails
 type FailedItemDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -5872,7 +6602,6 @@ func (s *FailedItemDetails) SetRetryable(v bool) *FailedItemDetails {
 
 // Contains information about an Amazon Inspector finding. This data type is
 // used as the response element in the DescribeFindings action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/Finding
 type Finding struct {
 	_ struct{} `type:"structure"`
 
@@ -6060,7 +6789,6 @@ func (s *Finding) SetUserAttributes(v []*Attribute) *Finding {
 }
 
 // This data type is used as a request parameter in the ListFindings action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/FindingFilter
 type FindingFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -6191,7 +6919,6 @@ func (s *FindingFilter) SetUserAttributes(v []*Attribute) *FindingFilter {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetAssessmentReportRequest
 type GetAssessmentReportInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6265,7 +6992,6 @@ func (s *GetAssessmentReportInput) SetReportType(v string) *GetAssessmentReportI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetAssessmentReportResponse
 type GetAssessmentReportOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6301,7 +7027,143 @@ func (s *GetAssessmentReportOutput) SetUrl(v string) *GetAssessmentReportOutput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetTelemetryMetadataRequest
+type GetExclusionsPreviewInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that specifies the assessment template for which the exclusions preview
+	// was requested.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
+
+	// The locale into which you want to translate the exclusion's title, description,
+	// and recommendation.
+	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
+
+	// You can use this parameter to indicate the maximum number of items you want
+	// in the response. The default value is 100. The maximum value is 500.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// You can use this parameter when paginating results. Set the value of this
+	// parameter to null on your first call to the GetExclusionsPreviewRequest action.
+	// Subsequent calls to the action fill nextToken in the request with the value
+	// of nextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// The unique identifier associated of the exclusions preview.
+	//
+	// PreviewToken is a required field
+	PreviewToken *string `locationName:"previewToken" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetExclusionsPreviewInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetExclusionsPreviewInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetExclusionsPreviewInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetExclusionsPreviewInput"}
+	if s.AssessmentTemplateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateArn"))
+	}
+	if s.AssessmentTemplateArn != nil && len(*s.AssessmentTemplateArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateArn", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.PreviewToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("PreviewToken"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssessmentTemplateArn sets the AssessmentTemplateArn field's value.
+func (s *GetExclusionsPreviewInput) SetAssessmentTemplateArn(v string) *GetExclusionsPreviewInput {
+	s.AssessmentTemplateArn = &v
+	return s
+}
+
+// SetLocale sets the Locale field's value.
+func (s *GetExclusionsPreviewInput) SetLocale(v string) *GetExclusionsPreviewInput {
+	s.Locale = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetExclusionsPreviewInput) SetMaxResults(v int64) *GetExclusionsPreviewInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetExclusionsPreviewInput) SetNextToken(v string) *GetExclusionsPreviewInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPreviewToken sets the PreviewToken field's value.
+func (s *GetExclusionsPreviewInput) SetPreviewToken(v string) *GetExclusionsPreviewInput {
+	s.PreviewToken = &v
+	return s
+}
+
+type GetExclusionsPreviewOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the exclusions included in the preview.
+	ExclusionPreviews []*ExclusionPreview `locationName:"exclusionPreviews" type:"list"`
+
+	// When a response is generated, if there is more data to be listed, this parameters
+	// is present in the response and contains the value to use for the nextToken
+	// parameter in a subsequent pagination request. If there is no more data to
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// Specifies the status of the request to generate an exclusions preview.
+	//
+	// PreviewStatus is a required field
+	PreviewStatus *string `locationName:"previewStatus" type:"string" required:"true" enum:"PreviewStatus"`
+}
+
+// String returns the string representation
+func (s GetExclusionsPreviewOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetExclusionsPreviewOutput) GoString() string {
+	return s.String()
+}
+
+// SetExclusionPreviews sets the ExclusionPreviews field's value.
+func (s *GetExclusionsPreviewOutput) SetExclusionPreviews(v []*ExclusionPreview) *GetExclusionsPreviewOutput {
+	s.ExclusionPreviews = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetExclusionsPreviewOutput) SetNextToken(v string) *GetExclusionsPreviewOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPreviewStatus sets the PreviewStatus field's value.
+func (s *GetExclusionsPreviewOutput) SetPreviewStatus(v string) *GetExclusionsPreviewOutput {
+	s.PreviewStatus = &v
+	return s
+}
+
 type GetTelemetryMetadataInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6344,7 +7206,6 @@ func (s *GetTelemetryMetadataInput) SetAssessmentRunArn(v string) *GetTelemetryM
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/GetTelemetryMetadataResponse
 type GetTelemetryMetadataOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6370,7 +7231,6 @@ func (s *GetTelemetryMetadataOutput) SetTelemetryMetadata(v []*TelemetryMetadata
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentRunAgentsRequest
 type ListAssessmentRunAgentsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6456,7 +7316,6 @@ func (s *ListAssessmentRunAgentsInput) SetNextToken(v string) *ListAssessmentRun
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentRunAgentsResponse
 type ListAssessmentRunAgentsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6494,7 +7353,6 @@ func (s *ListAssessmentRunAgentsOutput) SetNextToken(v string) *ListAssessmentRu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentRunsRequest
 type ListAssessmentRunsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6573,7 +7431,6 @@ func (s *ListAssessmentRunsInput) SetNextToken(v string) *ListAssessmentRunsInpu
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentRunsResponse
 type ListAssessmentRunsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6612,7 +7469,6 @@ func (s *ListAssessmentRunsOutput) SetNextToken(v string) *ListAssessmentRunsOut
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentTargetsRequest
 type ListAssessmentTargetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6681,7 +7537,6 @@ func (s *ListAssessmentTargetsInput) SetNextToken(v string) *ListAssessmentTarge
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentTargetsResponse
 type ListAssessmentTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6720,7 +7575,6 @@ func (s *ListAssessmentTargetsOutput) SetNextToken(v string) *ListAssessmentTarg
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentTemplatesRequest
 type ListAssessmentTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6799,7 +7653,6 @@ func (s *ListAssessmentTemplatesInput) SetNextToken(v string) *ListAssessmentTem
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListAssessmentTemplatesResponse
 type ListAssessmentTemplatesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6837,7 +7690,6 @@ func (s *ListAssessmentTemplatesOutput) SetNextToken(v string) *ListAssessmentTe
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListEventSubscriptionsRequest
 type ListEventSubscriptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6900,7 +7752,6 @@ func (s *ListEventSubscriptionsInput) SetResourceArn(v string) *ListEventSubscri
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListEventSubscriptionsResponse
 type ListEventSubscriptionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6938,7 +7789,110 @@ func (s *ListEventSubscriptionsOutput) SetSubscriptions(v []*Subscription) *List
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListFindingsRequest
+type ListExclusionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the assessment run that generated the exclusions that you want
+	// to list.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
+
+	// You can use this parameter to indicate the maximum number of items you want
+	// in the response. The default value is 100. The maximum value is 500.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// You can use this parameter when paginating results. Set the value of this
+	// parameter to null on your first call to the ListExclusionsRequest action.
+	// Subsequent calls to the action fill nextToken in the request with the value
+	// of nextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListExclusionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListExclusionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListExclusionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListExclusionsInput"}
+	if s.AssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArn"))
+	}
+	if s.AssessmentRunArn != nil && len(*s.AssessmentRunArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArn", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssessmentRunArn sets the AssessmentRunArn field's value.
+func (s *ListExclusionsInput) SetAssessmentRunArn(v string) *ListExclusionsInput {
+	s.AssessmentRunArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListExclusionsInput) SetMaxResults(v int64) *ListExclusionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListExclusionsInput) SetNextToken(v string) *ListExclusionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListExclusionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of exclusions' ARNs returned by the action.
+	//
+	// ExclusionArns is a required field
+	ExclusionArns []*string `locationName:"exclusionArns" type:"list" required:"true"`
+
+	// When a response is generated, if there is more data to be listed, this parameters
+	// is present in the response and contains the value to use for the nextToken
+	// parameter in a subsequent pagination request. If there is no more data to
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListExclusionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListExclusionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetExclusionArns sets the ExclusionArns field's value.
+func (s *ListExclusionsOutput) SetExclusionArns(v []*string) *ListExclusionsOutput {
+	s.ExclusionArns = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListExclusionsOutput) SetNextToken(v string) *ListExclusionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListFindingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7017,7 +7971,6 @@ func (s *ListFindingsInput) SetNextToken(v string) *ListFindingsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListFindingsResponse
 type ListFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7055,7 +8008,6 @@ func (s *ListFindingsOutput) SetNextToken(v string) *ListFindingsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListRulesPackagesRequest
 type ListRulesPackagesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7105,7 +8057,6 @@ func (s *ListRulesPackagesInput) SetNextToken(v string) *ListRulesPackagesInput 
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListRulesPackagesResponse
 type ListRulesPackagesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7143,7 +8094,6 @@ func (s *ListRulesPackagesOutput) SetRulesPackageArns(v []*string) *ListRulesPac
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListTagsForResourceRequest
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7185,7 +8135,6 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ListTagsForResourceResponse
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7211,7 +8160,6 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/PreviewAgentsRequest
 type PreviewAgentsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7278,7 +8226,6 @@ func (s *PreviewAgentsInput) SetPreviewAgentsArn(v string) *PreviewAgentsInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/PreviewAgentsResponse
 type PreviewAgentsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7316,7 +8263,6 @@ func (s *PreviewAgentsOutput) SetNextToken(v string) *PreviewAgentsOutput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/RegisterCrossAccountAccessRoleRequest
 type RegisterCrossAccountAccessRoleInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7359,7 +8305,6 @@ func (s *RegisterCrossAccountAccessRoleInput) SetRoleArn(v string) *RegisterCros
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/RegisterCrossAccountAccessRoleOutput
 type RegisterCrossAccountAccessRoleOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7374,7 +8319,6 @@ func (s RegisterCrossAccountAccessRoleOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/RemoveAttributesFromFindingsRequest
 type RemoveAttributesFromFindingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7430,7 +8374,6 @@ func (s *RemoveAttributesFromFindingsInput) SetFindingArns(v []*string) *RemoveA
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/RemoveAttributesFromFindingsResponse
 type RemoveAttributesFromFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7461,7 +8404,6 @@ func (s *RemoveAttributesFromFindingsOutput) SetFailedItems(v map[string]*Failed
 // set of tags that, when queried, identify the AWS resources that make up the
 // assessment target. This data type is used as the response element in the
 // DescribeResourceGroups action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ResourceGroup
 type ResourceGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -7511,7 +8453,6 @@ func (s *ResourceGroup) SetTags(v []*ResourceGroupTag) *ResourceGroup {
 }
 
 // This data type is used as one of the elements of the ResourceGroup data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/ResourceGroupTag
 type ResourceGroupTag struct {
 	_ struct{} `type:"structure"`
 
@@ -7567,7 +8508,6 @@ func (s *ResourceGroupTag) SetValue(v string) *ResourceGroupTag {
 
 // Contains information about an Amazon Inspector rules package. This data type
 // is used as the response element in the DescribeRulesPackages action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/RulesPackage
 type RulesPackage struct {
 	_ struct{} `type:"structure"`
 
@@ -7635,8 +8575,40 @@ func (s *RulesPackage) SetVersion(v string) *RulesPackage {
 	return s
 }
 
+// This data type contains key-value pairs that identify various Amazon resources.
+type Scope struct {
+	_ struct{} `type:"structure"`
+
+	// The type of the scope.
+	Key *string `locationName:"key" type:"string" enum:"ScopeType"`
+
+	// The resource identifier for the specified scope type.
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s Scope) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scope) GoString() string {
+	return s.String()
+}
+
+// SetKey sets the Key field's value.
+func (s *Scope) SetKey(v string) *Scope {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Scope) SetValue(v string) *Scope {
+	s.Value = &v
+	return s
+}
+
 // This data type is used in the Finding data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/InspectorServiceAttributes
 type ServiceAttributes struct {
 	_ struct{} `type:"structure"`
 
@@ -7680,7 +8652,6 @@ func (s *ServiceAttributes) SetSchemaVersion(v int64) *ServiceAttributes {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/SetTagsForResourceRequest
 type SetTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7742,7 +8713,6 @@ func (s *SetTagsForResourceInput) SetTags(v []*Tag) *SetTagsForResourceInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/SetTagsForResourceOutput
 type SetTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7757,7 +8727,6 @@ func (s SetTagsForResourceOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/StartAssessmentRunRequest
 type StartAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7813,7 +8782,6 @@ func (s *StartAssessmentRunInput) SetAssessmentTemplateArn(v string) *StartAsses
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/StartAssessmentRunResponse
 type StartAssessmentRunOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7839,7 +8807,6 @@ func (s *StartAssessmentRunOutput) SetAssessmentRunArn(v string) *StartAssessmen
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/StopAssessmentRunRequest
 type StopAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7894,7 +8861,6 @@ func (s *StopAssessmentRunInput) SetStopAction(v string) *StopAssessmentRunInput
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/StopAssessmentRunOutput
 type StopAssessmentRunOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -7909,7 +8875,6 @@ func (s StopAssessmentRunOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/SubscribeToEventRequest
 type SubscribeToEventInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7983,7 +8948,6 @@ func (s *SubscribeToEventInput) SetTopicArn(v string) *SubscribeToEventInput {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/SubscribeToEventOutput
 type SubscribeToEventOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8000,7 +8964,6 @@ func (s SubscribeToEventOutput) GoString() string {
 
 // This data type is used as a response element in the ListEventSubscriptions
 // action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/Subscription
 type Subscription struct {
 	_ struct{} `type:"structure"`
 
@@ -8053,7 +9016,6 @@ func (s *Subscription) SetTopicArn(v string) *Subscription {
 // A key and value pair. This data type is used as a request parameter in the
 // SetTagsForResource action and a response element in the ListTagsForResource
 // action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/Tag
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -8110,7 +9072,6 @@ func (s *Tag) SetValue(v string) *Tag {
 // The metadata about the Amazon Inspector application data metrics collected
 // by the agent. This data type is used as the response element in the GetTelemetryMetadata
 // action.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/TelemetryMetadata
 type TelemetryMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -8157,7 +9118,6 @@ func (s *TelemetryMetadata) SetMessageType(v string) *TelemetryMetadata {
 }
 
 // This data type is used in the AssessmentRunFilter data type.
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/TimestampRange
 type TimestampRange struct {
 	_ struct{} `type:"structure"`
 
@@ -8190,7 +9150,6 @@ func (s *TimestampRange) SetEndDate(v time.Time) *TimestampRange {
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/UnsubscribeFromEventRequest
 type UnsubscribeFromEventInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8264,7 +9223,6 @@ func (s *UnsubscribeFromEventInput) SetTopicArn(v string) *UnsubscribeFromEventI
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/UnsubscribeFromEventOutput
 type UnsubscribeFromEventOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8279,7 +9237,6 @@ func (s UnsubscribeFromEventOutput) GoString() string {
 	return s.String()
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/UpdateAssessmentTargetRequest
 type UpdateAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8295,9 +9252,7 @@ type UpdateAssessmentTargetInput struct {
 
 	// The ARN of the resource group that is used to specify the new resource group
 	// to associate with the assessment target.
-	//
-	// ResourceGroupArn is a required field
-	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -8324,9 +9279,6 @@ func (s *UpdateAssessmentTargetInput) Validate() error {
 	}
 	if s.AssessmentTargetName != nil && len(*s.AssessmentTargetName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetName", 1))
-	}
-	if s.ResourceGroupArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("ResourceGroupArn"))
 	}
 	if s.ResourceGroupArn != nil && len(*s.ResourceGroupArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupArn", 1))
@@ -8356,7 +9308,6 @@ func (s *UpdateAssessmentTargetInput) SetResourceGroupArn(v string) *UpdateAsses
 	return s
 }
 
-// See also, https://docs.aws.amazon.com/goto/WebAPI/inspector-2016-02-16/UpdateAssessmentTargetOutput
 type UpdateAssessmentTargetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -8746,6 +9697,14 @@ const (
 )
 
 const (
+	// PreviewStatusWorkInProgress is a PreviewStatus enum value
+	PreviewStatusWorkInProgress = "WORK_IN_PROGRESS"
+
+	// PreviewStatusCompleted is a PreviewStatus enum value
+	PreviewStatusCompleted = "COMPLETED"
+)
+
+const (
 	// ReportFileFormatHtml is a ReportFileFormat enum value
 	ReportFileFormatHtml = "HTML"
 
@@ -8770,6 +9729,14 @@ const (
 
 	// ReportTypeFull is a ReportType enum value
 	ReportTypeFull = "FULL"
+)
+
+const (
+	// ScopeTypeInstanceId is a ScopeType enum value
+	ScopeTypeInstanceId = "INSTANCE_ID"
+
+	// ScopeTypeRulesPackageArn is a ScopeType enum value
+	ScopeTypeRulesPackageArn = "RULES_PACKAGE_ARN"
 )
 
 const (

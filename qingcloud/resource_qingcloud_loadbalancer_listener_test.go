@@ -212,7 +212,7 @@ resource "qingcloud_loadbalancer_listener" "foo"{
   load_balancer_id = "${qingcloud_loadbalancer.foo.id}"
   listener_port = "443"
   listener_protocol = "https"
-  server_certificate_id = "${qingcloud_server_certificate.foo.id}"
+  server_certificate_id = ["${qingcloud_server_certificate.foo.id}"]
   listener_option = 256
 }
 
@@ -274,7 +274,7 @@ resource "qingcloud_loadbalancer_listener" "foo"{
   load_balancer_id = "${qingcloud_loadbalancer.foo.id}"
   listener_port = "443"
   listener_protocol = "https"
-  server_certificate_id = "${qingcloud_server_certificate.foo.id}"
+  server_certificate_id = ["${qingcloud_server_certificate.foo.id}"]
   listener_option = 207
   healthy_check_method = "http|/index.html|vhost.example.com"
   healthy_check_option = "10|5|5|5"

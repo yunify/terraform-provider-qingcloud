@@ -14,7 +14,7 @@
 // | limitations under the License.
 // +-------------------------------------------------------------------------
 
-package test
+package main
 
 import (
 	"io/ioutil"
@@ -34,6 +34,8 @@ func TestMain(m *testing.M) {
 
 	context := func(s *godog.Suite) {
 		QingCloudServiceFeatureContext(s)
+		InstanceFeatureContext(s)
+		JobFeatureContext(s)
 	}
 	options := godog.Options{
 		Format: "pretty",
@@ -50,7 +52,7 @@ func TestMain(m *testing.M) {
 func setUp() {
 	loadTestConfig()
 	loadConfig()
-	initQingStorService()
+	initQingCloudService()
 }
 
 var err error
@@ -86,7 +88,7 @@ func loadConfig() {
 	}
 }
 
-func initQingStorService() {
+func initQingCloudService() {
 	if qcService == nil {
 		qcService, err = qc.Init(c)
 		checkErrorForExit(err)

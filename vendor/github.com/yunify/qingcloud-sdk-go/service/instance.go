@@ -47,6 +47,55 @@ func (s *QingCloudService) Instance(zone string) (*InstanceService, error) {
 	return &InstanceService{Config: s.Config, Properties: properties}, nil
 }
 
+// Documentation URL: https://docs.qingcloud.com/api/instance/cease_instances.html
+func (s *InstanceService) CeaseInstances(i *CeaseInstancesInput) (*CeaseInstancesOutput, error) {
+	if i == nil {
+		i = &CeaseInstancesInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "CeaseInstances",
+		RequestMethod: "GET",
+	}
+
+	x := &CeaseInstancesOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type CeaseInstancesInput struct {
+	Instances []*string `json:"instances" name:"instances" location:"params"` // Required
+}
+
+func (v *CeaseInstancesInput) Validate() error {
+
+	if len(v.Instances) == 0 {
+		return errors.ParameterRequiredError{
+			ParameterName: "Instances",
+			ParentName:    "CeaseInstancesInput",
+		}
+	}
+
+	return nil
+}
+
+type CeaseInstancesOutput struct {
+	Message *string `json:"message" name:"message"`
+	Action  *string `json:"action" name:"action" location:"elements"`
+	JobID   *string `json:"job_id" name:"job_id" location:"elements"`
+	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+}
+
 // Documentation URL: https://docs.qingcloud.com/api/instance/describe_instance_types.html
 func (s *InstanceService) DescribeInstanceTypes(i *DescribeInstanceTypesInput) (*DescribeInstanceTypesOutput, error) {
 	if i == nil {
@@ -183,95 +232,6 @@ type DescribeInstancesOutput struct {
 	InstanceSet []*Instance `json:"instance_set" name:"instance_set" location:"elements"`
 	RetCode     *int        `json:"ret_code" name:"ret_code" location:"elements"`
 	TotalCount  *int        `json:"total_count" name:"total_count" location:"elements"`
-}
-
-// Documentation URL: https://docs.qingcloud.com/api/monitor/get_monitor.html
-func (s *InstanceService) GetInstanceMonitor(i *GetInstanceMonitorInput) (*GetInstanceMonitorOutput, error) {
-	if i == nil {
-		i = &GetInstanceMonitorInput{}
-	}
-	o := &data.Operation{
-		Config:        s.Config,
-		Properties:    s.Properties,
-		APIName:       "GetMonitor",
-		RequestMethod: "GET",
-	}
-
-	x := &GetInstanceMonitorOutput{}
-	r, err := request.New(o, i, x)
-	if err != nil {
-		return nil, err
-	}
-
-	err = r.Send()
-	if err != nil {
-		return nil, err
-	}
-
-	return x, err
-}
-
-type GetInstanceMonitorInput struct {
-	EndTime   *time.Time `json:"end_time" name:"end_time" format:"ISO 8601" location:"params"`     // Required
-	Meters    []*string  `json:"meters" name:"meters" location:"params"`                           // Required
-	Resource  *string    `json:"resource" name:"resource" location:"params"`                       // Required
-	StartTime *time.Time `json:"start_time" name:"start_time" format:"ISO 8601" location:"params"` // Required
-	// Step's available values: 5m, 15m, 2h, 1d
-	Step *string `json:"step" name:"step" location:"params"` // Required
-}
-
-func (v *GetInstanceMonitorInput) Validate() error {
-
-	if len(v.Meters) == 0 {
-		return errors.ParameterRequiredError{
-			ParameterName: "Meters",
-			ParentName:    "GetInstanceMonitorInput",
-		}
-	}
-
-	if v.Resource == nil {
-		return errors.ParameterRequiredError{
-			ParameterName: "Resource",
-			ParentName:    "GetInstanceMonitorInput",
-		}
-	}
-
-	if v.Step == nil {
-		return errors.ParameterRequiredError{
-			ParameterName: "Step",
-			ParentName:    "GetInstanceMonitorInput",
-		}
-	}
-
-	if v.Step != nil {
-		stepValidValues := []string{"5m", "15m", "2h", "1d"}
-		stepParameterValue := fmt.Sprint(*v.Step)
-
-		stepIsValid := false
-		for _, value := range stepValidValues {
-			if value == stepParameterValue {
-				stepIsValid = true
-			}
-		}
-
-		if !stepIsValid {
-			return errors.ParameterValueNotAllowedError{
-				ParameterName:  "Step",
-				ParameterValue: stepParameterValue,
-				AllowedValues:  stepValidValues,
-			}
-		}
-	}
-
-	return nil
-}
-
-type GetInstanceMonitorOutput struct {
-	Message    *string  `json:"message" name:"message"`
-	Action     *string  `json:"action" name:"action" location:"elements"`
-	MeterSet   []*Meter `json:"meter_set" name:"meter_set" location:"elements"`
-	ResourceID *string  `json:"resource_id" name:"resource_id" location:"elements"`
-	RetCode    *int     `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
 // Documentation URL: https://docs.qingcloud.com/api/instance/modify_instance_attributes.html
@@ -602,7 +562,10 @@ type RunInstancesInput struct {
 	// CPU's available values: 1, 2, 4, 8, 16
 	CPU *int `json:"cpu" name:"cpu" default:"1" location:"params"`
 	// CPUMax's available values: 1, 2, 4, 8, 16
-	CPUMax   *int    `json:"cpu_max" name:"cpu_max" location:"params"`
+	CPUMax *int `json:"cpu_max" name:"cpu_max" location:"params"`
+	// CPUModel's available values: Westmere, SandyBridge, IvyBridge, Haswell, Broadwell
+	CPUModel *string `json:"cpu_model" name:"cpu_model" default:"Westmere" location:"params"`
+	Gpu      *int    `json:"gpu" name:"gpu" default:"0" location:"params"`
 	Hostname *string `json:"hostname" name:"hostname" location:"params"`
 	ImageID  *string `json:"image_id" name:"image_id" location:"params"` // Required
 	// InstanceClass's available values: 0, 1
@@ -670,6 +633,26 @@ func (v *RunInstancesInput) Validate() error {
 				ParameterName:  "CPUMax",
 				ParameterValue: cpuMaxParameterValue,
 				AllowedValues:  cpuMaxValidValues,
+			}
+		}
+	}
+
+	if v.CPUModel != nil {
+		cpuModelValidValues := []string{"Westmere", "SandyBridge", "IvyBridge", "Haswell", "Broadwell"}
+		cpuModelParameterValue := fmt.Sprint(*v.CPUModel)
+
+		cpuModelIsValid := false
+		for _, value := range cpuModelValidValues {
+			if value == cpuModelParameterValue {
+				cpuModelIsValid = true
+			}
+		}
+
+		if !cpuModelIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "CPUModel",
+				ParameterValue: cpuModelParameterValue,
+				AllowedValues:  cpuModelValidValues,
 			}
 		}
 	}

@@ -1392,16 +1392,16 @@ func (s *LoadBalancerService) ModifyLoadBalancerListenerAttributes(i *ModifyLoad
 }
 
 type ModifyLoadBalancerListenerAttributesInput struct {
-	BalanceMode              *string `json:"balance_mode" name:"balance_mode" location:"params"`
-	Forwardfor               *int    `json:"forwardfor" name:"forwardfor" location:"params"`
-	HealthyCheckMethod       *string `json:"healthy_check_method" name:"healthy_check_method" location:"params"`
-	HealthyCheckOption       *string `json:"healthy_check_option" name:"healthy_check_option" location:"params"`
-	ListenerOption           *int    `json:"listener_option" name:"listener_option" location:"params"`
-	LoadBalancerListener     *string `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"` // Required
-	LoadBalancerListenerName *string `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name" location:"params"`
-	ServerCertificateID      *string `json:"server_certificate_id" name:"server_certificate_id" location:"params"`
-	SessionSticky            *string `json:"session_sticky" name:"session_sticky" location:"params"`
-	Timeout                  *int    `json:"timeout" name:"timeout" location:"params"`
+	BalanceMode              *string   `json:"balance_mode" name:"balance_mode" location:"params"`
+	Forwardfor               *int      `json:"forwardfor" name:"forwardfor" location:"params"`
+	HealthyCheckMethod       *string   `json:"healthy_check_method" name:"healthy_check_method" location:"params"`
+	HealthyCheckOption       *string   `json:"healthy_check_option" name:"healthy_check_option" location:"params"`
+	ListenerOption           *int      `json:"listener_option" name:"listener_option" location:"params"`
+	LoadBalancerListener     *string   `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"` // Required
+	LoadBalancerListenerName *string   `json:"loadbalancer_listener_name" name:"loadbalancer_listener_name" location:"params"`
+	ServerCertificateID      []*string `json:"server_certificate_id" name:"server_certificate_id" location:"params"`
+	SessionSticky            *string   `json:"session_sticky" name:"session_sticky" location:"params"`
+	Timeout                  *int      `json:"timeout" name:"timeout" location:"params"`
 }
 
 func (v *ModifyLoadBalancerListenerAttributesInput) Validate() error {
