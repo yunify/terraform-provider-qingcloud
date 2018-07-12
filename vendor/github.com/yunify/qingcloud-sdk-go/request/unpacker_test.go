@@ -79,6 +79,7 @@ func TestUnpackerUnpackHTTPRequest(t *testing.T) {
 		RetCode    *int      `json:"ret_code" name:"ret_code"`
 		TotalCount *int      `json:"total_count" name:"total_count"`
 		VolumeSet  []*Volume `json:"volume_set" name:"volume_set"`
+		Message    *string   `json:"message" name:"message"`
 	}
 
 	httpResponse := &http.Response{Header: http.Header{}}

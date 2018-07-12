@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/internal/leakcheck"
 	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/test/leakcheck"
 )
 
 func TestMain(m *testing.M) {
@@ -815,7 +815,7 @@ func testIPResolver(t *testing.T) {
 		{"127.0.0.1:12345", []resolver.Address{{Addr: "127.0.0.1:12345"}}},
 		{"::1", []resolver.Address{{Addr: "[::1]" + colonDefaultPort}}},
 		{"[::1]:12345", []resolver.Address{{Addr: "[::1]:12345"}}},
-		{"[::1]:", []resolver.Address{{Addr: "[::1]:443"}}},
+		{"[::1]", []resolver.Address{{Addr: "[::1]:443"}}},
 		{"2001:db8:85a3::8a2e:370:7334", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]" + colonDefaultPort}}},
 		{"[2001:db8:85a3::8a2e:370:7334]", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]" + colonDefaultPort}}},
 		{"[2001:db8:85a3::8a2e:370:7334]:12345", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]:12345"}}},
@@ -867,6 +867,7 @@ func TestResolveFunc(t *testing.T) {
 		{"www.google.com", nil},
 		{"foo.bar:12345", nil},
 		{"127.0.0.1", nil},
+		{"::", nil},
 		{"127.0.0.1:12345", nil},
 		{"[::1]:80", nil},
 		{"[2001:db8:a0b:12f0::1]:21", nil},
@@ -875,7 +876,8 @@ func TestResolveFunc(t *testing.T) {
 		{"[fe80::1%lo0]:80", nil},
 		{"golang.org:http", nil},
 		{"[2001:db8::1]:http", nil},
-		{":", nil},
+		{"[2001:db8::1]:", errEndsWithColon},
+		{":", errEndsWithColon},
 		{"", errMissingAddr},
 		{"[2001:db8:a0b:12f0::1", errForInvalidTarget},
 	}
@@ -890,5 +892,47 @@ func TestResolveFunc(t *testing.T) {
 		if !reflect.DeepEqual(err, v.want) {
 			t.Errorf("Build(%q, cc, resolver.BuildOption{}) = %v, want %v", v.addr, err, v.want)
 		}
+	}
+}
+
+func TestDisableServiceConfig(t *testing.T) {
+	defer leakcheck.Check(t)
+	tests := []struct {
+		target               string
+		scWant               string
+		disableServiceConfig bool
+	}{
+		{
+			"foo.bar.com",
+			generateSC("foo.bar.com"),
+			false,
+		},
+		{
+			"foo.bar.com",
+			"",
+			true,
+		},
+	}
+
+	for _, a := range tests {
+		b := NewBuilder()
+		cc := &testClientConn{target: a.target}
+		r, err := b.Build(resolver.Target{Endpoint: a.target}, cc, resolver.BuildOption{DisableServiceConfig: a.disableServiceConfig})
+		if err != nil {
+			t.Fatalf("%v\n", err)
+		}
+		var cnt int
+		var sc string
+		for {
+			sc, cnt = cc.getSc()
+			if cnt > 0 {
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		if !reflect.DeepEqual(a.scWant, sc) {
+			t.Errorf("Resolved service config of target: %q = %+v, want %+v\n", a.target, sc, a.scWant)
+		}
+		r.Close()
 	}
 }
