@@ -15,6 +15,7 @@ package qingcloud
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -136,6 +137,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.RunInstancesInput)
 	input.Count = qc.Int(1)
+	input.Hostname, _ = getNamePointer(d)
 	input.InstanceName, _ = getNamePointer(d)
 	input.ImageID = getSetStringPointer(d, resourceInstanceImageID)
 	input.CPU = qc.Int(d.Get(resourceInstanceCPU).(int))
