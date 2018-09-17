@@ -33,6 +33,8 @@ const (
 	resourceInstanceVolumeIDs       = "volume_ids"
 	resourceInstancePublicIP        = "public_ip"
 	resourceInstanceUserData        = "userdata"
+	resourceInstanceLoginMode       = "login_mode"
+	resourceInstanceLoginPassword   = "login_passwd"
 )
 
 func resourceQingcloudInstance() *schema.Resource {
@@ -90,7 +92,8 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceInstanceKeyPairIDs: &schema.Schema{
 				Type:     schema.TypeSet,
-				Required: true,
+				Computed: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -129,6 +132,15 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
+			resourceInstanceLoginMode: &schema.Schema{
+				Type:     schema.TypeString,
+				ValidateFunc: withinArrayString("keypair", "passwd"),
+				Required: true,
+			},
+			resourceInstanceLoginPassword: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -144,13 +156,25 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
 	input.InstanceClass = qc.Int(d.Get(resourceInstanceClass).(int))
 	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
-	input.LoginMode = qc.String("keypair")
-	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
-	if len(kps) < 1 {
-		return fmt.Errorf("KeyPair Required")
+
+	input.LoginMode = qc.String(d.Get(resourceInstanceLoginMode).(string))
+	var loginMode = *input.LoginMode
+	if loginMode == "keypair" {
+		kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
+		if len(kps) < 1 {
+			return fmt.Errorf("KeyPair Required")
+		}
+		kp := kps[0].(string)
+		input.LoginKeyPair = qc.String(kp)
+	} else if loginMode == "passwd"{
+		input.LoginPasswd = qc.String(d.Get(resourceInstanceLoginPassword).(string))
+		if *input.LoginPasswd == "" {
+			return fmt.Errorf("loginPassword Required")
+		}
+	} else {
+		return fmt.Errorf("loginMode is error!")
 	}
-	kp := kps[0].(string)
-	input.LoginKeyPair = qc.String(kp)
+
 	if d.Get(resourceInstanceUserData).(string) != "" {
 		if err := setInstanceUserData(d, meta, input); err != nil {
 			return err

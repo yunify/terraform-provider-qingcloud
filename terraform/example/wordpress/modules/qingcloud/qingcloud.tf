@@ -11,12 +11,14 @@ resource "qingcloud_keypair" "foo" {
 
 resource "qingcloud_instance" "wordpress" {
   image_id         = "centos73x64"
+  login_mode       = "keypair"
   keypair_ids      = ["${qingcloud_keypair.foo.id}"]
   managed_vxnet_id = "${qingcloud_vxnet.foo.id}"
 }
 
 resource "qingcloud_instance" "mysql" {
   image_id         = "centos73x64"
+  login_mode       = "keypair"
   keypair_ids      = ["${qingcloud_keypair.foo.id}"]
   managed_vxnet_id = "${qingcloud_vxnet.foo.id}"
 }

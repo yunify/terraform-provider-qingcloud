@@ -33,6 +33,7 @@ resource "qingcloud_keypair" "arthur"{
 resource "qingcloud_instance" "init"{
   count = 1
   name = "master-${count.index}"
+  login_mode = "keypair"
   image_id = "centos7x64d"
   instance_class = "0"
   managed_vxnet_id="vxnet-0"
