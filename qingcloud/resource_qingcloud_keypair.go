@@ -18,6 +18,9 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"fmt"
+	"github.com/hashicorp/terraform/helper/resource"
+	"time"
 )
 
 const (
@@ -128,26 +131,34 @@ func resourceQingcloudKeypairUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) error {
 	clt := meta.(*QingCloudClient).keypair
-	describeKeyPairsInput := new(qc.DescribeKeyPairsInput)
-	describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
-	var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 	var err error
-	simpleRetry(func() error {
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+		describeKeyPairsInput := new(qc.DescribeKeyPairsInput)
+		describeKeyPairsInput.KeyPairs = []*string{qc.String(d.Id())}
+		describeKeyPairsInput.Verbose = qc.Int(1)
+		var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		return isServerBusy(err)
+		if err != nil{
+			return resource.NonRetryableError(err)
+		}
+		instanceIds := describeKeyPairsOutput.KeyPairSet[0].InstanceIDs
+
+		if len(instanceIds) > 0 {
+			detachKeyPairsInput := new(qc.DetachKeyPairsInput)
+			detachKeyPairsInput.KeyPairs = describeKeyPairsInput.KeyPairs
+			detachKeyPairsInput.Instances = instanceIds
+			_, err = clt.DetachKeyPairs(detachKeyPairsInput)
+			if err!= nil {
+				return resource.NonRetryableError(err)
+			}
+			return resource.RetryableError(fmt.Errorf("there are still other resources [%v] depending on this resource[%v]", instanceIds, []*string{qc.String(d.Id())}))
+		}
+		input := new(qc.DeleteKeyPairsInput)
+		input.KeyPairs = []*string{qc.String(d.Id())}
+		_, err = clt.DeleteKeyPairs(input)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
-	if err != nil {
-		return err
-	}
-	input := new(qc.DeleteKeyPairsInput)
-	input.KeyPairs = []*string{qc.String(d.Id())}
-	var output *qc.DeleteKeyPairsOutput
-	simpleRetry(func() error {
-		output, err = clt.DeleteKeyPairs(input)
-		return isServerBusy(err)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }

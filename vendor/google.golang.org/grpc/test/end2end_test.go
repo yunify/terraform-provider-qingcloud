@@ -30,6 +30,7 @@ import (
 	"io"
 	"math"
 	"net"
+	"net/http"
 	"os"
 	"reflect"
 	"runtime"
@@ -55,7 +56,7 @@ import (
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/internal"
+	"google.golang.org/grpc/internal/channelz"
 	"google.golang.org/grpc/internal/leakcheck"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
@@ -71,7 +72,7 @@ import (
 )
 
 func init() {
-	grpc.RegisterChannelz()
+	channelz.TurnOn()
 }
 
 var (
@@ -452,6 +453,8 @@ type test struct {
 	maxClientSendMsgSize    *int
 	maxServerReceiveMsgSize *int
 	maxServerSendMsgSize    *int
+	maxClientHeaderListSize *uint32
+	maxServerHeaderListSize *uint32
 	userAgent               string
 	// clientCompression and serverCompression are set to test the deprecated API
 	// WithCompressor and WithDecompressor.
@@ -483,7 +486,7 @@ type test struct {
 	nonBlockingDial bool
 
 	// srv and srvAddr are set once startServer is called.
-	srv     *grpc.Server
+	srv     stopper
 	srvAddr string
 
 	// srvs and srvAddrs are set once startServers is called.
@@ -492,6 +495,11 @@ type test struct {
 
 	cc          *grpc.ClientConn // nil until requested via clientConn
 	restoreLogs func()           // nil unless declareLogNoise is used
+}
+
+type stopper interface {
+	Stop()
+	GracefulStop()
 }
 
 func (te *test) tearDown() {
@@ -546,6 +554,9 @@ func (te *test) listenAndServe(ts testpb.TestServiceServer, listen func(network,
 	if te.maxServerSendMsgSize != nil {
 		sopts = append(sopts, grpc.MaxSendMsgSize(*te.maxServerSendMsgSize))
 	}
+	if te.maxServerHeaderListSize != nil {
+		sopts = append(sopts, grpc.MaxHeaderListSize(*te.maxServerHeaderListSize))
+	}
 	if te.tapHandle != nil {
 		sopts = append(sopts, grpc.InTapHandle(te.tapHandle))
 	}
@@ -598,9 +609,6 @@ func (te *test) listenAndServe(ts testpb.TestServiceServer, listen func(network,
 	}
 	s := grpc.NewServer(sopts...)
 	te.srv = s
-	if te.e.httpHandler {
-		internal.TestingUseHandlerImpl(s)
-	}
 	if te.healthServer != nil {
 		healthgrpc.RegisterHealthServer(s, te.healthServer)
 	}
@@ -618,9 +626,98 @@ func (te *test) listenAndServe(ts testpb.TestServiceServer, listen func(network,
 		addr = "localhost:" + port
 	}
 
-	go s.Serve(lis)
 	te.srvAddr = addr
+
+	if te.e.httpHandler {
+		if te.e.security != "tls" {
+			te.t.Fatalf("unsupported environment settings")
+		}
+		cert, err := tls.LoadX509KeyPair(testdata.Path("server1.pem"), testdata.Path("server1.key"))
+		if err != nil {
+			te.t.Fatal("Error creating TLS certificate: ", err)
+		}
+		hs := &http.Server{
+			Handler: s,
+		}
+		err = http2.ConfigureServer(hs, &http2.Server{
+			MaxConcurrentStreams: te.maxStream,
+		})
+		if err != nil {
+			te.t.Fatal("error starting http2 server: ", err)
+		}
+		hs.TLSConfig.Certificates = []tls.Certificate{cert}
+		tlsListener := tls.NewListener(lis, hs.TLSConfig)
+		whs := &wrapHS{Listener: tlsListener, s: hs, conns: make(map[net.Conn]bool)}
+		te.srv = whs
+		go hs.Serve(whs)
+
+		return lis
+	}
+
+	go s.Serve(lis)
 	return lis
+}
+
+// TODO: delete wrapHS and wrapConn when Go1.6 and Go1.7 support are gone and
+// call s.Close and s.Shutdown instead.
+type wrapHS struct {
+	sync.Mutex
+	net.Listener
+	s     *http.Server
+	conns map[net.Conn]bool
+}
+
+func (w *wrapHS) Accept() (net.Conn, error) {
+	c, err := w.Listener.Accept()
+	if err != nil {
+		return nil, err
+	}
+	w.Lock()
+	if w.conns == nil {
+		w.Unlock()
+		c.Close()
+		return nil, errors.New("connection after listener closed")
+	}
+	w.conns[&wrapConn{Conn: c, hs: w}] = true
+	w.Unlock()
+	return c, nil
+}
+
+func (w *wrapHS) Stop() {
+	w.Listener.Close()
+	w.Lock()
+	conns := w.conns
+	w.conns = nil
+	w.Unlock()
+	for c := range conns {
+		c.Close()
+	}
+}
+
+// Poll for now..
+func (w *wrapHS) GracefulStop() {
+	w.Listener.Close()
+	for {
+		w.Lock()
+		l := len(w.conns)
+		w.Unlock()
+		if l == 0 {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+type wrapConn struct {
+	net.Conn
+	hs *wrapHS
+}
+
+func (w *wrapConn) Close() error {
+	w.hs.Lock()
+	delete(w.hs.conns, w.Conn)
+	w.hs.Unlock()
+	return w.Conn.Close()
 }
 
 func (te *test) startServerWithConnControl(ts testpb.TestServiceServer) *listenerWrapper {
@@ -696,6 +793,9 @@ func (te *test) configDial(opts ...grpc.DialOption) ([]grpc.DialOption, string) 
 	}
 	if te.maxClientSendMsgSize != nil {
 		opts = append(opts, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(*te.maxClientSendMsgSize)))
+	}
+	if te.maxClientHeaderListSize != nil {
+		opts = append(opts, grpc.WithMaxHeaderListSize(*te.maxClientHeaderListSize))
 	}
 	switch te.e.security {
 	case "tls":
@@ -2959,10 +3059,6 @@ func testSetAndSendHeaderStreamingRPC(t *testing.T, e env) {
 	defer te.tearDown()
 	tc := testpb.NewTestServiceClient(te.clientConn())
 
-	const (
-		argSize  = 1
-		respSize = 1
-	)
 	ctx := metadata.NewOutgoingContext(context.Background(), testMetadata)
 	stream, err := tc.FullDuplexCall(ctx)
 	if err != nil {
@@ -4559,9 +4655,7 @@ func TestCredsHandshakeAuthority(t *testing.T) {
 	}
 }
 
-type clientFailCreds struct {
-	got string
-}
+type clientFailCreds struct{}
 
 func (c *clientFailCreds) ServerHandshake(rawConn net.Conn) (net.Conn, credentials.AuthInfo, error) {
 	return rawConn, nil, nil
@@ -6452,5 +6546,168 @@ func TestDisabledIOBuffers(t *testing.T) {
 	stream.CloseSend()
 	if _, err := stream.Recv(); err != io.EOF {
 		t.Fatalf("stream.Recv() = _, %v, want _, io.EOF", err)
+	}
+}
+
+func TestServerMaxHeaderListSizeClientUserViolation(t *testing.T) {
+	defer leakcheck.Check(t)
+	for _, e := range listTestEnv() {
+		if e.httpHandler {
+			continue
+		}
+		testServerMaxHeaderListSizeClientUserViolation(t, e)
+	}
+}
+
+func testServerMaxHeaderListSizeClientUserViolation(t *testing.T, e env) {
+	te := newTest(t, e)
+	te.maxServerHeaderListSize = new(uint32)
+	*te.maxServerHeaderListSize = 216
+	te.startServer(&testServer{security: e.security})
+	defer te.tearDown()
+
+	cc := te.clientConn()
+	tc := testpb.NewTestServiceClient(cc)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	metadata.AppendToOutgoingContext(ctx, "oversize", string(make([]byte, 216)))
+	var err error
+	if err = verifyResultWithDelay(func() (bool, error) {
+		if _, err = tc.EmptyCall(ctx, &testpb.Empty{}); err != nil && status.Code(err) == codes.Internal {
+			return true, nil
+		}
+		return false, fmt.Errorf("tc.EmptyCall() = _, err: %v, want _, error code: %v", err, codes.Internal)
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestClientMaxHeaderListSizeServerUserViolation(t *testing.T) {
+	defer leakcheck.Check(t)
+	for _, e := range listTestEnv() {
+		if e.httpHandler {
+			continue
+		}
+		testClientMaxHeaderListSizeServerUserViolation(t, e)
+	}
+}
+
+func testClientMaxHeaderListSizeServerUserViolation(t *testing.T, e env) {
+	te := newTest(t, e)
+	te.maxClientHeaderListSize = new(uint32)
+	*te.maxClientHeaderListSize = 1 // any header server sends will violate
+	te.startServer(&testServer{security: e.security})
+	defer te.tearDown()
+
+	cc := te.clientConn()
+	tc := testpb.NewTestServiceClient(cc)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var err error
+	if err = verifyResultWithDelay(func() (bool, error) {
+		if _, err = tc.EmptyCall(ctx, &testpb.Empty{}); err != nil && status.Code(err) == codes.Internal {
+			return true, nil
+		}
+		return false, fmt.Errorf("tc.EmptyCall() = _, err: %v, want _, error code: %v", err, codes.Internal)
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestServerMaxHeaderListSizeClientIntentionalViolation(t *testing.T) {
+	defer leakcheck.Check(t)
+	for _, e := range listTestEnv() {
+		if e.httpHandler || e.security == "tls" {
+			continue
+		}
+		testServerMaxHeaderListSizeClientIntentionalViolation(t, e)
+	}
+}
+
+func testServerMaxHeaderListSizeClientIntentionalViolation(t *testing.T, e env) {
+	te := newTest(t, e)
+	te.maxServerHeaderListSize = new(uint32)
+	*te.maxServerHeaderListSize = 512
+	te.startServer(&testServer{security: e.security})
+	defer te.tearDown()
+
+	cc, dw := te.clientConnWithConnControl()
+	tc := &testServiceClientWrapper{TestServiceClient: testpb.NewTestServiceClient(cc)}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	stream, err := tc.FullDuplexCall(ctx)
+	if err != nil {
+		t.Fatalf("%v.FullDuplexCall(_) = _, %v, want _, <nil>", tc, err)
+	}
+	rcw := dw.getRawConnWrapper()
+	val := make([]string, 512)
+	for i := range val {
+		val[i] = "a"
+	}
+	// allow for client to send the initial header
+	time.Sleep(100 * time.Millisecond)
+	rcw.writeHeaders(http2.HeadersFrameParam{
+		StreamID:      tc.getCurrentStreamID(),
+		BlockFragment: rcw.encodeHeader("oversize", strings.Join(val, "")),
+		EndStream:     false,
+		EndHeaders:    true,
+	})
+	if _, err := stream.Recv(); err == nil || status.Code(err) != codes.Internal {
+		t.Fatalf("stream.Recv() = _, %v, want _, error code: %v", err, codes.Internal)
+	}
+}
+
+func TestClientMaxHeaderListSizeServerIntentionalViolation(t *testing.T) {
+	defer leakcheck.Check(t)
+	for _, e := range listTestEnv() {
+		if e.httpHandler || e.security == "tls" {
+			continue
+		}
+		testClientMaxHeaderListSizeServerIntentionalViolation(t, e)
+	}
+}
+
+func testClientMaxHeaderListSizeServerIntentionalViolation(t *testing.T, e env) {
+	te := newTest(t, e)
+	te.maxClientHeaderListSize = new(uint32)
+	*te.maxClientHeaderListSize = 200
+	lw := te.startServerWithConnControl(&testServer{security: e.security, setHeaderOnly: true})
+	defer te.tearDown()
+	cc, _ := te.clientConnWithConnControl()
+	tc := &testServiceClientWrapper{TestServiceClient: testpb.NewTestServiceClient(cc)}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	stream, err := tc.FullDuplexCall(ctx)
+	if err != nil {
+		t.Fatalf("%v.FullDuplexCall(_) = _, %v, want _, <nil>", tc, err)
+	}
+	var i int
+	var rcw *rawConnWrapper
+	for i = 0; i < 100; i++ {
+		rcw = lw.getLastConn()
+		if rcw != nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+		continue
+	}
+	if i == 100 {
+		t.Fatalf("failed to create server transport after 1s")
+	}
+
+	val := make([]string, 200)
+	for i := range val {
+		val[i] = "a"
+	}
+	// allow for client to send the initial header.
+	time.Sleep(100 * time.Millisecond)
+	rcw.writeHeaders(http2.HeadersFrameParam{
+		StreamID:      tc.getCurrentStreamID(),
+		BlockFragment: rcw.encodeHeader("oversize", strings.Join(val, "")),
+		EndStream:     false,
+		EndHeaders:    true,
+	})
+	if _, err := stream.Recv(); err == nil || status.Code(err) != codes.Internal {
+		t.Fatalf("stream.Recv() = _, %v, want _, error code: %v", err, codes.Internal)
 	}
 }
