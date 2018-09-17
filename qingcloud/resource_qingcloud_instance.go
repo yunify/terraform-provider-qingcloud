@@ -242,6 +242,9 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	}
 	if instance.KeyPairIDs != nil {
 		d.Set(resourceInstanceKeyPairIDs, qc.StringValueSlice(instance.KeyPairIDs))
+		d.Set(resourceInstanceLoginMode,"keypair")
+	} else {
+		d.Set(resourceInstanceLoginMode,"passwd")
 	}
 	if instance.Volumes != nil {
 		volumeIDs := make([]string, 0, len(instance.Volumes))
