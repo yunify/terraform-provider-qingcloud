@@ -127,7 +127,6 @@ resource "qingcloud_instance" "master"{
   image_id = "trustysrvx64f"
   instance_class = "0"
   managed_vxnet_id = "${qingcloud_vxnet.vx.id}"
-  login_mode = "keypair"
   keypair_ids = ["${qingcloud_keypair.arthur.id}"]
   security_group_id ="${qingcloud_security_group.basic.id}"
 }
@@ -136,7 +135,6 @@ resource "qingcloud_instance" "slave"{
   count = 3
 
   name = "slave-${count.index}"
-  login_mode = "keypair"
   image_id = "trustysrvx64f"
   instance_class = "0"
   managed_vxnet_id = "${qingcloud_vxnet.vx.id}"

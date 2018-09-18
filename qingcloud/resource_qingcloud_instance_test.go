@@ -413,7 +413,6 @@ resource "qingcloud_tag" "test"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-    login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -428,7 +427,6 @@ resource "qingcloud_tag" "test"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	cpu = 2
     memory = 2048
@@ -443,7 +441,6 @@ resource "qingcloud_keypair" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}",
 				"${qingcloud_tag.test2.id}"]
@@ -461,7 +458,6 @@ resource "qingcloud_keypair" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 }
 resource "qingcloud_tag" "test"{
@@ -486,7 +482,6 @@ resource "qingcloud_keypair" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -510,7 +505,6 @@ resource "qingcloud_keypair" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}","${qingcloud_keypair.foo2.id}","${qingcloud_keypair.foo3.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -533,7 +527,6 @@ resource "qingcloud_keypair" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo1.id}","${qingcloud_keypair.foo2.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -561,7 +554,6 @@ resource "qingcloud_volume" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	volume_ids = ["${qingcloud_volume.foo1.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
@@ -590,7 +582,6 @@ resource "qingcloud_volume" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}","${qingcloud_volume.foo3.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
@@ -618,7 +609,6 @@ resource "qingcloud_volume" "foo3"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	volume_ids = ["${qingcloud_volume.foo1.id}","${qingcloud_volume.foo2.id}"]
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
@@ -644,7 +634,6 @@ resource "qingcloud_keypair" "foo"{
 resource "qingcloud_instance" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	eip_id = "${qingcloud_eip.foo.id}"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
@@ -669,7 +658,6 @@ resource "qingcloud_keypair" "foo"{
 resource "qingcloud_instance" "foo" {
 	security_group_id = "${qingcloud_security_group.foo.id}"
 	image_id = "centos7x64d"
-	login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -684,7 +672,6 @@ resource "qingcloud_tag" "test"{
 resource "qingcloud_instance" "foo" {
     name = "passwordTest"
 	image_id = "centos7x64d"
-    login_mode = "passwd"
 	login_passwd = "Zhu88jie"
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }

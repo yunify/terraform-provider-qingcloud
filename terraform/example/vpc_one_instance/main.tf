@@ -12,7 +12,6 @@ resource "qingcloud_keypair" "foo" {
 resource "qingcloud_instance" "foo" {
   image_id         = "centos73x64"
   keypair_ids      = ["${qingcloud_keypair.foo.id}"]
-  login_mode       = "keypair"
   managed_vxnet_id = "${qingcloud_vxnet.foo.id}"
 }
 

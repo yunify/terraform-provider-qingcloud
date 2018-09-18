@@ -134,7 +134,6 @@ resource "qingcloud_loadbalancer_listener" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-    login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }
@@ -168,7 +167,6 @@ resource "qingcloud_loadbalancer_listener" "foo"{
 }
 resource "qingcloud_instance" "foo" {
 	image_id = "centos7x64d"
-    login_mode = "keypair"
 	keypair_ids = ["${qingcloud_keypair.foo.id}"]
 	tag_ids = ["${qingcloud_tag.test.id}"]
 }

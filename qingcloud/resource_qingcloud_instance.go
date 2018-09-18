@@ -33,7 +33,6 @@ const (
 	resourceInstanceVolumeIDs       = "volume_ids"
 	resourceInstancePublicIP        = "public_ip"
 	resourceInstanceUserData        = "userdata"
-	resourceInstanceLoginMode       = "login_mode"
 	resourceInstanceLoginPassword   = "login_passwd"
 )
 
@@ -132,11 +131,6 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			resourceInstanceLoginMode: &schema.Schema{
-				Type:     schema.TypeString,
-				ValidateFunc: withinArrayString("keypair", "passwd"),
-				Required: true,
-			},
 			resourceInstanceLoginPassword: &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -157,22 +151,16 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.InstanceClass = qc.Int(d.Get(resourceInstanceClass).(int))
 	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
 
-	input.LoginMode = qc.String(d.Get(resourceInstanceLoginMode).(string))
-	var loginMode = *input.LoginMode
-	if loginMode == "keypair" {
-		kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
-		if len(kps) < 1 {
-			return fmt.Errorf("KeyPair Required")
-		}
+	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
+	if len(kps) > 0 {
 		kp := kps[0].(string)
+		input.LoginMode = qc.String("keypair")
 		input.LoginKeyPair = qc.String(kp)
-	} else if loginMode == "passwd"{
+	} else if d.Get(resourceInstanceLoginPassword).(string) != "" {
+		input.LoginMode = qc.String("passwd")
 		input.LoginPasswd = qc.String(d.Get(resourceInstanceLoginPassword).(string))
-		if *input.LoginPasswd == "" {
-			return fmt.Errorf("loginPassword Required")
-		}
 	} else {
-		return fmt.Errorf("loginMode is error!")
+		return fmt.Errorf("loginMode is Required!")
 	}
 
 	if d.Get(resourceInstanceUserData).(string) != "" {
@@ -242,9 +230,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	}
 	if instance.KeyPairIDs != nil {
 		d.Set(resourceInstanceKeyPairIDs, qc.StringValueSlice(instance.KeyPairIDs))
-		d.Set(resourceInstanceLoginMode,"keypair")
-	} else {
-		d.Set(resourceInstanceLoginMode,"passwd")
 	}
 	if instance.Volumes != nil {
 		volumeIDs := make([]string, 0, len(instance.Volumes))
