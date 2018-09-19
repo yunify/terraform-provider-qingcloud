@@ -23,6 +23,73 @@ import (
 	"github.com/yunify/qingcloud-sdk-go/request/errors"
 )
 
+type App struct {
+	Abstraction           *string   `json:"abstraction" name:"abstraction"`
+	AppContractStatus     *string   `json:"app_contract_status" name:"app_contract_status"`
+	AppID                 *string   `json:"app_id" name:"app_id"`
+	AppInstanceID         *string   `json:"app_instance_id" name:"app_instance_id"`
+	AppName               *string   `json:"app_name" name:"app_name"`
+	AppType               *string   `json:"app_type" name:"app_type"`
+	AuthLevel             *int      `json:"auth_level" name:"auth_level"`
+	Category              *string   `json:"category" name:"category"`
+	CompanyURL            *string   `json:"company_url" name:"company_url"`
+	Contact               *string   `json:"contact" name:"contact"`
+	CoverImg              *string   `json:"cover_img" name:"cover_img"`
+	Description           *string   `json:"description" name:"description"`
+	Icon                  *string   `json:"icon" name:"icon"`
+	Screenshots           []*string `json:"screenshots" name:"screenshots"`
+	Status                *string   `json:"status" name:"status"`
+	Tags                  []*string `json:"tags" name:"tags"`
+	TermsOfService        *string   `json:"terms_of_service" name:"terms_of_service"`
+	TermsOfServiceLink    *string   `json:"terms_of_service_link" name:"terms_of_service_link"`
+	URL                   *string   `json:"url" name:"url"`
+	UsageInstructions     *string   `json:"usage_instructions" name:"usage_instructions"`
+	UsageInstructionsLink *string   `json:"usage_instructions_link" name:"usage_instructions_link"`
+	Visibility            *string   `json:"visibility" name:"visibility"`
+	Zones                 []*string `json:"zones" name:"zones"`
+}
+
+func (v *App) Validate() error {
+
+	return nil
+}
+
+type AppVersion struct {
+	AppID       *string    `json:"app_id" name:"app_id"`
+	CreateTime  *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
+	Description *string    `json:"description" name:"description"`
+	Name        *string    `json:"name" name:"name"`
+	ResourceKit *string    `json:"resource_kit" name:"resource_kit"`
+	Status      *string    `json:"status" name:"status"`
+	StatusTime  *time.Time `json:"status_time" name:"status_time" format:"ISO 8601"`
+	VersionID   *string    `json:"version_id" name:"version_id"`
+}
+
+func (v *AppVersion) Validate() error {
+
+	return nil
+}
+
+type AppVersionAttachment struct {
+	AttachmentID   *string    `json:"attachment_id" name:"attachment_id"`
+	AttachmentType *string    `json:"attachment_type" name:"attachment_type"`
+	Category       *string    `json:"category" name:"category"`
+	CreateTime     *time.Time `json:"create_time" name:"create_time" format:"ISO 8601"`
+	Filename       *string    `json:"filename" name:"filename"`
+	Filesize       *int       `json:"filesize" name:"filesize"`
+	Name           *string    `json:"name" name:"name"`
+	Owner          *string    `json:"owner" name:"owner"`
+	ResourceID     *string    `json:"resource_id" name:"resource_id"`
+	ResourceType   *string    `json:"resource_type" name:"resource_type"`
+	StatusTime     *time.Time `json:"status_time" name:"status_time" format:"ISO 8601"`
+	SubCategory    *string    `json:"sub_category" name:"sub_category"`
+}
+
+func (v *AppVersionAttachment) Validate() error {
+
+	return nil
+}
+
 type Cache struct {
 	AutoBackupTime *int `json:"auto_backup_time" name:"auto_backup_time"`
 	// CacheClass's available values: 0, 1
@@ -398,21 +465,16 @@ func (v *CachePrivateIP) Validate() error {
 type Cluster struct {
 	AdvancedActions            map[string]*string `json:"advanced_actions" name:"advanced_actions"`
 	AppID                      *string            `json:"app_id" name:"app_id"`
-	AppInfo                    interface{}        `json:"app_info" name:"app_info"`
+	AppInfo                    *App               `json:"app_info" name:"app_info"`
 	AppVersion                 *string            `json:"app_version" name:"app_version"`
-	AppVersionInfo             interface{}        `json:"app_version_info" name:"app_version_info"`
+	AppVersionInfo             *AppVersion        `json:"app_version_info" name:"app_version_info"`
 	AutoBackupTime             *int               `json:"auto_backup_time" name:"auto_backup_time"`
-	Backup                     map[string]*bool   `json:"backup" name:"backup"`
 	BackupPolicy               *string            `json:"backup_policy" name:"backup_policy"`
-	BackupService              interface{}        `json:"backup_service" name:"backup_service"`
-	CfgmgmtID                  *string            `json:"cfgmgmt_id" name:"cfgmgmt_id"`
 	ClusterID                  *string            `json:"cluster_id" name:"cluster_id"`
 	ClusterType                *int               `json:"cluster_type" name:"cluster_type"`
 	ConsoleID                  *string            `json:"console_id" name:"console_id"`
-	Controller                 *string            `json:"controller" name:"controller"`
 	CreateTime                 *time.Time         `json:"create_time" name:"create_time" format:"ISO 8601"`
 	CustomService              interface{}        `json:"custom_service" name:"custom_service"`
-	Debug                      *bool              `json:"debug" name:"debug"`
 	Description                *string            `json:"description" name:"description"`
 	DisplayTabs                interface{}        `json:"display_tabs" name:"display_tabs"`
 	Endpoints                  interface{}        `json:"endpoints" name:"endpoints"`
@@ -420,24 +482,16 @@ type Cluster struct {
 	HealthCheckEnablement      map[string]*bool   `json:"health_check_enablement" name:"health_check_enablement"`
 	IncrementalBackupSupported *bool              `json:"incremental_backup_supported" name:"incremental_backup_supported"`
 	LatestSnapshotTime         *string            `json:"latest_snapshot_time" name:"latest_snapshot_time"`
-	Links                      map[string]*string `json:"links" name:"links"`
-	MetadataRootAccess         *int               `json:"metadata_root_access" name:"metadata_root_access"`
 	Name                       *string            `json:"name" name:"name"`
 	NodeCount                  *int               `json:"node_count" name:"node_count"`
-	Nodes                      []*ClusterNode     `json:"nodes" name:"nodes"`
 	Owner                      *string            `json:"owner" name:"owner"`
-	PartnerAccess              *bool              `json:"partner_access" name:"partner_access"`
-	RestoreService             interface{}        `json:"restore_service" name:"restore_service"`
-	ReuseHyper                 *int               `json:"reuse_hyper" name:"reuse_hyper"`
 	RoleCount                  map[string]*int    `json:"role_count" name:"role_count"`
 	Roles                      []*string          `json:"roles" name:"roles"`
 	RootUserID                 *string            `json:"root_user_id" name:"root_user_id"`
 	SecurityGroupID            *string            `json:"security_group_id" name:"security_group_id"`
 	Status                     *string            `json:"status" name:"status"`
-	StatusTime                 *time.Time         `json:"status_time" name:"status_time" format:"ISO 8601"`
-	SubCode                    *int               `json:"sub_code" name:"sub_code"`
+	Tags                       []*string          `json:"tags" name:"tags"`
 	TransitionStatus           *string            `json:"transition_status" name:"transition_status"`
-	UpgradePolicy              []*string          `json:"upgrade_policy" name:"upgrade_policy"`
 	UpgradeStatus              *string            `json:"upgrade_status" name:"upgrade_status"`
 	UpgradeTime                *time.Time         `json:"upgrade_time" name:"upgrade_time" format:"ISO 8601"`
 	VxNet                      *VxNet             `json:"vxnet" name:"vxnet"`
@@ -445,11 +499,15 @@ type Cluster struct {
 
 func (v *Cluster) Validate() error {
 
-	if len(v.Nodes) > 0 {
-		for _, property := range v.Nodes {
-			if err := property.Validate(); err != nil {
-				return err
-			}
+	if v.AppInfo != nil {
+		if err := v.AppInfo.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if v.AppVersionInfo != nil {
+		if err := v.AppVersionInfo.Validate(); err != nil {
+			return err
 		}
 	}
 
@@ -1158,7 +1216,7 @@ type KeyPair struct {
 	Owner         *string   `json:"owner" name:"owner"`
 	PrivKey       *string   `json:"priv_key" name:"priv_key"`
 	PubKey        *string   `json:"pub_key" name:"pub_key"`
-	ResourceIDs   *string   `json:"resource_ids" name:"resource_ids"`
+	ResourceIDs   []*string `json:"resource_ids" name:"resource_ids"`
 	Tags          []*Tag    `json:"tags" name:"tags"`
 }
 

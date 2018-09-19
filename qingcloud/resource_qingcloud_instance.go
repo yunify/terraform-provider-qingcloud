@@ -33,6 +33,7 @@ const (
 	resourceInstanceVolumeIDs       = "volume_ids"
 	resourceInstancePublicIP        = "public_ip"
 	resourceInstanceUserData        = "userdata"
+	resourceInstanceLoginPassword   = "login_passwd"
 )
 
 func resourceQingcloudInstance() *schema.Resource {
@@ -90,7 +91,8 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceInstanceKeyPairIDs: &schema.Schema{
 				Type:     schema.TypeSet,
-				Required: true,
+				Computed: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -129,6 +131,10 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
+			resourceInstanceLoginPassword: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -144,13 +150,19 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
 	input.InstanceClass = qc.Int(d.Get(resourceInstanceClass).(int))
 	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
-	input.LoginMode = qc.String("keypair")
+
 	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
-	if len(kps) < 1 {
-		return fmt.Errorf("KeyPair Required")
+	if len(kps) > 0 {
+		kp := kps[0].(string)
+		input.LoginMode = qc.String("keypair")
+		input.LoginKeyPair = qc.String(kp)
+	} else if d.Get(resourceInstanceLoginPassword).(string) != "" {
+		input.LoginMode = qc.String("passwd")
+		input.LoginPasswd = qc.String(d.Get(resourceInstanceLoginPassword).(string))
+	} else {
+		return fmt.Errorf("loginMode is Required!")
 	}
-	kp := kps[0].(string)
-	input.LoginKeyPair = qc.String(kp)
+
 	if d.Get(resourceInstanceUserData).(string) != "" {
 		if err := setInstanceUserData(d, meta, input); err != nil {
 			return err
