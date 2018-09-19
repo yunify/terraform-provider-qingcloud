@@ -847,6 +847,7 @@ type DescribeLoadBalancerBackendsInput struct {
 	LoadBalancerBackends []*string `json:"loadbalancer_backends" name:"loadbalancer_backends" location:"params"`
 	LoadBalancerListener *string   `json:"loadbalancer_listener" name:"loadbalancer_listener" location:"params"`
 	Offset               *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner                *string   `json:"owner" name:"owner" location:"params"`
 	Verbose              *int      `json:"verbose" name:"verbose" location:"params"`
 }
 
@@ -893,6 +894,7 @@ type DescribeLoadBalancerListenersInput struct {
 	LoadBalancer          *string   `json:"loadbalancer" name:"loadbalancer" location:"params"`
 	LoadBalancerListeners []*string `json:"loadbalancer_listeners" name:"loadbalancer_listeners" location:"params"`
 	Offset                *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner                 *string   `json:"owner" name:"owner" location:"params"`
 	Verbose               *int      `json:"verbose" name:"verbose" location:"params"`
 }
 
@@ -939,6 +941,7 @@ type DescribeLoadBalancerPoliciesInput struct {
 	Limit                *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	LoadBalancerPolicies []*string `json:"loadbalancer_policies" name:"loadbalancer_policies" location:"params"`
 	Offset               *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner                *string   `json:"owner" name:"owner" location:"params"`
 	Verbose              *int      `json:"verbose" name:"verbose" location:"params"`
 }
 
@@ -986,6 +989,7 @@ type DescribeLoadBalancerPolicyRulesInput struct {
 	LoadBalancerPolicy      *string   `json:"loadbalancer_policy" name:"loadbalancer_policy" location:"params"`
 	LoadBalancerPolicyRules []*string `json:"loadbalancer_policy_rules" name:"loadbalancer_policy_rules" location:"params"`
 	Offset                  *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner                   *string   `json:"owner" name:"owner" location:"params"`
 }
 
 func (v *DescribeLoadBalancerPolicyRulesInput) Validate() error {
@@ -1031,6 +1035,7 @@ type DescribeLoadBalancersInput struct {
 	Limit         *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	LoadBalancers []*string `json:"loadbalancers" name:"loadbalancers" location:"params"`
 	Offset        *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner         *string   `json:"owner" name:"owner" location:"params"`
 	SearchWord    *string   `json:"search_word" name:"search_word" location:"params"`
 	Status        []*string `json:"status" name:"status" location:"params"`
 	Tags          []*string `json:"tags" name:"tags" location:"params"`
@@ -1078,6 +1083,7 @@ func (s *LoadBalancerService) DescribeServerCertificates(i *DescribeServerCertif
 type DescribeServerCertificatesInput struct {
 	Limit              *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset             *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner              *string   `json:"owner" name:"owner" location:"params"`
 	SearchWord         *string   `json:"search_word" name:"search_word" location:"params"`
 	ServerCertificates []*string `json:"server_certificates" name:"server_certificates" location:"params"`
 	Verbose            *int      `json:"verbose" name:"verbose" default:"0" location:"params"`
