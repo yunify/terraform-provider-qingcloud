@@ -94,6 +94,7 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 }
 
 func isVxnetSelfManaged(vxnetId string, clt *qc.VxNetService) (bool, error) {
+
 	input := new(qc.DescribeVxNetsInput)
 	input.VxNets = []*string{qc.String(vxnetId)}
 	output, err := clt.DescribeVxNets(input)

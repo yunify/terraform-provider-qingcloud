@@ -75,6 +75,16 @@ The events that can be sent are:
 	return commentify(w.String())
 }
 
+func hasEventStream(topShape *Shape) bool {
+	for _, ref := range topShape.MemberRefs {
+		if ref.Shape.IsEventStream {
+			return true
+		}
+	}
+
+	return false
+}
+
 func eventStreamAPIShapeRefDoc(refName string) string {
 	return commentify(fmt.Sprintf("Use %s to use the API's stream.", refName))
 }
@@ -117,7 +127,13 @@ func (a *API) setupEventStreams() {
 			Type:           "structure",
 			EventStreamAPI: op.EventStreamAPI,
 			IsEventStream:  true,
+			MemberRefs: map[string]*ShapeRef{
+				"Inbound": &ShapeRef{
+					ShapeName: inbound.Shape.ShapeName,
+				},
+			},
 		}
+		inbound.Shape.refs = append(inbound.Shape.refs, streamShape.MemberRefs["Inbound"])
 		streamShapeRef := &ShapeRef{
 			API:           a,
 			ShapeName:     streamShape.ShapeName,
@@ -667,8 +683,8 @@ func (s {{ $.ShapeName }}) Code() string {
 
 // Message returns the exception's message.
 func (s {{ $.ShapeName }}) Message() string {
-	{{- if index $.MemberRefs "Message" }}
-		return *s.Message
+	{{- if index $.MemberRefs "Message_" }}
+		return *s.Message_
 	{{- else }}
 		return ""
 	{{ end -}}

@@ -563,6 +563,7 @@ type DescribeSecurityGroupIPSetsInput struct {
 	IPSetType              *int      `json:"ipset_type" name:"ipset_type" location:"params"`
 	Limit                  *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset                 *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner                  *string   `json:"owner" name:"owner" location:"params"`
 	SecurityGroupIPSetName *string   `json:"security_group_ipset_name" name:"security_group_ipset_name" location:"params"`
 	SecurityGroupIPSets    []*string `json:"security_group_ipsets" name:"security_group_ipsets" location:"params"`
 	Tags                   []*string `json:"tags" name:"tags" location:"params"`
@@ -634,6 +635,7 @@ type DescribeSecurityGroupRulesInput struct {
 	Direction          *int      `json:"direction" name:"direction" location:"params"`
 	Limit              *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset             *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner              *string   `json:"owner" name:"owner" location:"params"`
 	SecurityGroup      *string   `json:"security_group" name:"security_group" location:"params"`
 	SecurityGroupRules []*string `json:"security_group_rules" name:"security_group_rules" location:"params"`
 }
@@ -754,6 +756,7 @@ func (s *SecurityGroupService) DescribeSecurityGroups(i *DescribeSecurityGroupsI
 type DescribeSecurityGroupsInput struct {
 	Limit          *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset         *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner          *string   `json:"owner" name:"owner" location:"params"`
 	SearchWord     *string   `json:"search_word" name:"search_word" location:"params"`
 	SecurityGroups []*string `json:"security_groups" name:"security_groups" location:"params"`
 	Tags           []*string `json:"tags" name:"tags" location:"params"`
