@@ -416,6 +416,7 @@ func (s *RouterService) DescribeRouterStaticEntries(i *DescribeRouterStaticEntri
 type DescribeRouterStaticEntriesInput struct {
 	Limit               *int    `json:"limit" name:"limit" location:"params"`
 	Offset              *int    `json:"offset" name:"offset" location:"params"`
+	Owner               *string `json:"owner" name:"owner" location:"params"`
 	RouterStatic        *string `json:"router_static" name:"router_static" location:"params"`
 	RouterStaticEntries *string `json:"router_static_entries" name:"router_static_entries" location:"params"`
 }
@@ -462,6 +463,7 @@ func (s *RouterService) DescribeRouterStatics(i *DescribeRouterStaticsInput) (*D
 type DescribeRouterStaticsInput struct {
 	Limit         *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset        *int      `json:"offset" name:"offset" default:"0" location:"params"`
+	Owner         *string   `json:"owner" name:"owner" location:"params"`
 	Router        *string   `json:"router" name:"router" location:"params"` // Required
 	RouterStatics []*string `json:"router_statics" name:"router_statics" location:"params"`
 	// StaticType's available values: 1, 2, 3, 4, 5, 6, 7, 8
@@ -635,6 +637,7 @@ func (s *RouterService) DescribeRouters(i *DescribeRoutersInput) (*DescribeRoute
 type DescribeRoutersInput struct {
 	Limit      *int      `json:"limit" name:"limit" location:"params"`
 	Offset     *int      `json:"offset" name:"offset" location:"params"`
+	Owner      *string   `json:"owner" name:"owner" location:"params"`
 	Routers    []*string `json:"routers" name:"routers" location:"params"`
 	SearchWord *string   `json:"search_word" name:"search_word" location:"params"`
 	Status     []*string `json:"status" name:"status" location:"params"`

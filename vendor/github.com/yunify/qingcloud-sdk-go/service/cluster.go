@@ -483,8 +483,8 @@ func (s *ClusterService) DeleteClusters(i *DeleteClustersInput) (*DeleteClusters
 }
 
 type DeleteClustersInput struct {
-	Clusters []*string `json:"clusters" name:"clusters" location:"params"` // Required
-	Force    *int      `json:"force" name:"force" location:"params"`
+	Clusters    []*string `json:"clusters" name:"clusters" location:"params"` // Required
+	DirectCease *int      `json:"direct_cease" name:"direct_cease" location:"params"`
 }
 
 func (v *DeleteClustersInput) Validate() error {
@@ -710,26 +710,20 @@ func (s *ClusterService) DescribeClusters(i *DescribeClustersInput) (*DescribeCl
 type DescribeClustersInput struct {
 	AppVersions       []*string `json:"app_versions" name:"app_versions" location:"params"`
 	Apps              []*string `json:"apps" name:"apps" location:"params"`
-	CfgmgmtID         *string   `json:"cfgmgmt_id" name:"cfgmgmt_id" location:"params"`
+	ClusterName       *string   `json:"cluster_name" name:"cluster_name" location:"params"`
 	Clusters          []*string `json:"clusters" name:"clusters" location:"params"`
-	Console           *string   `json:"console" name:"console" location:"params"`
 	ExternalClusterID *string   `json:"external_cluster_id" name:"external_cluster_id" location:"params"`
 	Limit             *int      `json:"limit" name:"limit" location:"params"`
 	Link              *string   `json:"link" name:"link" location:"params"`
-	Name              *string   `json:"name" name:"name" location:"params"`
 	Offset            *int      `json:"offset" name:"offset" location:"params"`
 	Owner             *string   `json:"owner" name:"owner" location:"params"`
 	Reverse           *int      `json:"reverse" name:"reverse" location:"params"`
-	Role              *string   `json:"role" name:"role" location:"params"`
 	// Scope's available values: all, cfgmgmt
-	Scope            *string   `json:"scope" name:"scope" location:"params"`
-	SearchWord       *string   `json:"search_word" name:"search_word" location:"params"`
-	SortKey          *string   `json:"sort_key" name:"sort_key" location:"params"`
-	Status           *string   `json:"status" name:"status" location:"params"`
-	TransitionStatus *string   `json:"transition_status" name:"transition_status" location:"params"`
-	Users            []*string `json:"users" name:"users" location:"params"`
-	Verbose          *int      `json:"verbose" name:"verbose" location:"params"`
-	VxNet            *string   `json:"vxnet" name:"vxnet" location:"params"`
+	Scope   *string   `json:"scope" name:"scope" location:"params"`
+	Status  []*string `json:"status" name:"status" location:"params"`
+	Tags    []*string `json:"tags" name:"tags" location:"params"`
+	Verbose *int      `json:"verbose" name:"verbose" location:"params"`
+	VxNet   *string   `json:"vxnet" name:"vxnet" location:"params"`
 }
 
 func (v *DescribeClustersInput) Validate() error {

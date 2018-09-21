@@ -668,6 +668,105 @@ func (c *Rekognition) DeleteStreamProcessorWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+const opDescribeCollection = "DescribeCollection"
+
+// DescribeCollectionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCollection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeCollection for more information on using the DescribeCollection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeCollectionRequest method.
+//    req, resp := client.DescribeCollectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *Rekognition) DescribeCollectionRequest(input *DescribeCollectionInput) (req *request.Request, output *DescribeCollectionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeCollection,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeCollectionInput{}
+	}
+
+	output = &DescribeCollectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeCollection API operation for Amazon Rekognition.
+//
+// Describes the specified collection. You can use DescribeCollection to get
+// information, such as the number of faces indexed into a collection and the
+// version of the model used by the collection for face detection.
+//
+// For more information, see Describing a Collection in the Amazon Rekognition
+// Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Rekognition's
+// API operation DescribeCollection for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   Input parameter violated a constraint. Validate your parameter before calling
+//   the API operation again.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to perform the action.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   Amazon Rekognition experienced a service issue. Try your call again.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   Amazon Rekognition is temporarily unable to process the request. Try your
+//   call again.
+//
+//   * ErrCodeProvisionedThroughputExceededException "ProvisionedThroughputExceededException"
+//   The number of requests exceeded your throughput limit. If you want to increase
+//   this limit, contact Amazon Rekognition.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The collection specified in the request cannot be found.
+//
+func (c *Rekognition) DescribeCollection(input *DescribeCollectionInput) (*DescribeCollectionOutput, error) {
+	req, out := c.DescribeCollectionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeCollectionWithContext is the same as DescribeCollection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeCollection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Rekognition) DescribeCollectionWithContext(ctx aws.Context, input *DescribeCollectionInput, opts ...request.Option) (*DescribeCollectionOutput, error) {
+	req, out := c.DescribeCollectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeStreamProcessor = "DescribeStreamProcessor"
 
 // DescribeStreamProcessorRequest generates a "aws/request.Request" representing the
@@ -1227,7 +1326,7 @@ func (c *Rekognition) DetectTextRequest(input *DetectTextInput) (req *request.Re
 // To determine whether a TextDetection element is a line of text or a word,
 // use the TextDetection object Type field.
 //
-// To be detected, text must be within +/- 30 degrees orientation of the horizontal
+// To be detected, text must be within +/- 90 degrees orientation of the horizontal
 // axis.
 //
 // For more information, see DetectText in the Amazon Rekognition Developer
@@ -2535,11 +2634,14 @@ func (c *Rekognition) IndexFacesRequest(input *IndexFacesInput) (req *request.Re
 // it in the back-end database. Amazon Rekognition uses feature vectors when
 // performing face match and search operations using the and operations.
 //
+// To get the number of faces in a collection, call .
+//
 // If you are using version 1.0 of the face detection model, IndexFaces indexes
 // the 15 largest faces in the input image. Later versions of the face detection
 // model index the 100 largest faces in the input image. To determine which
-// version of the model you are using, check the the value of FaceModelVersion
-// in the response from IndexFaces.
+// version of the model you are using, call and supply the collection ID. You
+// also get the model version from the value of FaceModelVersion in the response
+// from IndexFaces.
 //
 // For more information, see Model Versioning in the Amazon Rekognition Developer
 // Guide.
@@ -2550,16 +2652,48 @@ func (c *Rekognition) IndexFacesRequest(input *IndexFacesInput) (req *request.Re
 // this external image ID to create a client-side index to associate the faces
 // with each image. You can then use the index to find all faces in an image.
 //
+// You can specify the maximum number of faces to index with the MaxFaces input
+// parameter. This is useful when you want to index the largest faces in an
+// image, and you don't want to index other faces detected in the image.
+//
+// The QualityFilter input parameter allows you to filter out detected faces
+// that don’t meet the required quality bar chosen by Amazon Rekognition. The
+// quality bar is based on a variety of common use cases.
+//
 // In response, the operation returns an array of metadata for all detected
-// faces. This includes, the bounding box of the detected face, confidence value
-// (indicating the bounding box contains a face), a face ID assigned by the
-// service for each face that is detected and stored, and an image ID assigned
-// by the service for the input image. If you request all facial attributes
-// (using the detectionAttributes parameter, Amazon Rekognition returns detailed
-// facial attributes such as facial landmarks (for example, location of eye
-// and mount) and other facial attributes such gender. If you provide the same
-// image, specify the same collection, and use the same external ID in the IndexFaces
-// operation, Amazon Rekognition doesn't save duplicate face metadata.
+// faces, FaceRecords. This includes:
+//
+//    * The bounding box, BoundingBox, of the detected face.
+//
+//    * A confidence value, Confidence, indicating the confidence that the bounding
+//    box contains a face.
+//
+//    * A face ID, faceId, assigned by the service for each face that is detected
+//    and stored.
+//
+//    * An image ID, ImageId, assigned by the service for the input image.
+//
+// If you request all facial attributes (using the detectionAttributes parameter),
+// Amazon Rekognition returns detailed facial attributes such as facial landmarks
+// (for example, location of eye and mouth) and other facial attributes such
+// gender. If you provide the same image, specify the same collection, and use
+// the same external ID in the IndexFaces operation, Amazon Rekognition doesn't
+// save duplicate face metadata.
+//
+// Information about faces detected in an image, but not indexed, is returned
+// in an array of objects, UnindexedFaces. Faces are not indexed for reasons
+// such as:
+//
+//    * The face is too blurry.
+//
+//    * The image is too dark.
+//
+//    * The face has an extreme pose.
+//
+//    * The face is too small.
+//
+//    * The number of faces detected exceeds the value of the MaxFaces request
+//    parameter.
 //
 // For more information, see Adding Faces to a Collection in the Amazon Rekognition
 // Developer Guide.
@@ -2570,7 +2704,6 @@ func (c *Rekognition) IndexFacesRequest(input *IndexFacesInput) (req *request.Re
 // be either a PNG or JPEG formatted file.
 //
 // This operation requires permissions to perform the rekognition:IndexFaces
-// action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3903,7 +4036,7 @@ func (c *Rekognition) StartFaceSearchRequest(input *StartFaceSearchInput) (req *
 // you specify in NotificationChannel. To get the search results, first check
 // that the status value published to the Amazon SNS topic is SUCCEEDED. If
 // so, call and pass the job identifier (JobId) from the initial call to StartFaceSearch.
-// For more information, see collections-search-person.
+// For more information, see procedure-person-search-videos.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4488,7 +4621,7 @@ func (s *Beard) SetValue(v bool) *Beard {
 	return s
 }
 
-// Identifies the bounding box around the object, face or text. The left (x-coordinate)
+// Identifies the bounding box around the face or text. The left (x-coordinate)
 // and top (y-coordinate) are coordinates representing the top and left sides
 // of the bounding box. Note that the upper-left corner of the image is the
 // origin (0,0).
@@ -5469,6 +5602,103 @@ func (s DeleteStreamProcessorOutput) GoString() string {
 	return s.String()
 }
 
+type DescribeCollectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the collection to describe.
+	//
+	// CollectionId is a required field
+	CollectionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeCollectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCollectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeCollectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeCollectionInput"}
+	if s.CollectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CollectionId"))
+	}
+	if s.CollectionId != nil && len(*s.CollectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CollectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCollectionId sets the CollectionId field's value.
+func (s *DescribeCollectionInput) SetCollectionId(v string) *DescribeCollectionInput {
+	s.CollectionId = &v
+	return s
+}
+
+type DescribeCollectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the collection.
+	CollectionARN *string `type:"string"`
+
+	// The number of milliseconds since the Unix epoch time until the creation of
+	// the collection. The Unix epoch time is 00:00:00 Coordinated Universal Time
+	// (UTC), Thursday, 1 January 1970.
+	CreationTimestamp *time.Time `type:"timestamp"`
+
+	// The number of faces that are indexed into the collection. To index faces
+	// into a collection, use .
+	FaceCount *int64 `type:"long"`
+
+	// The version of the face model that's used by the collection for face detection.
+	//
+	// For more information, see Model Versioning in the Amazon Rekognition Developer
+	// Guide.
+	FaceModelVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeCollectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCollectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCollectionARN sets the CollectionARN field's value.
+func (s *DescribeCollectionOutput) SetCollectionARN(v string) *DescribeCollectionOutput {
+	s.CollectionARN = &v
+	return s
+}
+
+// SetCreationTimestamp sets the CreationTimestamp field's value.
+func (s *DescribeCollectionOutput) SetCreationTimestamp(v time.Time) *DescribeCollectionOutput {
+	s.CreationTimestamp = &v
+	return s
+}
+
+// SetFaceCount sets the FaceCount field's value.
+func (s *DescribeCollectionOutput) SetFaceCount(v int64) *DescribeCollectionOutput {
+	s.FaceCount = &v
+	return s
+}
+
+// SetFaceModelVersion sets the FaceModelVersion field's value.
+func (s *DescribeCollectionOutput) SetFaceModelVersion(v string) *DescribeCollectionOutput {
+	s.FaceModelVersion = &v
+	return s
+}
+
 type DescribeStreamProcessorInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5514,7 +5744,7 @@ type DescribeStreamProcessorOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Date and time the stream processor was created
-	CreationTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	CreationTimestamp *time.Time `type:"timestamp"`
 
 	// Kinesis video stream that provides the source streaming video.
 	Input *StreamProcessorInput `type:"structure"`
@@ -5522,7 +5752,7 @@ type DescribeStreamProcessorOutput struct {
 	// The time, in Unix format, the stream processor was last updated. For example,
 	// when the stream processor moves from a running state to a failed state, or
 	// when the user starts or stops the stream processor.
-	LastUpdateTimestamp *time.Time `type:"timestamp" timestampFormat:"unix"`
+	LastUpdateTimestamp *time.Time `type:"timestamp"`
 
 	// Name of the stream processor.
 	Name *string `min:"1" type:"string"`
@@ -7602,6 +7832,31 @@ type IndexFacesInput struct {
 	//
 	// Image is a required field
 	Image *Image `type:"structure" required:"true"`
+
+	// The maximum number of faces to index. The value of MaxFaces must be greater
+	// than or equal to 1. IndexFaces returns no more that 100 detected faces in
+	// an image, even if you specify a larger value for MaxFaces.
+	//
+	// If IndexFaces detects more faces than the value of MaxFaces, the faces with
+	// the lowest quality are filtered out first. If there are still more faces
+	// than the value of MaxFaces, the faces with the smallest bounding boxes are
+	// filtered out (up to the number needed to satisfy the value of MaxFaces).
+	// Information about the unindexed faces is available in the UnindexedFaces
+	// array.
+	//
+	// The faces returned by IndexFaces are sorted, in descending order, by the
+	// largest face bounding box size, to the smallest.
+	MaxFaces *int64 `min:"1" type:"integer"`
+
+	// Specifies how much filtering is done to identify faces detected with low
+	// quality. Filtered faces are not indexed. If you specify AUTO, filtering prioritizes
+	// the identification of faces that don’t meet the required quality bar chosen
+	// by Amazon Rekognition. The quality bar is based on a variety of common use
+	// cases. Low quality detections can arise for a number of reasons. For example,
+	// an object misidentified as a face, a face that is too blurry, or a face with
+	// a pose that is too extreme to use. If you specify NONE, no filtering is performed.
+	// The default value is NONE.
+	QualityFilter *string `type:"string" enum:"QualityFilter"`
 }
 
 // String returns the string representation
@@ -7628,6 +7883,9 @@ func (s *IndexFacesInput) Validate() error {
 	}
 	if s.Image == nil {
 		invalidParams.Add(request.NewErrParamRequired("Image"))
+	}
+	if s.MaxFaces != nil && *s.MaxFaces < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxFaces", 1))
 	}
 	if s.Image != nil {
 		if err := s.Image.Validate(); err != nil {
@@ -7665,6 +7923,18 @@ func (s *IndexFacesInput) SetImage(v *Image) *IndexFacesInput {
 	return s
 }
 
+// SetMaxFaces sets the MaxFaces field's value.
+func (s *IndexFacesInput) SetMaxFaces(v int64) *IndexFacesInput {
+	s.MaxFaces = &v
+	return s
+}
+
+// SetQualityFilter sets the QualityFilter field's value.
+func (s *IndexFacesInput) SetQualityFilter(v string) *IndexFacesInput {
+	s.QualityFilter = &v
+	return s
+}
+
 type IndexFacesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7687,6 +7957,12 @@ type IndexFacesOutput struct {
 	// in FaceRecords represent face locations after Exif metadata is used to correct
 	// the image orientation. Images in .png format don't contain Exif metadata.
 	OrientationCorrection *string `type:"string" enum:"OrientationCorrection"`
+
+	// An array of faces that detected in the image but not indexed either because
+	// the quality filter deemed them to be of low-quality or the MaxFaces request
+	// parameter filtered them out. To use the quality filter, you specify the QualityFilter
+	// request parameter.
+	UnindexedFaces []*UnindexedFace `type:"list"`
 }
 
 // String returns the string representation
@@ -7714,6 +7990,12 @@ func (s *IndexFacesOutput) SetFaceRecords(v []*FaceRecord) *IndexFacesOutput {
 // SetOrientationCorrection sets the OrientationCorrection field's value.
 func (s *IndexFacesOutput) SetOrientationCorrection(v string) *IndexFacesOutput {
 	s.OrientationCorrection = &v
+	return s
+}
+
+// SetUnindexedFaces sets the UnindexedFaces field's value.
+func (s *IndexFacesOutput) SetUnindexedFaces(v []*UnindexedFace) *IndexFacesOutput {
+	s.UnindexedFaces = v
 	return s
 }
 
@@ -8409,7 +8691,7 @@ func (s *PersonDetection) SetTimestamp(v int64) *PersonDetection {
 
 // Information about a person whose face matches a face(s) in a Amazon Rekognition
 // collection. Includes information about the faces in the Amazon Rekognition
-// collection (, information about the person (PersonDetail) and the timestamp
+// collection (), information about the person (PersonDetail) and the timestamp
 // for when the person was detected in a video. An array of PersonMatch objects
 // is returned by .
 type PersonMatch struct {
@@ -10091,6 +10373,55 @@ func (s *TextDetection) SetType(v string) *TextDetection {
 	return s
 }
 
+// A face detected by but not indexed. Use the Reasons response attribute to
+// determine why a face is not indexed.
+type UnindexedFace struct {
+	_ struct{} `type:"structure"`
+
+	// Structure containing attributes of a face that was detected, but not indexed,
+	// by IndexFaces.
+	FaceDetail *FaceDetail `type:"structure"`
+
+	// An array of reasons specifying why a face was not indexed.
+	//
+	//    * EXTREME_POSE - The face is at a pose that can't be detected. For example,
+	//    the head is turned too far away from the camera.
+	//
+	//    * EXCEEDS_MAX_FACES - The number of faces detected is already higher than
+	//    that specified by the MaxFaces input parameter for IndexFaces.
+	//
+	//    * LOW_BRIGHTNESS - The image is too dark.
+	//
+	//    * LOW_SHARPNESS - The image is too blurry.
+	//
+	//    * LOW_CONFIDENCE - The face was detected with a low confidence.
+	//
+	//    * SMALL_BOUNDING_BOX - The bounding box around the face is too small.
+	Reasons []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s UnindexedFace) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnindexedFace) GoString() string {
+	return s.String()
+}
+
+// SetFaceDetail sets the FaceDetail field's value.
+func (s *UnindexedFace) SetFaceDetail(v *FaceDetail) *UnindexedFace {
+	s.FaceDetail = v
+	return s
+}
+
+// SetReasons sets the Reasons field's value.
+func (s *UnindexedFace) SetReasons(v []*string) *UnindexedFace {
+	s.Reasons = v
+	return s
+}
+
 // Video file stored in an Amazon S3 bucket. Amazon Rekognition video start
 // operations such as use Video to specify a video for analysis. The supported
 // file formats are .mp4, .mov and .avi.
@@ -10382,6 +10713,34 @@ const (
 
 	// PersonTrackingSortByTimestamp is a PersonTrackingSortBy enum value
 	PersonTrackingSortByTimestamp = "TIMESTAMP"
+)
+
+const (
+	// QualityFilterNone is a QualityFilter enum value
+	QualityFilterNone = "NONE"
+
+	// QualityFilterAuto is a QualityFilter enum value
+	QualityFilterAuto = "AUTO"
+)
+
+const (
+	// ReasonExceedsMaxFaces is a Reason enum value
+	ReasonExceedsMaxFaces = "EXCEEDS_MAX_FACES"
+
+	// ReasonExtremePose is a Reason enum value
+	ReasonExtremePose = "EXTREME_POSE"
+
+	// ReasonLowBrightness is a Reason enum value
+	ReasonLowBrightness = "LOW_BRIGHTNESS"
+
+	// ReasonLowSharpness is a Reason enum value
+	ReasonLowSharpness = "LOW_SHARPNESS"
+
+	// ReasonLowConfidence is a Reason enum value
+	ReasonLowConfidence = "LOW_CONFIDENCE"
+
+	// ReasonSmallBoundingBox is a Reason enum value
+	ReasonSmallBoundingBox = "SMALL_BOUNDING_BOX"
 )
 
 const (
