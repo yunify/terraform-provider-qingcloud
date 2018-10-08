@@ -100,6 +100,69 @@ func TestInterpolater_moduleVariable(t *testing.T) {
 	})
 }
 
+func TestInterpolater_localVal(t *testing.T) {
+	lock := new(sync.RWMutex)
+	state := &State{
+		Modules: []*ModuleState{
+			&ModuleState{
+				Path: rootModulePath,
+				Locals: map[string]interface{}{
+					"foo": "hello!",
+				},
+			},
+		},
+	}
+
+	i := &Interpolater{
+		Module:    testModule(t, "interpolate-local"),
+		State:     state,
+		StateLock: lock,
+	}
+
+	scope := &InterpolationScope{
+		Path: rootModulePath,
+	}
+
+	testInterpolate(t, i, scope, "local.foo", ast.Variable{
+		Value: "hello!",
+		Type:  ast.TypeString,
+	})
+}
+
+func TestInterpolater_missingID(t *testing.T) {
+	lock := new(sync.RWMutex)
+	state := &State{
+		Modules: []*ModuleState{
+			&ModuleState{
+				Path: rootModulePath,
+				Resources: map[string]*ResourceState{
+					"aws_instance.web": &ResourceState{
+						Type: "aws_instance",
+						Primary: &InstanceState{
+							ID: "bar",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	i := &Interpolater{
+		Module:    testModule(t, "interpolate-resource-variable"),
+		State:     state,
+		StateLock: lock,
+	}
+
+	scope := &InterpolationScope{
+		Path: rootModulePath,
+	}
+
+	testInterpolate(t, i, scope, "aws_instance.web.id", ast.Variable{
+		Value: "bar",
+		Type:  ast.TypeString,
+	})
+}
+
 func TestInterpolater_pathCwd(t *testing.T) {
 	i := &Interpolater{}
 	scope := &InterpolationScope{}
@@ -285,8 +348,8 @@ func TestInterpolater_resourceVariableMissingDuringInput(t *testing.T) {
 			&ModuleState{
 				Path:      rootModulePath,
 				Resources: map[string]*ResourceState{
-				// No resources at all yet, because we're still dealing
-				// with input and so the resources haven't been created.
+					// No resources at all yet, because we're still dealing
+					// with input and so the resources haven't been created.
 				},
 			},
 		},
@@ -359,8 +422,109 @@ func TestInterpolater_resourceVariableMulti(t *testing.T) {
 	}
 
 	testInterpolate(t, i, scope, "aws_instance.web.*.foo", ast.Variable{
-		Value: config.UnknownVariableValue,
-		Type:  ast.TypeUnknown,
+		Type: ast.TypeList,
+		Value: []ast.Variable{
+			{
+				Type:  ast.TypeUnknown,
+				Value: config.UnknownVariableValue,
+			},
+		},
+	})
+}
+
+func TestInterpolater_resourceVariableMultiPartialUnknown(t *testing.T) {
+	lock := new(sync.RWMutex)
+	state := &State{
+		Modules: []*ModuleState{
+			&ModuleState{
+				Path: rootModulePath,
+				Resources: map[string]*ResourceState{
+					"aws_instance.web.0": &ResourceState{
+						Type: "aws_instance",
+						Primary: &InstanceState{
+							ID: "bar",
+							Attributes: map[string]string{
+								"foo": "1",
+							},
+						},
+					},
+					"aws_instance.web.1": &ResourceState{
+						Type: "aws_instance",
+						Primary: &InstanceState{
+							ID: "bar",
+							Attributes: map[string]string{
+								"foo": config.UnknownVariableValue,
+							},
+						},
+					},
+					"aws_instance.web.2": &ResourceState{
+						Type: "aws_instance",
+						Primary: &InstanceState{
+							ID: "bar",
+							Attributes: map[string]string{
+								"foo": "2",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	i := &Interpolater{
+		Module:    testModule(t, "interpolate-resource-variable-multi"),
+		State:     state,
+		StateLock: lock,
+	}
+
+	scope := &InterpolationScope{
+		Path: rootModulePath,
+	}
+
+	testInterpolate(t, i, scope, "aws_instance.web.*.foo", ast.Variable{
+		Type: ast.TypeList,
+		Value: []ast.Variable{
+			{
+				Type:  ast.TypeString,
+				Value: "1",
+			},
+			{
+				Type:  ast.TypeUnknown,
+				Value: config.UnknownVariableValue,
+			},
+			{
+				Type:  ast.TypeString,
+				Value: "2",
+			},
+		},
+	})
+}
+
+func TestInterpolater_resourceVariableMultiNoState(t *testing.T) {
+	// When evaluating a "splat" variable in a module that doesn't have
+	// any state yet, we should still be able to resolve to an empty
+	// list.
+	// See https://github.com/hashicorp/terraform/issues/14438 for an
+	// example of what we're testing for here.
+	lock := new(sync.RWMutex)
+	state := &State{
+		Modules: []*ModuleState{},
+	}
+
+	i := &Interpolater{
+		Module:    testModule(t, "interpolate-resource-variable-multi"),
+		State:     state,
+		StateLock: lock,
+		Operation: walkApply,
+	}
+
+	scope := &InterpolationScope{
+		Path: rootModulePath,
+	}
+
+	testInterpolate(t, i, scope, "aws_instance.web.*.foo", ast.Variable{
+		Type:  ast.TypeList,
+		Value: []ast.Variable{},
 	})
 }
 
@@ -408,8 +572,13 @@ func TestInterpolater_resourceVariableMultiList(t *testing.T) {
 	}
 
 	testInterpolate(t, i, scope, "aws_instance.web.*.ip", ast.Variable{
-		Value: config.UnknownVariableValue,
-		Type:  ast.TypeUnknown,
+		Type: ast.TypeList,
+		Value: []ast.Variable{
+			{
+				Type:  ast.TypeUnknown,
+				Value: config.UnknownVariableValue,
+			},
+		},
 	})
 }
 

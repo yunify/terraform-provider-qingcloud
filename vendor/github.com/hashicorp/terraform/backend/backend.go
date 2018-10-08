@@ -7,20 +7,37 @@ package backend
 import (
 	"context"
 	"errors"
+	"time"
 
+	"github.com/hashicorp/terraform/command/clistate"
 	"github.com/hashicorp/terraform/config/module"
 	"github.com/hashicorp/terraform/state"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-// This is the name of the default, initial state that every backend
-// must have. This state cannot be deleted.
+// DefaultStateName is the name of the default, initial state that every
+// backend must have. This state cannot be deleted.
 const DefaultStateName = "default"
 
-// Error value to return when a named state operation isn't supported.
 // This must be returned rather than a custom error so that the Terraform
 // CLI can detect it and handle it appropriately.
-var ErrNamedStatesNotSupported = errors.New("named states not supported")
+var (
+	// ErrNamedStatesNotSupported is returned when a named state operation
+	// isn't supported.
+	ErrNamedStatesNotSupported = errors.New("named states not supported")
+
+	// ErrDefaultStateNotSupported is returned when an operation does not support
+	// using the default state, but requires a named state to be selected.
+	ErrDefaultStateNotSupported = errors.New("default state not supported\n\n" +
+		"You can create a new workspace wth the \"workspace new\" command")
+
+	// ErrOperationNotSupported is returned when an unsupported operation
+	// is detected by the configured backend.
+	ErrOperationNotSupported = errors.New("operation not supported")
+)
+
+// InitFn is used to initialize a new backend.
+type InitFn func() Backend
 
 // Backend is the minimal interface that must be implemented to enable Terraform.
 type Backend interface {
@@ -120,9 +137,11 @@ type Operation struct {
 
 	// The options below are more self-explanatory and affect the runtime
 	// behavior of the operation.
-	Destroy   bool
-	Targets   []string
-	Variables map[string]interface{}
+	Destroy      bool
+	Targets      []string
+	Variables    map[string]interface{}
+	AutoApprove  bool
+	DestroyForce bool
 
 	// Input/output/control options.
 	UIIn  terraform.UIInput
@@ -132,20 +151,36 @@ type Operation struct {
 	// state.Lockers for its duration, and Unlock when complete.
 	LockState bool
 
-	// Environment is the named state that should be loaded from the Backend.
-	Environment string
+	// StateLocker is used to lock the state while providing UI feedback to the
+	// user. This will be supplied by the Backend itself.
+	StateLocker clistate.Locker
+
+	// The duration to retry obtaining a State lock.
+	StateLockTimeout time.Duration
+
+	// Workspace is the name of the workspace that this operation should run
+	// in, which controls which named state is used.
+	Workspace string
 }
 
 // RunningOperation is the result of starting an operation.
 type RunningOperation struct {
-	// Context should be used to track Done and Err for errors.
-	//
 	// For implementers of a backend, this context should not wrap the
 	// passed in context. Otherwise, canceling the parent context will
 	// immediately mark this context as "done" but those aren't the semantics
 	// we want: we want this context to be done only when the operation itself
 	// is fully done.
 	context.Context
+
+	// Stop requests the operation to complete early, by calling Stop on all
+	// the plugins. If the process needs to terminate immediately, call Cancel.
+	Stop context.CancelFunc
+
+	// Cancel is the context.CancelFunc associated with the embedded context,
+	// and can be called to terminate the operation early.
+	// Once Cancel is called, the operation should return as soon as possible
+	// to avoid running operations during process exit.
+	Cancel context.CancelFunc
 
 	// Err is the error of the operation. This is populated after
 	// the operation has completed.

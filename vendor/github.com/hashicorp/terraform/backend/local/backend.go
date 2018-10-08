@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/terraform/backend"
+	"github.com/hashicorp/terraform/command/clistate"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/state"
 	"github.com/hashicorp/terraform/terraform"
@@ -20,10 +22,9 @@ import (
 )
 
 const (
-	DefaultEnvDir          = "terraform.tfstate.d"
-	DefaultEnvFile         = "environment"
+	DefaultWorkspaceDir    = "terraform.tfstate.d"
+	DefaultWorkspaceFile   = "environment"
 	DefaultStateFilename   = "terraform.tfstate"
-	DefaultDataDir         = ".terraform"
 	DefaultBackupExtension = ".backup"
 )
 
@@ -36,8 +37,8 @@ type Local struct {
 	CLI      cli.Ui
 	CLIColor *colorstring.Colorize
 
-	// The State* paths are set from the CLI options, and may be left blank to
-	// use the defaults. If the actual paths for the local backend state are
+	// The State* paths are set from the backend config, and may be left blank
+	// to use the defaults. If the actual paths for the local backend state are
 	// needed, use the StatePaths method.
 	//
 	// StatePath is the local path where state is read from.
@@ -48,12 +49,12 @@ type Local struct {
 	// StateBackupPath is the local path where a backup file will be written.
 	// Set this to "-" to disable state backup.
 	//
-	// StateEnvPath is the path to the folder containing environments. This
-	// defaults to DefaultEnvDir if not set.
-	StatePath       string
-	StateOutPath    string
-	StateBackupPath string
-	StateEnvDir     string
+	// StateWorkspaceDir is the path to the folder containing data for
+	// non-default workspaces. This defaults to DefaultWorkspaceDir if not set.
+	StatePath         string
+	StateOutPath      string
+	StateBackupPath   string
+	StateWorkspaceDir string
 
 	// We only want to create a single instance of a local state, so store them
 	// here as they're loaded.
@@ -79,98 +80,121 @@ type Local struct {
 	// If this is nil, local performs normal state loading and storage.
 	Backend backend.Backend
 
+	// RunningInAutomation indicates that commands are being run by an
+	// automated system rather than directly at a command prompt.
+	//
+	// This is a hint not to produce messages that expect that a user can
+	// run a follow-up command, perhaps because Terraform is running in
+	// some sort of workflow automation tool that abstracts away the
+	// exact commands that are being run.
+	RunningInAutomation bool
+
 	schema *schema.Backend
 	opLock sync.Mutex
-	once   sync.Once
 }
 
-func (b *Local) Input(
-	ui terraform.UIInput, c *terraform.ResourceConfig) (*terraform.ResourceConfig, error) {
-	b.once.Do(b.init)
+// New returns a new initialized local backend.
+func New() *Local {
+	return NewWithBackend(nil)
+}
 
+// NewWithBackend returns a new local backend initialized with a
+// dedicated backend for non-enhanced behavior.
+func NewWithBackend(backend backend.Backend) *Local {
+	b := &Local{
+		Backend: backend,
+	}
+
+	b.schema = &schema.Backend{
+		Schema: map[string]*schema.Schema{
+			"path": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"workspace_dir": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"environment_dir": &schema.Schema{
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				ConflictsWith: []string{"workspace_dir"},
+				Deprecated:    "workspace_dir should be used instead, with the same meaning",
+			},
+		},
+
+		ConfigureFunc: b.configure,
+	}
+
+	return b
+}
+
+func (b *Local) configure(ctx context.Context) error {
+	d := schema.FromContextBackendConfig(ctx)
+
+	// Set the path if it is set
+	pathRaw, ok := d.GetOk("path")
+	if ok {
+		path := pathRaw.(string)
+		if path == "" {
+			return fmt.Errorf("configured path is empty")
+		}
+
+		b.StatePath = path
+		b.StateOutPath = path
+	}
+
+	if raw, ok := d.GetOk("workspace_dir"); ok {
+		path := raw.(string)
+		if path != "" {
+			b.StateWorkspaceDir = path
+		}
+	}
+
+	// Legacy name, which ConflictsWith workspace_dir
+	if raw, ok := d.GetOk("environment_dir"); ok {
+		path := raw.(string)
+		if path != "" {
+			b.StateWorkspaceDir = path
+		}
+	}
+
+	return nil
+}
+
+func (b *Local) Input(ui terraform.UIInput, c *terraform.ResourceConfig) (*terraform.ResourceConfig, error) {
 	f := b.schema.Input
 	if b.Backend != nil {
 		f = b.Backend.Input
 	}
-
 	return f(ui, c)
 }
 
 func (b *Local) Validate(c *terraform.ResourceConfig) ([]string, []error) {
-	b.once.Do(b.init)
-
 	f := b.schema.Validate
 	if b.Backend != nil {
 		f = b.Backend.Validate
 	}
-
 	return f(c)
 }
 
 func (b *Local) Configure(c *terraform.ResourceConfig) error {
-	b.once.Do(b.init)
-
 	f := b.schema.Configure
 	if b.Backend != nil {
 		f = b.Backend.Configure
 	}
-
 	return f(c)
 }
 
-func (b *Local) States() ([]string, error) {
-	// If we have a backend handling state, defer to that.
-	if b.Backend != nil {
-		return b.Backend.States()
-	}
-
-	// the listing always start with "default"
-	envs := []string{backend.DefaultStateName}
-
-	entries, err := ioutil.ReadDir(b.stateEnvDir())
-	// no error if there's no envs configured
-	if os.IsNotExist(err) {
-		return envs, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	var listed []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			listed = append(listed, filepath.Base(entry.Name()))
-		}
-	}
-
-	sort.Strings(listed)
-	envs = append(envs, listed...)
-
-	return envs, nil
-}
-
-// DeleteState removes a named state.
-// The "default" state cannot be removed.
-func (b *Local) DeleteState(name string) error {
-	// If we have a backend handling state, defer to that.
-	if b.Backend != nil {
-		return b.Backend.DeleteState(name)
-	}
-
-	if name == "" {
-		return errors.New("empty state name")
-	}
-
-	if name == backend.DefaultStateName {
-		return errors.New("cannot delete default state")
-	}
-
-	delete(b.states, name)
-	return os.RemoveAll(filepath.Join(b.stateEnvDir(), name))
-}
-
 func (b *Local) State(name string) (state.State, error) {
-	// If we have a backend handling state, defer to that.
+	statePath, stateOutPath, backupPath := b.StatePaths(name)
+
+	// If we have a backend handling state, delegate to that.
 	if b.Backend != nil {
 		return b.Backend.State(name)
 	}
@@ -182,8 +206,6 @@ func (b *Local) State(name string) (state.State, error) {
 	if err := b.createState(name); err != nil {
 		return nil, err
 	}
-
-	statePath, stateOutPath, backupPath := b.StatePaths(name)
 
 	// Otherwise, we need to load the state.
 	var s state.State = &state.LocalState{
@@ -206,6 +228,57 @@ func (b *Local) State(name string) (state.State, error) {
 	return s, nil
 }
 
+// DeleteState removes a named state.
+// The "default" state cannot be removed.
+func (b *Local) DeleteState(name string) error {
+	// If we have a backend handling state, defer to that.
+	if b.Backend != nil {
+		return b.Backend.DeleteState(name)
+	}
+
+	if name == "" {
+		return errors.New("empty state name")
+	}
+
+	if name == backend.DefaultStateName {
+		return errors.New("cannot delete default state")
+	}
+
+	delete(b.states, name)
+	return os.RemoveAll(filepath.Join(b.stateWorkspaceDir(), name))
+}
+
+func (b *Local) States() ([]string, error) {
+	// If we have a backend handling state, defer to that.
+	if b.Backend != nil {
+		return b.Backend.States()
+	}
+
+	// the listing always start with "default"
+	envs := []string{backend.DefaultStateName}
+
+	entries, err := ioutil.ReadDir(b.stateWorkspaceDir())
+	// no error if there's no envs configured
+	if os.IsNotExist(err) {
+		return envs, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var listed []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			listed = append(listed, filepath.Base(entry.Name()))
+		}
+	}
+
+	sort.Strings(listed)
+	envs = append(envs, listed...)
+
+	return envs, nil
+}
+
 // Operation implements backend.Enhanced
 //
 // This will initialize an in-memory terraform.Context to perform the
@@ -216,7 +289,7 @@ func (b *Local) State(name string) (state.State, error) {
 // name conflicts, assume that the field is overwritten if set.
 func (b *Local) Operation(ctx context.Context, op *backend.Operation) (*backend.RunningOperation, error) {
 	// Determine the function to call for our operation
-	var f func(context.Context, *backend.Operation, *backend.RunningOperation)
+	var f func(context.Context, context.Context, *backend.Operation, *backend.RunningOperation)
 	switch op.Type {
 	case backend.OperationTypeRefresh:
 		f = b.opRefresh
@@ -236,18 +309,92 @@ func (b *Local) Operation(ctx context.Context, op *backend.Operation) (*backend.
 	b.opLock.Lock()
 
 	// Build our running operation
-	runningCtx, runningCtxCancel := context.WithCancel(context.Background())
-	runningOp := &backend.RunningOperation{Context: runningCtx}
+	// the runninCtx is only used to block until the operation returns.
+	runningCtx, done := context.WithCancel(context.Background())
+	runningOp := &backend.RunningOperation{
+		Context: runningCtx,
+	}
+
+	// stopCtx wraps the context passed in, and is used to signal a graceful Stop.
+	stopCtx, stop := context.WithCancel(ctx)
+	runningOp.Stop = stop
+
+	// cancelCtx is used to cancel the operation immediately, usually
+	// indicating that the process is exiting.
+	cancelCtx, cancel := context.WithCancel(context.Background())
+	runningOp.Cancel = cancel
+
+	if op.LockState {
+		op.StateLocker = clistate.NewLocker(stopCtx, op.StateLockTimeout, b.CLI, b.Colorize())
+	} else {
+		op.StateLocker = clistate.NewNoopLocker()
+	}
 
 	// Do it
 	go func() {
+		defer done()
+		defer stop()
+		defer cancel()
+
+		// the state was locked during context creation, unlock the state when
+		// the operation completes
+		defer func() {
+			runningOp.Err = op.StateLocker.Unlock(runningOp.Err)
+		}()
+
 		defer b.opLock.Unlock()
-		defer runningCtxCancel()
-		f(ctx, op, runningOp)
+		f(stopCtx, cancelCtx, op, runningOp)
 	}()
 
 	// Return
 	return runningOp, nil
+}
+
+// opWait wats for the operation to complete, and a stop signal or a
+// cancelation signal.
+func (b *Local) opWait(
+	doneCh <-chan struct{},
+	stopCtx context.Context,
+	cancelCtx context.Context,
+	tfCtx *terraform.Context,
+	opState state.State) (canceled bool) {
+	// Wait for the operation to finish or for us to be interrupted so
+	// we can handle it properly.
+	select {
+	case <-stopCtx.Done():
+		if b.CLI != nil {
+			b.CLI.Output("stopping operation...")
+		}
+
+		// try to force a PersistState just in case the process is terminated
+		// before we can complete.
+		if err := opState.PersistState(); err != nil {
+			// We can't error out from here, but warn the user if there was an error.
+			// If this isn't transient, we will catch it again below, and
+			// attempt to save the state another way.
+			if b.CLI != nil {
+				b.CLI.Error(fmt.Sprintf(earlyStateWriteErrorFmt, err))
+			}
+		}
+
+		// Stop execution
+		go tfCtx.Stop()
+
+		select {
+		case <-cancelCtx.Done():
+			log.Println("[WARN] running operation canceled")
+			// if the operation was canceled, we need to return immediately
+			canceled = true
+		case <-doneCh:
+		}
+	case <-cancelCtx.Done():
+		// this should not be called without first attempting to stop the
+		// operation
+		log.Println("[ERROR] running operation canceled without Stop")
+		canceled = true
+	case <-doneCh:
+	}
+	return
 }
 
 // Colorize returns the Colorize structure that can be used for colorizing
@@ -262,51 +409,6 @@ func (b *Local) Colorize() *colorstring.Colorize {
 		Colors:  colorstring.DefaultColors,
 		Disable: true,
 	}
-}
-
-func (b *Local) init() {
-	b.schema = &schema.Backend{
-		Schema: map[string]*schema.Schema{
-			"path": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
-
-			"environment_dir": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
-		},
-
-		ConfigureFunc: b.schemaConfigure,
-	}
-}
-
-func (b *Local) schemaConfigure(ctx context.Context) error {
-	d := schema.FromContextBackendConfig(ctx)
-
-	// Set the path if it is set
-	pathRaw, ok := d.GetOk("path")
-	if ok {
-		path := pathRaw.(string)
-		if path == "" {
-			return fmt.Errorf("configured path is empty")
-		}
-
-		b.StatePath = path
-		b.StateOutPath = path
-	}
-
-	if raw, ok := d.GetOk("environment_dir"); ok {
-		path := raw.(string)
-		if path != "" {
-			b.StateEnvDir = path
-		}
-	}
-
-	return nil
 }
 
 // StatePaths returns the StatePath, StateOutPath, and StateBackupPath as
@@ -325,7 +427,7 @@ func (b *Local) StatePaths(name string) (string, string, string) {
 			statePath = DefaultStateFilename
 		}
 	} else {
-		statePath = filepath.Join(b.stateEnvDir(), name, DefaultStateFilename)
+		statePath = filepath.Join(b.stateWorkspaceDir(), name, DefaultStateFilename)
 	}
 
 	if stateOutPath == "" {
@@ -348,7 +450,7 @@ func (b *Local) createState(name string) error {
 		return nil
 	}
 
-	stateDir := filepath.Join(b.stateEnvDir(), name)
+	stateDir := filepath.Join(b.stateWorkspaceDir(), name)
 	s, err := os.Stat(stateDir)
 	if err == nil && s.IsDir() {
 		// no need to check for os.IsNotExist, since that is covered by os.MkdirAll
@@ -364,30 +466,33 @@ func (b *Local) createState(name string) error {
 	return nil
 }
 
-// stateEnvDir returns the directory where state environments are stored.
-func (b *Local) stateEnvDir() string {
-	if b.StateEnvDir != "" {
-		return b.StateEnvDir
+// stateWorkspaceDir returns the directory where state environments are stored.
+func (b *Local) stateWorkspaceDir() string {
+	if b.StateWorkspaceDir != "" {
+		return b.StateWorkspaceDir
 	}
 
-	return DefaultEnvDir
+	return DefaultWorkspaceDir
 }
 
-// currentStateName returns the name of the current named state as set in the
-// configuration files.
-// If there are no configured environments, currentStateName returns "default"
-func (b *Local) currentStateName() (string, error) {
-	contents, err := ioutil.ReadFile(filepath.Join(DefaultDataDir, DefaultEnvFile))
-	if os.IsNotExist(err) {
-		return backend.DefaultStateName, nil
-	}
-	if err != nil {
-		return "", err
-	}
-
-	if fromFile := strings.TrimSpace(string(contents)); fromFile != "" {
-		return fromFile, nil
-	}
-
-	return backend.DefaultStateName, nil
+func (b *Local) pluginInitRequired(providerErr *terraform.ResourceProviderError) {
+	b.CLI.Output(b.Colorize().Color(fmt.Sprintf(
+		strings.TrimSpace(errPluginInit)+"\n",
+		providerErr)))
 }
+
+// this relies on multierror to format the plugin errors below the copy
+const errPluginInit = `
+[reset][bold][yellow]Plugin reinitialization required. Please run "terraform init".[reset]
+[yellow]Reason: Could not satisfy plugin requirements.
+
+Plugins are external binaries that Terraform uses to access and manipulate
+resources. The configuration provided requires plugins which can't be located,
+don't satisfy the version constraints, or are otherwise incompatible.
+
+[reset][red]%s
+
+[reset][yellow]Terraform automatically discovers provider requirements from your
+configuration, including providers used in child modules. To see the
+requirements and constraints from each module, run "terraform providers".
+`
