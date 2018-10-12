@@ -420,6 +420,7 @@ type Generator struct {
 	packageNames     map[GoImportPath]GoPackageName // Imported package names in the current file.
 	usedPackages     map[GoImportPath]bool          // Packages used in current file.
 	usedPackageNames map[GoPackageName]bool         // Package names used in the current file.
+	addedImports     map[GoImportPath]bool          // Additional imports to emit.
 	typeNameToObject map[string]Object              // Key is a fully-qualified name in input syntax.
 	init             []string                       // Lines to emit in the init function.
 	indent           string
@@ -534,12 +535,19 @@ func (g *Generator) GoPackageName(importPath GoImportPath) GoPackageName {
 		return name
 	}
 	name := cleanPackageName(baseName(string(importPath)))
-	for i, orig := 1, name; g.usedPackageNames[name]; i++ {
+	for i, orig := 1, name; g.usedPackageNames[name] || isGoPredeclaredIdentifier[string(name)]; i++ {
 		name = orig + GoPackageName(strconv.Itoa(i))
 	}
 	g.packageNames[importPath] = name
 	g.usedPackageNames[name] = true
 	return name
+}
+
+// AddImport adds a package to the generated file's import section.
+// It returns the name used for the package.
+func (g *Generator) AddImport(importPath GoImportPath) GoPackageName {
+	g.addedImports[importPath] = true
+	return g.GoPackageName(importPath)
 }
 
 var globalPackageNames = map[GoPackageName]bool{
@@ -587,9 +595,51 @@ var isGoKeyword = map[string]bool{
 	"var":         true,
 }
 
+var isGoPredeclaredIdentifier = map[string]bool{
+	"append":     true,
+	"bool":       true,
+	"byte":       true,
+	"cap":        true,
+	"close":      true,
+	"complex":    true,
+	"complex128": true,
+	"complex64":  true,
+	"copy":       true,
+	"delete":     true,
+	"error":      true,
+	"false":      true,
+	"float32":    true,
+	"float64":    true,
+	"imag":       true,
+	"int":        true,
+	"int16":      true,
+	"int32":      true,
+	"int64":      true,
+	"int8":       true,
+	"iota":       true,
+	"len":        true,
+	"make":       true,
+	"new":        true,
+	"nil":        true,
+	"panic":      true,
+	"print":      true,
+	"println":    true,
+	"real":       true,
+	"recover":    true,
+	"rune":       true,
+	"string":     true,
+	"true":       true,
+	"uint":       true,
+	"uint16":     true,
+	"uint32":     true,
+	"uint64":     true,
+	"uint8":      true,
+	"uintptr":    true,
+}
+
 func cleanPackageName(name string) GoPackageName {
 	name = strings.Map(badToUnderscore, name)
-	// Identifier must not be keyword: insert _.
+	// Identifier must not be keyword or predeclared identifier: insert _.
 	if isGoKeyword[name] {
 		name = "_" + name
 	}
@@ -1109,6 +1159,7 @@ func (g *Generator) generate(file *FileDescriptor) {
 	g.usedPackages = make(map[GoImportPath]bool)
 	g.packageNames = make(map[GoImportPath]GoPackageName)
 	g.usedPackageNames = make(map[GoPackageName]bool)
+	g.addedImports = make(map[GoImportPath]bool)
 	for name := range globalPackageNames {
 		g.usedPackageNames[name] = true
 	}
@@ -1137,11 +1188,10 @@ func (g *Generator) generate(file *FileDescriptor) {
 		g.generateExtension(ext)
 	}
 	g.generateInitFunction()
+	g.generateFileDescriptor(file)
 
 	// Run the plugins before the imports so we know which imports are necessary.
 	g.runPlugins(file)
-
-	g.generateFileDescriptor(file)
 
 	// Generate header and imports last, though they appear first in the output.
 	rem := g.Buffer
@@ -1211,23 +1261,10 @@ func (g *Generator) generateHeader() {
 		g.P("// source: ", g.file.Name)
 	}
 	g.P()
-
+	g.PrintComments(strconv.Itoa(packagePath))
+	g.P()
 	g.P("package ", g.file.packageName)
 	g.P()
-
-	if loc, ok := g.file.comments[strconv.Itoa(packagePath)]; ok {
-		g.P("/*")
-		// not using g.PrintComments because this is a /* */ comment block.
-		text := strings.TrimSuffix(loc.GetLeadingComments(), "\n")
-		for _, line := range strings.Split(text, "\n") {
-			line = strings.TrimPrefix(line, " ")
-			// ensure we don't escape from the block comment
-			line = strings.Replace(line, "*/", "* /", -1)
-			g.P(line)
-		}
-		g.P("*/")
-		g.P()
-	}
 }
 
 // deprecationComment is the standard comment added to deprecated
@@ -1280,14 +1317,7 @@ func (g *Generator) weak(i int32) bool {
 
 // Generate the imports
 func (g *Generator) generateImports() {
-	g.P("import (")
-	// We almost always need a proto import.  Rather than computing when we
-	// do, which is tricky when there's a plugin, just import it and
-	// reference it later. The same argument applies to the fmt and math packages.
-	g.P(g.Pkg["proto"]+" ", GoImportPath(g.ImportPrefix)+"github.com/golang/protobuf/proto")
-	g.P(g.Pkg["fmt"] + ` "fmt"`)
-	g.P(g.Pkg["math"] + ` "math"`)
-	imports := make(map[GoImportPath]bool)
+	imports := make(map[GoImportPath]GoPackageName)
 	for i, s := range g.file.Dependency {
 		fd := g.fileByName(s)
 		importPath := fd.importPath
@@ -1300,10 +1330,9 @@ func (g *Generator) generateImports() {
 			continue
 		}
 		// Do not import a package twice.
-		if imports[importPath] {
+		if _, ok := imports[importPath]; ok {
 			continue
 		}
-		imports[importPath] = true
 		// We need to import all the dependencies, even if we don't reference them,
 		// because other code and tools depend on having the full transitive closure
 		// of protocol buffer types in the binary.
@@ -1311,6 +1340,19 @@ func (g *Generator) generateImports() {
 		if _, ok := g.usedPackages[importPath]; !ok {
 			packageName = "_"
 		}
+		imports[importPath] = packageName
+	}
+	for importPath := range g.addedImports {
+		imports[importPath] = g.GoPackageName(importPath)
+	}
+	// We almost always need a proto import.  Rather than computing when we
+	// do, which is tricky when there's a plugin, just import it and
+	// reference it later. The same argument applies to the fmt and math packages.
+	g.P("import (")
+	g.P(g.Pkg["fmt"] + ` "fmt"`)
+	g.P(g.Pkg["math"] + ` "math"`)
+	g.P(g.Pkg["proto"]+" ", GoImportPath(g.ImportPrefix)+"github.com/golang/protobuf/proto")
+	for importPath, packageName := range imports {
 		g.P(packageName, " ", GoImportPath(g.ImportPrefix)+importPath)
 	}
 	g.P(")")
@@ -1436,6 +1478,8 @@ func (g *Generator) generateEnum(enum *EnumDescriptor) {
 		g.P("func (", ccTypeName, `) XXX_WellKnownType() string { return "`, enum.GetName(), `" }`)
 		g.P()
 	}
+
+	g.generateEnumRegistration(enum)
 }
 
 // The tag is a string like "varint,2,opt,name=fieldname,def=7" that
@@ -2810,6 +2854,7 @@ func (g *Generator) generateExtension(ext *ExtensionDescriptor) {
 	g.P("}")
 	g.P()
 
+	g.addInitf("%s.RegisterExtension(%s)", g.Pkg["proto"], ext.DescName())
 	if mset {
 		// Generate a bit more code to register with message_set.go.
 		g.addInitf("%s.RegisterMessageSetType((%s)(nil), %d, %q)", g.Pkg["proto"], fieldType, *field.Number, extName)
@@ -2819,17 +2864,6 @@ func (g *Generator) generateExtension(ext *ExtensionDescriptor) {
 }
 
 func (g *Generator) generateInitFunction() {
-	for _, enum := range g.file.enum {
-		g.generateEnumRegistration(enum)
-	}
-	for _, d := range g.file.desc {
-		for _, ext := range d.ext {
-			g.generateExtensionRegistration(ext)
-		}
-	}
-	for _, ext := range g.file.ext {
-		g.generateExtensionRegistration(ext)
-	}
 	if len(g.init) == 0 {
 		return
 	}
@@ -2891,10 +2925,6 @@ func (g *Generator) generateEnumRegistration(enum *EnumDescriptor) {
 	// The full type name, CamelCased.
 	ccTypeName := CamelCaseSlice(typeName)
 	g.addInitf("%s.RegisterEnum(%q, %[3]s_name, %[3]s_value)", g.Pkg["proto"], pkg+ccTypeName, ccTypeName)
-}
-
-func (g *Generator) generateExtensionRegistration(ext *ExtensionDescriptor) {
-	g.addInitf("%s.RegisterExtension(%s)", g.Pkg["proto"], ext.DescName())
 }
 
 // And now lots of helper functions.

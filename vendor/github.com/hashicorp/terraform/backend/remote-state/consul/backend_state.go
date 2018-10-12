@@ -15,15 +15,9 @@ const (
 )
 
 func (b *Backend) States() ([]string, error) {
-	// Get the Consul client
-	client, err := b.clientRaw()
-	if err != nil {
-		return nil, err
-	}
-
 	// List our raw path
 	prefix := b.configData.Get("path").(string) + keyEnvPrefix
-	keys, _, err := client.KV().Keys(prefix, "/", nil)
+	keys, _, err := b.client.KV().Keys(prefix, "/", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -56,14 +50,8 @@ func (b *Backend) States() ([]string, error) {
 }
 
 func (b *Backend) DeleteState(name string) error {
-	if name == backend.DefaultStateName {
+	if name == backend.DefaultStateName || name == "" {
 		return fmt.Errorf("can't delete default state")
-	}
-
-	// Get the Consul API client
-	client, err := b.clientRaw()
-	if err != nil {
-		return err
 	}
 
 	// Determine the path of the data
@@ -71,17 +59,11 @@ func (b *Backend) DeleteState(name string) error {
 
 	// Delete it. We just delete it without any locking since
 	// the DeleteState API is documented as such.
-	_, err = client.KV().Delete(path, nil)
+	_, err := b.client.KV().Delete(path, nil)
 	return err
 }
 
 func (b *Backend) State(name string) (state.State, error) {
-	// Get the Consul API client
-	client, err := b.clientRaw()
-	if err != nil {
-		return nil, err
-	}
-
 	// Determine the path of the data
 	path := b.path(name)
 
@@ -91,9 +73,10 @@ func (b *Backend) State(name string) (state.State, error) {
 	// Build the state client
 	var stateMgr state.State = &remote.State{
 		Client: &RemoteClient{
-			Client: client,
-			Path:   path,
-			GZip:   gzip,
+			Client:    b.client,
+			Path:      path,
+			GZip:      gzip,
+			lockState: b.lock,
 		},
 	}
 
@@ -102,22 +85,24 @@ func (b *Backend) State(name string) (state.State, error) {
 		stateMgr = &state.LockDisabled{Inner: stateMgr}
 	}
 
-	// Get the locker, which we know always exists
-	stateMgrLocker := stateMgr.(state.Locker)
+	// the default state always exists
+	if name == backend.DefaultStateName {
+		return stateMgr, nil
+	}
 
 	// Grab a lock, we use this to write an empty state if one doesn't
 	// exist already. We have to write an empty state as a sentinel value
 	// so States() knows it exists.
 	lockInfo := state.NewLockInfo()
 	lockInfo.Operation = "init"
-	lockId, err := stateMgrLocker.Lock(lockInfo)
+	lockId, err := stateMgr.Lock(lockInfo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lock state in Consul: %s", err)
 	}
 
 	// Local helper function so we can call it multiple places
 	lockUnlock := func(parent error) error {
-		if err := stateMgrLocker.Unlock(lockId); err != nil {
+		if err := stateMgr.Unlock(lockId); err != nil {
 			return fmt.Errorf(strings.TrimSpace(errStateUnlock), lockId, err)
 		}
 

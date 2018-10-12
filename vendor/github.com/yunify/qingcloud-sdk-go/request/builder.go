@@ -61,6 +61,9 @@ func (b *Builder) build() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+	if b.operation.RequestMethod == "POST"{
+		httpRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 
 	logger.Info(fmt.Sprintf(
 		"Built QingCloud request: [%d] %s \n %s ",

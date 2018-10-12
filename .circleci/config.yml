@@ -6,7 +6,7 @@ jobs:
   test:
     docker:
       # specify the version
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.9
     working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
     steps:
       - checkout
@@ -41,7 +41,7 @@ jobs:
                  codeclimate-test-reporter < cov.out
   release:
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.9
     working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
     steps:
       - checkout

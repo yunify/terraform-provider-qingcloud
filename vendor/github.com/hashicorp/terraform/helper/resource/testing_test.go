@@ -2,9 +2,12 @@ package resource
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -117,6 +120,58 @@ func TestTest(t *testing.T) {
 	}
 	if !mp.TestResetCalled {
 		t.Fatal("didn't call TestReset")
+	}
+}
+
+func TestTest_plan_only(t *testing.T) {
+	mp := testProvider()
+	mp.ApplyReturn = &terraform.InstanceState{
+		ID: "foo",
+	}
+
+	checkDestroy := false
+
+	checkDestroyFn := func(*terraform.State) error {
+		checkDestroy = true
+		return nil
+	}
+
+	mt := new(mockT)
+	Test(mt, TestCase{
+		Providers: map[string]terraform.ResourceProvider{
+			"test": mp,
+		},
+		CheckDestroy: checkDestroyFn,
+		Steps: []TestStep{
+			TestStep{
+				Config:             testConfigStr,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+
+	if !mt.failed() {
+		t.Fatal("test should've failed")
+	}
+
+	expected := `Step 0 error: After applying this step, the plan was not empty:
+
+DIFF:
+
+CREATE: test_instance.foo
+  foo: "" => "bar"
+
+STATE:
+
+<no state>`
+
+	if mt.failMessage() != expected {
+		t.Fatalf("Expected message: %s\n\ngot:\n\n%s", expected, mt.failMessage())
+	}
+
+	if !checkDestroy {
+		t.Fatal("didn't call check for destroy")
 	}
 }
 
@@ -334,6 +389,46 @@ func TestTest_preCheck(t *testing.T) {
 	}
 }
 
+func TestTest_skipFunc(t *testing.T) {
+	preCheckCalled := false
+	skipped := false
+
+	mp := testProvider()
+	mp.ApplyReturn = &terraform.InstanceState{
+		ID: "foo",
+	}
+
+	checkStepFn := func(*terraform.State) error {
+		return fmt.Errorf("error")
+	}
+
+	mt := new(mockT)
+	Test(mt, TestCase{
+		Providers: map[string]terraform.ResourceProvider{
+			"test": mp,
+		},
+		PreCheck: func() { preCheckCalled = true },
+		Steps: []TestStep{
+			{
+				Config:   testConfigStr,
+				Check:    checkStepFn,
+				SkipFunc: func() (bool, error) { skipped = true; return true, nil },
+			},
+		},
+	})
+
+	if mt.failed() {
+		t.Fatal("Expected check to be skipped")
+	}
+
+	if !preCheckCalled {
+		t.Fatal("precheck should be called")
+	}
+	if !skipped {
+		t.Fatal("SkipFunc should be called")
+	}
+}
+
 func TestTest_stepError(t *testing.T) {
 	mp := testProvider()
 	mp.ApplyReturn = &terraform.InstanceState{
@@ -422,6 +517,99 @@ func TestTest_resetError(t *testing.T) {
 
 	if !mt.failed() {
 		t.Fatal("test should've failed")
+	}
+}
+
+func TestTest_expectError(t *testing.T) {
+	cases := []struct {
+		name     string
+		planErr  bool
+		applyErr bool
+		badErr   bool
+	}{
+		{
+			name:     "successful apply",
+			planErr:  false,
+			applyErr: false,
+		},
+		{
+			name:     "bad plan",
+			planErr:  true,
+			applyErr: false,
+		},
+		{
+			name:     "bad apply",
+			planErr:  false,
+			applyErr: true,
+		},
+		{
+			name:     "bad plan, bad err",
+			planErr:  true,
+			applyErr: false,
+			badErr:   true,
+		},
+		{
+			name:     "bad apply, bad err",
+			planErr:  false,
+			applyErr: true,
+			badErr:   true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mp := testProvider()
+			expectedText := "test provider error"
+			var errText string
+			if tc.badErr {
+				errText = "wrong provider error"
+			} else {
+				errText = expectedText
+			}
+			noErrText := "no error received, but expected a match to"
+			if tc.planErr {
+				mp.DiffReturnError = errors.New(errText)
+			}
+			if tc.applyErr {
+				mp.ApplyReturnError = errors.New(errText)
+			}
+			mt := new(mockT)
+			Test(mt, TestCase{
+				Providers: map[string]terraform.ResourceProvider{
+					"test": mp,
+				},
+				Steps: []TestStep{
+					TestStep{
+						Config:             testConfigStr,
+						ExpectError:        regexp.MustCompile(expectedText),
+						Check:              func(*terraform.State) error { return nil },
+						ExpectNonEmptyPlan: true,
+					},
+				},
+			},
+			)
+			if mt.FatalCalled {
+				t.Fatalf("fatal: %+v", mt.FatalArgs)
+			}
+			switch {
+			case len(mt.ErrorArgs) < 1 && !tc.planErr && !tc.applyErr:
+				t.Fatalf("expected error, got none")
+			case !tc.planErr && !tc.applyErr:
+				for _, e := range mt.ErrorArgs {
+					if regexp.MustCompile(noErrText).MatchString(fmt.Sprintf("%v", e)) {
+						return
+					}
+				}
+				t.Fatalf("expected error to match %s, got %+v", noErrText, mt.ErrorArgs)
+			case tc.badErr:
+				for _, e := range mt.ErrorArgs {
+					if regexp.MustCompile(expectedText).MatchString(fmt.Sprintf("%v", e)) {
+						return
+					}
+				}
+				t.Fatalf("expected error to match %s, got %+v", expectedText, mt.ErrorArgs)
+			}
+		})
 	}
 }
 
@@ -532,6 +720,10 @@ func (t *mockT) Skip(args ...interface{}) {
 	t.f = true
 }
 
+func (t *mockT) Name() string {
+	return "MockedName"
+}
+
 func (t *mockT) failed() bool {
 	return t.f
 }
@@ -564,6 +756,244 @@ func testProvider() *terraform.MockResourceProvider {
 	return mp
 }
 
+func TestTest_Main(t *testing.T) {
+	flag.Parse()
+	if *flagSweep == "" {
+		// Tests for the TestMain method used for Sweepers will panic without the -sweep
+		// flag specified. Mock the value for now
+		*flagSweep = "us-east-1"
+	}
+
+	cases := []struct {
+		Name            string
+		Sweepers        map[string]*Sweeper
+		ExpectedRunList []string
+		SweepRun        string
+	}{
+		{
+			Name: "normal",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+			},
+			ExpectedRunList: []string{"aws_dummy"},
+		},
+		{
+			Name: "with dep",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+				"aws_top": &Sweeper{
+					Name:         "aws_top",
+					Dependencies: []string{"aws_sub"},
+					F:            mockSweeperFunc,
+				},
+				"aws_sub": &Sweeper{
+					Name: "aws_sub",
+					F:    mockSweeperFunc,
+				},
+			},
+			ExpectedRunList: []string{"aws_dummy", "aws_sub", "aws_top"},
+		},
+		{
+			Name: "with filter",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+				"aws_top": &Sweeper{
+					Name:         "aws_top",
+					Dependencies: []string{"aws_sub"},
+					F:            mockSweeperFunc,
+				},
+				"aws_sub": &Sweeper{
+					Name: "aws_sub",
+					F:    mockSweeperFunc,
+				},
+			},
+			ExpectedRunList: []string{"aws_dummy"},
+			SweepRun:        "aws_dummy",
+		},
+		{
+			Name: "with two filters",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+				"aws_top": &Sweeper{
+					Name:         "aws_top",
+					Dependencies: []string{"aws_sub"},
+					F:            mockSweeperFunc,
+				},
+				"aws_sub": &Sweeper{
+					Name: "aws_sub",
+					F:    mockSweeperFunc,
+				},
+			},
+			ExpectedRunList: []string{"aws_dummy", "aws_sub"},
+			SweepRun:        "aws_dummy,aws_sub",
+		},
+		{
+			Name: "with dep and filter",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+				"aws_top": &Sweeper{
+					Name:         "aws_top",
+					Dependencies: []string{"aws_sub"},
+					F:            mockSweeperFunc,
+				},
+				"aws_sub": &Sweeper{
+					Name: "aws_sub",
+					F:    mockSweeperFunc,
+				},
+			},
+			ExpectedRunList: []string{"aws_top", "aws_sub"},
+			SweepRun:        "aws_top",
+		},
+		{
+			Name: "filter and none",
+			Sweepers: map[string]*Sweeper{
+				"aws_dummy": &Sweeper{
+					Name: "aws_dummy",
+					F:    mockSweeperFunc,
+				},
+				"aws_top": &Sweeper{
+					Name:         "aws_top",
+					Dependencies: []string{"aws_sub"},
+					F:            mockSweeperFunc,
+				},
+				"aws_sub": &Sweeper{
+					Name: "aws_sub",
+					F:    mockSweeperFunc,
+				},
+			},
+			SweepRun: "none",
+		},
+	}
+
+	for _, tc := range cases {
+		// reset sweepers
+		sweeperFuncs = map[string]*Sweeper{}
+
+		t.Run(tc.Name, func(t *testing.T) {
+			for n, s := range tc.Sweepers {
+				AddTestSweepers(n, s)
+			}
+			*flagSweepRun = tc.SweepRun
+
+			TestMain(&testing.M{})
+
+			// get list of tests ran from sweeperRunList keys
+			var keys []string
+			for k, _ := range sweeperRunList {
+				keys = append(keys, k)
+			}
+
+			sort.Strings(keys)
+			sort.Strings(tc.ExpectedRunList)
+			if !reflect.DeepEqual(keys, tc.ExpectedRunList) {
+				t.Fatalf("Expected keys mismatch, expected:\n%#v\ngot:\n%#v\n", tc.ExpectedRunList, keys)
+			}
+		})
+	}
+}
+
+func mockSweeperFunc(s string) error {
+	return nil
+}
+
+func TestTest_Taint(t *testing.T) {
+	mp := testProvider()
+	mp.DiffFn = func(
+		_ *terraform.InstanceInfo,
+		state *terraform.InstanceState,
+		_ *terraform.ResourceConfig,
+	) (*terraform.InstanceDiff, error) {
+		return &terraform.InstanceDiff{
+			DestroyTainted: state.Tainted,
+		}, nil
+	}
+
+	mp.ApplyFn = func(
+		info *terraform.InstanceInfo,
+		state *terraform.InstanceState,
+		diff *terraform.InstanceDiff,
+	) (*terraform.InstanceState, error) {
+		var id string
+		switch {
+		case diff.Destroy && !diff.DestroyTainted:
+			return nil, nil
+		case diff.DestroyTainted:
+			id = "tainted"
+		default:
+			id = "not_tainted"
+		}
+
+		return &terraform.InstanceState{
+			ID: id,
+		}, nil
+	}
+
+	mp.RefreshFn = func(
+		_ *terraform.InstanceInfo,
+		state *terraform.InstanceState,
+	) (*terraform.InstanceState, error) {
+		return state, nil
+	}
+
+	mt := new(mockT)
+	Test(mt, TestCase{
+		Providers: map[string]terraform.ResourceProvider{
+			"test": mp,
+		},
+		Steps: []TestStep{
+			TestStep{
+				Config: testConfigStr,
+				Check: func(s *terraform.State) error {
+					rs := s.RootModule().Resources["test_instance.foo"]
+					if rs.Primary.ID != "not_tainted" {
+						return fmt.Errorf("expected not_tainted, got %s", rs.Primary.ID)
+					}
+					return nil
+				},
+			},
+			TestStep{
+				Taint:  []string{"test_instance.foo"},
+				Config: testConfigStr,
+				Check: func(s *terraform.State) error {
+					rs := s.RootModule().Resources["test_instance.foo"]
+					if rs.Primary.ID != "tainted" {
+						return fmt.Errorf("expected tainted, got %s", rs.Primary.ID)
+					}
+					return nil
+				},
+			},
+			TestStep{
+				Taint:       []string{"test_instance.fooo"},
+				Config:      testConfigStr,
+				ExpectError: regexp.MustCompile("resource \"test_instance.fooo\" not found in state"),
+			},
+		},
+	})
+
+	if mt.failed() {
+		t.Fatalf("test failure: %s", mt.failMessage())
+	}
+}
+
 const testConfigStr = `
 resource "test_instance" "foo" {}
+`
+
+const testConfigStrProvider = `
+provider "test" {}
 `

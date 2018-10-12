@@ -4,33 +4,32 @@ package command
 // exported and private.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform/backend"
-	backendinit "github.com/hashicorp/terraform/backend/init"
-	clistate "github.com/hashicorp/terraform/command/state"
+	"github.com/hashicorp/terraform/command/clistate"
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/state"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/mapstructure"
 
-	backendlocal "github.com/hashicorp/terraform/backend/local"
+	backendInit "github.com/hashicorp/terraform/backend/init"
+	backendLocal "github.com/hashicorp/terraform/backend/local"
 )
 
 // BackendOpts are the options used to initialize a backend.Backend.
 type BackendOpts struct {
-	// ConfigPath is a path to a file or directory containing the backend
-	// configuration (declaration).
-	ConfigPath string
+	// Module is the root module from which we will extract the terraform and
+	// backend configuration.
+	Config *config.Config
 
 	// ConfigFile is a path to a file that contains configuration that
 	// is merged directly into the backend configuration when loaded
@@ -95,17 +94,22 @@ func (m *Meta) Backend(opts *BackendOpts) (backend.Enhanced, error) {
 		log.Printf("[INFO] command: backend initialized: %T", b)
 	}
 
-	// Setup the CLI opts we pass into backends that support it
+	// Setup the CLI opts we pass into backends that support it.
 	cliOpts := &backend.CLIOpts{
-		CLI:             m.Ui,
-		CLIColor:        m.Colorize(),
-		StatePath:       m.statePath,
-		StateOutPath:    m.stateOutPath,
-		StateBackupPath: m.backupPath,
-		ContextOpts:     m.contextOpts(),
-		Input:           m.Input(),
-		Validation:      true,
+		CLI:                 m.Ui,
+		CLIColor:            m.Colorize(),
+		StatePath:           m.statePath,
+		StateOutPath:        m.stateOutPath,
+		StateBackupPath:     m.backupPath,
+		ContextOpts:         m.contextOpts(),
+		Input:               m.Input(),
+		RunningInAutomation: m.RunningInAutomation,
 	}
+
+	// Don't validate if we have a plan. Validation is normally harmless here,
+	// but validation requires interpolation, and `file()` function calls may
+	// not have the original files in the current execution context.
+	cliOpts.Validation = opts.Plan == nil
 
 	// If the backend supports CLI initialization, do it.
 	if cli, ok := b.(backend.CLI); ok {
@@ -132,7 +136,7 @@ func (m *Meta) Backend(opts *BackendOpts) (backend.Enhanced, error) {
 	}
 
 	// Build the local backend
-	local := &backendlocal.Local{Backend: b}
+	local := backendLocal.NewWithBackend(b)
 	if err := local.CLIInit(cliOpts); err != nil {
 		// Local backend isn't allowed to fail. It would be a bug.
 		panic(err)
@@ -145,7 +149,7 @@ func (m *Meta) Backend(opts *BackendOpts) (backend.Enhanced, error) {
 // for some checks that require a remote backend.
 func (m *Meta) IsLocalBackend(b backend.Backend) bool {
 	// Is it a local backend?
-	bLocal, ok := b.(*backendlocal.Local)
+	bLocal, ok := b.(*backendLocal.Local)
 
 	// If it is, does it not have an alternate state backend?
 	if ok {
@@ -162,80 +166,46 @@ func (m *Meta) IsLocalBackend(b backend.Backend) bool {
 // be called.
 func (m *Meta) Operation() *backend.Operation {
 	return &backend.Operation{
-		PlanOutBackend: m.backendState,
-		Targets:        m.targets,
-		UIIn:           m.UIInput(),
-		Environment:    m.Env(),
+		PlanOutBackend:   m.backendState,
+		Targets:          m.targets,
+		UIIn:             m.UIInput(),
+		UIOut:            m.Ui,
+		Workspace:        m.Workspace(),
+		LockState:        m.stateLock,
+		StateLockTimeout: m.stateLockTimeout,
 	}
 }
 
 // backendConfig returns the local configuration for the backend
 func (m *Meta) backendConfig(opts *BackendOpts) (*config.Backend, error) {
-	// If no explicit path was given then it is okay for there to be
-	// no backend configuration found.
-	emptyOk := opts.ConfigPath == ""
-
-	// Determine the path to the configuration.
-	path := opts.ConfigPath
-
-	// If we had no path set, it is an error. We can't initialize unset
-	if path == "" {
-		path = "."
-	}
-
-	// Expand the path
-	if !filepath.IsAbs(path) {
-		var err error
-		path, err = filepath.Abs(path)
+	if opts.Config == nil {
+		// check if the config was missing, or just not required
+		conf, err := m.Config(".")
 		if err != nil {
-			return nil, fmt.Errorf(
-				"Error expanding path to backend config %q: %s", path, err)
+			return nil, err
 		}
-	}
 
-	log.Printf("[DEBUG] command: loading backend config file: %s", path)
-
-	// We first need to determine if we're loading a file or a directory.
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) && emptyOk {
-			log.Printf(
-				"[INFO] command: backend config not found, returning nil: %s",
-				path)
+		if conf == nil {
+			log.Println("[INFO] command: no config, returning nil")
 			return nil, nil
 		}
 
-		return nil, err
+		log.Println("[WARN] BackendOpts.Config not set, but config found")
+		opts.Config = conf
 	}
 
-	var f func(string) (*config.Config, error) = config.LoadFile
-	if fi.IsDir() {
-		f = config.LoadDir
-	}
-
-	// Load the configuration
-	c, err := f(path)
-	if err != nil {
-		// Check for the error where we have no config files and return nil
-		// as the configuration type.
-		if errwrap.ContainsType(err, new(config.ErrNoConfigsFound)) {
-			log.Printf(
-				"[INFO] command: backend config not found, returning nil: %s",
-				path)
-			return nil, nil
-		}
-
-		return nil, err
-	}
+	c := opts.Config
 
 	// If there is no Terraform configuration block, no backend config
 	if c.Terraform == nil {
+		log.Println("[INFO] command: empty terraform config, returning nil")
 		return nil, nil
 	}
 
 	// Get the configuration for the backend itself.
 	backend := c.Terraform.Backend
 	if backend == nil {
+		log.Println("[INFO] command: empty backend config, returning nil")
 		return nil, nil
 	}
 
@@ -261,7 +231,7 @@ func (m *Meta) backendConfig(opts *BackendOpts) (*config.Backend, error) {
 		rc, err := config.NewRawConfig(opts.ConfigExtra)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"Error adding extra configuration file for backend: %s", err)
+				"Error adding extra backend configuration from CLI: %s", err)
 		}
 
 		// Merge in the configuration
@@ -345,6 +315,13 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 		s = terraform.NewState()
 	}
 
+	// if we want to force reconfiguration of the backend, we set the backend
+	// state to nil on this copy. This will direct us through the correct
+	// configuration path in the switch statement below.
+	if m.reconfigure {
+		s.Backend = nil
+	}
+
 	// Upon return, we want to set the state we're using in-memory so that
 	// we can access it for commands.
 	m.backendState = nil
@@ -411,8 +388,16 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	case c != nil && s.Remote.Empty() && !s.Backend.Empty():
 		// If our configuration is the same, then we're just initializing
 		// a previously configured remote backend.
-		if !s.Backend.Empty() && s.Backend.Hash == cHash {
-			return m.backend_C_r_S_unchanged(c, sMgr)
+		if !s.Backend.Empty() {
+			hash := s.Backend.Hash
+			// on init we need an updated hash containing any extra options
+			// that were added after merging.
+			if opts.Init {
+				hash = s.Backend.Rehash()
+			}
+			if hash == cHash {
+				return m.backend_C_r_S_unchanged(c, sMgr)
+			}
 		}
 
 		if !opts.Init {
@@ -447,7 +432,11 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	case c != nil && !s.Remote.Empty() && !s.Backend.Empty():
 		// If the hashes are the same, we have a legacy remote state with
 		// an unchanged stored backend state.
-		if s.Backend.Hash == cHash {
+		hash := s.Backend.Hash
+		if opts.Init {
+			hash = s.Backend.Rehash()
+		}
+		if hash == cHash {
 			if !opts.Init {
 				initReason := fmt.Sprintf(
 					"Legacy remote state found with configured backend %q",
@@ -585,7 +574,7 @@ func (m *Meta) backendFromPlan(opts *BackendOpts) (backend.Backend, error) {
 		return nil, err
 	}
 
-	env := m.Env()
+	env := m.Workspace()
 
 	// Get the state so we can determine the effect of using this plan
 	realMgr, err := b.State(env)
@@ -593,15 +582,13 @@ func (m *Meta) backendFromPlan(opts *BackendOpts) (backend.Backend, error) {
 		return nil, fmt.Errorf("Error reading state: %s", err)
 	}
 
-	// Lock the state if we can
-	lockInfo := state.NewLockInfo()
-	lockInfo.Operation = "backend from plan"
-
-	lockID, err := clistate.Lock(realMgr, lockInfo, m.Ui, m.Colorize())
-	if err != nil {
-		return nil, fmt.Errorf("Error locking state: %s", err)
+	if m.stateLock {
+		stateLocker := clistate.NewLocker(context.Background(), m.stateLockTimeout, m.Ui, m.Colorize())
+		if err := stateLocker.Lock(realMgr, "backend from plan"); err != nil {
+			return nil, fmt.Errorf("Error locking state: %s", err)
+		}
+		defer stateLocker.Unlock(nil)
 	}
-	defer clistate.Unlock(realMgr, lockID, m.Ui, m.Colorize())
 
 	if err := realMgr.RefreshState(); err != nil {
 		return nil, fmt.Errorf("Error reading state: %s", err)
@@ -684,43 +671,30 @@ func (m *Meta) backend_c_r_S(
 	// Get the backend type for output
 	backendType := s.Backend.Type
 
-	// Confirm with the user that the copy should occur
-	copy, err := m.confirm(&terraform.InputOpts{
-		Id:    "backend-migrate-to-local",
-		Query: fmt.Sprintf("Do you want to copy the state from %q?", s.Backend.Type),
-		Description: fmt.Sprintf(
-			strings.TrimSpace(inputBackendMigrateLocal), s.Backend.Type),
-	})
+	m.Ui.Output(fmt.Sprintf(strings.TrimSpace(outputBackendMigrateLocal), s.Backend.Type))
+
+	// Grab a purely local backend to get the local state if it exists
+	localB, err := m.Backend(&BackendOpts{ForceLocal: true})
 	if err != nil {
-		return nil, fmt.Errorf(
-			"Error asking for state copy action: %s", err)
+		return nil, fmt.Errorf(strings.TrimSpace(errBackendLocalRead), err)
 	}
 
-	// If we're copying, perform the migration
-	if copy {
-		// Grab a purely local backend to get the local state if it exists
-		localB, err := m.Backend(&BackendOpts{ForceLocal: true})
-		if err != nil {
-			return nil, fmt.Errorf(strings.TrimSpace(errBackendLocalRead), err)
-		}
+	// Initialize the configured backend
+	b, err := m.backend_C_r_S_unchanged(c, sMgr)
+	if err != nil {
+		return nil, fmt.Errorf(
+			strings.TrimSpace(errBackendSavedUnsetConfig), s.Backend.Type, err)
+	}
 
-		// Initialize the configured backend
-		b, err := m.backend_C_r_S_unchanged(c, sMgr)
-		if err != nil {
-			return nil, fmt.Errorf(
-				strings.TrimSpace(errBackendSavedUnsetConfig), s.Backend.Type, err)
-		}
-
-		// Perform the migration
-		err = m.backendMigrateState(&backendMigrateOpts{
-			OneType: s.Backend.Type,
-			TwoType: "local",
-			One:     b,
-			Two:     localB,
-		})
-		if err != nil {
-			return nil, err
-		}
+	// Perform the migration
+	err = m.backendMigrateState(&backendMigrateOpts{
+		OneType: s.Backend.Type,
+		TwoType: "local",
+		One:     b,
+		Two:     localB,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// Remove the stored metadata
@@ -765,7 +739,7 @@ func (m *Meta) backend_c_R_s(
 	config := terraform.NewResourceConfig(rawC)
 
 	// Get the backend
-	f := backendinit.Backend(s.Remote.Type)
+	f := backendInit.Backend(s.Remote.Type)
 	if f == nil {
 		return nil, fmt.Errorf(strings.TrimSpace(errBackendLegacyUnknown), s.Remote.Type)
 	}
@@ -804,37 +778,22 @@ func (m *Meta) backend_c_R_S(
 	// Grab the state
 	s := sMgr.State()
 
-	// Ask the user if they want to migrate their existing remote state
-	copy, err := m.confirm(&terraform.InputOpts{
-		Id: "backend-migrate-to-new",
-		Query: fmt.Sprintf(
-			"Do you want to copy the legacy remote state from %q?",
-			s.Remote.Type),
-		Description: strings.TrimSpace(inputBackendMigrateLegacyLocal),
-	})
+	m.Ui.Output(strings.TrimSpace(outputBackendMigrateLegacy))
+	// Initialize the legacy backend
+	oldB, err := m.backendInitFromLegacy(s.Remote)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"Error asking for state copy action: %s", err)
+		return nil, err
 	}
 
-	// If the user wants a copy, copy!
-	if copy {
-		// Initialize the legacy backend
-		oldB, err := m.backendInitFromLegacy(s.Remote)
-		if err != nil {
-			return nil, err
-		}
-
-		// Perform the migration
-		err = m.backendMigrateState(&backendMigrateOpts{
-			OneType: s.Remote.Type,
-			TwoType: "local",
-			One:     oldB,
-			Two:     localB,
-		})
-		if err != nil {
-			return nil, err
-		}
+	// Perform the migration
+	err = m.backendMigrateState(&backendMigrateOpts{
+		OneType: s.Remote.Type,
+		TwoType: "local",
+		One:     oldB,
+		Two:     localB,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// Unset the remote state
@@ -896,38 +855,22 @@ func (m *Meta) backend_C_R_s(
 		return b, nil
 	}
 
-	// Finally, ask the user if they want to copy the state from
-	// their old remote state location.
-	copy, err := m.confirm(&terraform.InputOpts{
-		Id: "backend-migrate-to-new",
-		Query: fmt.Sprintf(
-			"Do you want to copy the legacy remote state from %q?",
-			s.Remote.Type),
-		Description: strings.TrimSpace(inputBackendMigrateLegacy),
-	})
+	m.Ui.Output(strings.TrimSpace(outputBackendMigrateLegacy))
+	// Initialize the legacy backend
+	oldB, err := m.backendInitFromLegacy(s.Remote)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"Error asking for state copy action: %s", err)
+		return nil, err
 	}
 
-	// If the user wants a copy, copy!
-	if copy {
-		// Initialize the legacy backend
-		oldB, err := m.backendInitFromLegacy(s.Remote)
-		if err != nil {
-			return nil, err
-		}
-
-		// Perform the migration
-		err = m.backendMigrateState(&backendMigrateOpts{
-			OneType: s.Remote.Type,
-			TwoType: c.Type,
-			One:     oldB,
-			Two:     b,
-		})
-		if err != nil {
-			return nil, err
-		}
+	// Perform the migration
+	err = m.backendMigrateState(&backendMigrateOpts{
+		OneType: s.Remote.Type,
+		TwoType: c.Type,
+		One:     oldB,
+		Two:     b,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// Unset the remote state
@@ -944,8 +887,7 @@ func (m *Meta) backend_C_R_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]\n\n"+
-			strings.TrimSpace(successBackendSet), s.Backend.Type)))
+		"[reset][green]\n"+strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	return b, nil
 }
@@ -965,7 +907,7 @@ func (m *Meta) backend_C_r_s(
 		return nil, fmt.Errorf(errBackendLocalRead, err)
 	}
 
-	env := m.Env()
+	env := m.Workspace()
 
 	localState, err := localB.State(env)
 	if err != nil {
@@ -976,7 +918,8 @@ func (m *Meta) backend_C_r_s(
 	}
 
 	// If the local state is not empty, we need to potentially do a
-	// state migration to the new backend (with user permission).
+	// state migration to the new backend (with user permission), unless the
+	// destination is also "local"
 	if localS := localState.State(); !localS.Empty() {
 		// Perform the migration
 		err = m.backendMigrateState(&backendMigrateOpts{
@@ -989,24 +932,37 @@ func (m *Meta) backend_C_r_s(
 			return nil, err
 		}
 
-		// We always delete the local state
-		if err := localState.WriteState(nil); err != nil {
-			return nil, fmt.Errorf(errBackendMigrateLocalDelete, err)
+		// we usually remove the local state after migration to prevent
+		// confusion, but adding a default local backend block to the config
+		// can get us here too. Don't delete our state if the old and new paths
+		// are the same.
+		erase := true
+		if newLocalB, ok := b.(*backendLocal.Local); ok {
+			if localB, ok := localB.(*backendLocal.Local); ok {
+				if newLocalB.StatePath == localB.StatePath {
+					erase = false
+				}
+			}
 		}
-		if err := localState.PersistState(); err != nil {
-			return nil, fmt.Errorf(errBackendMigrateLocalDelete, err)
+
+		if erase {
+			// We always delete the local state, unless that was our new state too.
+			if err := localState.WriteState(nil); err != nil {
+				return nil, fmt.Errorf(errBackendMigrateLocalDelete, err)
+			}
+			if err := localState.PersistState(); err != nil {
+				return nil, fmt.Errorf(errBackendMigrateLocalDelete, err)
+			}
 		}
 	}
 
-	// Lock the state if we can
-	lockInfo := state.NewLockInfo()
-	lockInfo.Operation = "backend from config"
-
-	lockID, err := clistate.Lock(sMgr, lockInfo, m.Ui, m.Colorize())
-	if err != nil {
-		return nil, fmt.Errorf("Error locking state: %s", err)
+	if m.stateLock {
+		stateLocker := clistate.NewLocker(context.Background(), m.stateLockTimeout, m.Ui, m.Colorize())
+		if err := stateLocker.Lock(sMgr, "backend from plan"); err != nil {
+			return nil, fmt.Errorf("Error locking state: %s", err)
+		}
+		defer stateLocker.Unlock(nil)
 	}
-	defer clistate.Unlock(sMgr, lockID, m.Ui, m.Colorize())
 
 	// Store the metadata in our saved state location
 	s := sMgr.State()
@@ -1027,8 +983,7 @@ func (m *Meta) backend_C_r_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]\n\n"+
-			strings.TrimSpace(successBackendSet), s.Backend.Type)))
+		"[reset][green]\n"+strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	// Return the backend
 	return b, nil
@@ -1054,48 +1009,36 @@ func (m *Meta) backend_C_r_S_changed(
 			"Error initializing new backend: %s", err)
 	}
 
-	// Check with the user if we want to migrate state
-	copy, err := m.confirm(&terraform.InputOpts{
-		Id:          "backend-migrate-to-new",
-		Query:       fmt.Sprintf("Do you want to copy the state from %q?", c.Type),
-		Description: strings.TrimSpace(fmt.Sprintf(inputBackendMigrateChange, c.Type, s.Backend.Type)),
-	})
+	// no need to confuse the user if the backend types are the same
+	if s.Backend.Type != c.Type {
+		m.Ui.Output(strings.TrimSpace(fmt.Sprintf(outputBackendMigrateChange, s.Backend.Type, c.Type)))
+	}
+
+	// Grab the existing backend
+	oldB, err := m.backend_C_r_S_unchanged(c, sMgr)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"Error asking for state copy action: %s", err)
+			"Error loading previously configured backend: %s", err)
 	}
 
-	// If we are, then we need to initialize the old backend and
-	// perform the copy.
-	if copy {
-		// Grab the existing backend
-		oldB, err := m.backend_C_r_S_unchanged(c, sMgr)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"Error loading previously configured backend: %s", err)
-		}
-
-		// Perform the migration
-		err = m.backendMigrateState(&backendMigrateOpts{
-			OneType: s.Backend.Type,
-			TwoType: c.Type,
-			One:     oldB,
-			Two:     b,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Lock the state if we can
-	lockInfo := state.NewLockInfo()
-	lockInfo.Operation = "backend from config"
-
-	lockID, err := clistate.Lock(sMgr, lockInfo, m.Ui, m.Colorize())
+	// Perform the migration
+	err = m.backendMigrateState(&backendMigrateOpts{
+		OneType: s.Backend.Type,
+		TwoType: c.Type,
+		One:     oldB,
+		Two:     b,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("Error locking state: %s", err)
+		return nil, err
 	}
-	defer clistate.Unlock(sMgr, lockID, m.Ui, m.Colorize())
+
+	if m.stateLock {
+		stateLocker := clistate.NewLocker(context.Background(), m.stateLockTimeout, m.Ui, m.Colorize())
+		if err := stateLocker.Lock(sMgr, "backend from plan"); err != nil {
+			return nil, fmt.Errorf("Error locking state: %s", err)
+		}
+		defer stateLocker.Unlock(nil)
+	}
 
 	// Update the backend state
 	s = sMgr.State()
@@ -1117,8 +1060,7 @@ func (m *Meta) backend_C_r_S_changed(
 
 	if output {
 		m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-			"[reset][green]\n\n"+
-				strings.TrimSpace(successBackendSet), s.Backend.Type)))
+			"[reset][green]\n"+strings.TrimSpace(successBackendSet), s.Backend.Type)))
 	}
 
 	return b, nil
@@ -1128,6 +1070,16 @@ func (m *Meta) backend_C_r_S_changed(
 func (m *Meta) backend_C_r_S_unchanged(
 	c *config.Backend, sMgr state.State) (backend.Backend, error) {
 	s := sMgr.State()
+
+	// it's possible for a backend to be unchanged, and the config itself to
+	// have changed by moving a parameter from the config to `-backend-config`
+	// In this case we only need to update the Hash.
+	if c != nil && s.Backend.Hash != c.Hash {
+		s.Backend.Hash = c.Hash
+		if err := sMgr.WriteState(s); err != nil {
+			return nil, fmt.Errorf(errBackendWriteSaved, err)
+		}
+	}
 
 	// Create the config. We do this from the backend state since this
 	// has the complete configuration data whereas the config itself
@@ -1139,7 +1091,7 @@ func (m *Meta) backend_C_r_S_unchanged(
 	config := terraform.NewResourceConfig(rawC)
 
 	// Get the backend
-	f := backendinit.Backend(s.Backend.Type)
+	f := backendInit.Backend(s.Backend.Type)
 	if f == nil {
 		return nil, fmt.Errorf(strings.TrimSpace(errBackendSavedUnknown), s.Backend.Type)
 	}
@@ -1197,48 +1149,32 @@ func (m *Meta) backend_C_R_S_unchanged(
 		return nil, err
 	}
 
-	// Ask if the user wants to move their legacy remote state
-	copy, err := m.confirm(&terraform.InputOpts{
-		Id: "backend-migrate-to-new",
-		Query: fmt.Sprintf(
-			"Do you want to copy the legacy remote state from %q?",
-			s.Remote.Type),
-		Description: strings.TrimSpace(inputBackendMigrateLegacy),
+	m.Ui.Output(strings.TrimSpace(outputBackendMigrateLegacy))
+
+	// Initialize the legacy backend
+	oldB, err := m.backendInitFromLegacy(s.Remote)
+	if err != nil {
+		return nil, err
+	}
+
+	// Perform the migration
+	err = m.backendMigrateState(&backendMigrateOpts{
+		OneType: s.Remote.Type,
+		TwoType: s.Backend.Type,
+		One:     oldB,
+		Two:     b,
 	})
 	if err != nil {
-		return nil, fmt.Errorf(
-			"Error asking for state copy action: %s", err)
+		return nil, err
 	}
 
-	// If the user wants a copy, copy!
-	if copy {
-		// Initialize the legacy backend
-		oldB, err := m.backendInitFromLegacy(s.Remote)
-		if err != nil {
-			return nil, err
+	if m.stateLock {
+		stateLocker := clistate.NewLocker(context.Background(), m.stateLockTimeout, m.Ui, m.Colorize())
+		if err := stateLocker.Lock(sMgr, "backend from plan"); err != nil {
+			return nil, fmt.Errorf("Error locking state: %s", err)
 		}
-
-		// Perform the migration
-		err = m.backendMigrateState(&backendMigrateOpts{
-			OneType: s.Remote.Type,
-			TwoType: s.Backend.Type,
-			One:     oldB,
-			Two:     b,
-		})
-		if err != nil {
-			return nil, err
-		}
+		defer stateLocker.Unlock(nil)
 	}
-
-	// Lock the state if we can
-	lockInfo := state.NewLockInfo()
-	lockInfo.Operation = "backend from config"
-
-	lockID, err := clistate.Lock(sMgr, lockInfo, m.Ui, m.Colorize())
-	if err != nil {
-		return nil, fmt.Errorf("Error locking state: %s", err)
-	}
-	defer clistate.Unlock(sMgr, lockID, m.Ui, m.Colorize())
 
 	// Unset the remote state
 	s = sMgr.State()
@@ -1272,7 +1208,7 @@ func (m *Meta) backendInitFromConfig(c *config.Backend) (backend.Backend, error)
 	config := terraform.NewResourceConfig(c.RawConfig)
 
 	// Get the backend
-	f := backendinit.Backend(c.Type)
+	f := backendInit.Backend(c.Type)
 	if f == nil {
 		return nil, fmt.Errorf(strings.TrimSpace(errBackendNewUnknown), c.Type)
 	}
@@ -1292,13 +1228,17 @@ func (m *Meta) backendInitFromConfig(c *config.Backend) (backend.Backend, error)
 
 	// Validate
 	warns, errs := b.Validate(config)
+	for _, warning := range warns {
+		// We just write warnings directly to the UI. This isn't great
+		// since we're a bit deep here to be pushing stuff out into the
+		// UI, but sufficient to let us print out deprecation warnings
+		// and the like.
+		m.Ui.Warn(warning)
+	}
 	if len(errs) > 0 {
 		return nil, fmt.Errorf(
 			"Error configuring the backend %q: %s",
 			c.Type, multierror.Append(nil, errs...))
-	}
-	if len(warns) > 0 {
-		// TODO: warnings are currently ignored
 	}
 
 	// Configure
@@ -1325,7 +1265,7 @@ func (m *Meta) backendInitFromLegacy(s *terraform.RemoteState) (backend.Backend,
 	config := terraform.NewResourceConfig(rawC)
 
 	// Get the backend
-	f := backendinit.Backend(s.Type)
+	f := backendInit.Backend(s.Type)
 	if f == nil {
 		return nil, fmt.Errorf(strings.TrimSpace(errBackendLegacyUnknown), s.Type)
 	}
@@ -1350,7 +1290,7 @@ func (m *Meta) backendInitFromSaved(s *terraform.BackendState) (backend.Backend,
 	config := terraform.NewResourceConfig(rawC)
 
 	// Get the backend
-	f := backendinit.Backend(s.Type)
+	f := backendInit.Backend(s.Type)
 	if f == nil {
 		return nil, fmt.Errorf(strings.TrimSpace(errBackendSavedUnknown), s.Type)
 	}
@@ -1560,7 +1500,7 @@ different states.
 
 The most common cause of seeing this error is using a plan that was
 created against a different state. Perhaps the plan is very old and the
-state has since been recreated, or perhaps the plan was against a competely
+state has since been recreated, or perhaps the plan was against a completely
 different infrastructure.
 `
 
@@ -1586,27 +1526,16 @@ Plan Serial:    %[1]d
 Current Serial: %[2]d
 `
 
-const inputBackendMigrateChange = `
-Would you like to copy the state from your prior backend %q to the
-newly configured %q backend? If you're reconfiguring the same backend,
-answering "yes" or "no" shouldn't make a difference. Please answer exactly
-"yes" or "no".
+const outputBackendMigrateChange = `
+Terraform detected that the backend type changed from %q to %q.
 `
 
-const inputBackendMigrateLegacy = `
-Terraform can copy the existing state in your legacy remote state
-backend to your newly configured backend. Please answer "yes" or "no".
+const outputBackendMigrateLegacy = `
+Terraform detected legacy remote state.
 `
 
-const inputBackendMigrateLegacyLocal = `
-Terraform can copy the existing state in your legacy remote state
-backend to your local state. Please answer "yes" or "no".
-`
-
-const inputBackendMigrateLocal = `
-Terraform has detected you're unconfiguring your previously set backend.
-Would you like to copy the state from %q to local state? Please answer
-"yes" or "no". If you answer "no", you will start with a blank local state.
+const outputBackendMigrateLocal = `
+Terraform has detected you're unconfiguring your previously set %q backend.
 `
 
 const outputBackendConfigureWithLegacy = `
@@ -1622,9 +1551,7 @@ const outputBackendReconfigure = `
 [reset][bold]Backend configuration changed![reset]
 
 Terraform has detected that the configuration specified for the backend
-has changed. Terraform will now reconfigure for this backend. If you didn't
-intend to reconfigure your backend please undo any changes to the "backend"
-section in your Terraform configuration.
+has changed. Terraform will now check for existing state in the backends.
 `
 
 const outputBackendSavedWithLegacy = `
@@ -1658,7 +1585,7 @@ process.
 
 const successBackendLegacyUnset = `
 Terraform has successfully migrated from legacy remote state to your
-configured remote state.
+configured backend (%q).
 `
 
 const successBackendReconfigureWithLegacy = `
