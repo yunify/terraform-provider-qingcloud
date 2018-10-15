@@ -670,7 +670,7 @@ resource "qingcloud_tag" "test"{
 	name="%v"
 }
 resource "qingcloud_instance" "foo" {
-    name = "passwordTest"
+    name = "passwordTest1"
 	image_id = "centos7x64d"
 	login_passwd = "Zhu88jie"
 	tag_ids = ["${qingcloud_tag.test.id}"]
