@@ -317,6 +317,37 @@ func TestAccQingcloudInstance_eip(t *testing.T) {
 
 }
 
+func TestAccQingcloudInstance_LoginMode(t *testing.T) {
+	var instance qc.DescribeInstancesOutput
+	testTag := "terraform-test-instance-loginmode" + os.Getenv("CIRCLE_BUILD_NUM")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+
+		IDRefreshName: "qingcloud_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccInstanceConfigKeyPair, testTag),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+				),
+			},
+			resource.TestStep{
+				Config: fmt.Sprintf(testAccInstanceConfigPassword, testTag),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"qingcloud_instance.foo", &instance),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceExists(n string, i *qc.DescribeInstancesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -632,5 +663,16 @@ resource "qingcloud_instance" "foo" {
 }
 resource "qingcloud_tag" "test"{
 	name="%v"
+}
+`
+const testAccInstanceConfigPassword = `
+resource "qingcloud_tag" "test"{
+	name="%v"
+}
+resource "qingcloud_instance" "foo" {
+    name = "passwordTest1"
+	image_id = "centos7x64d"
+	login_passwd = "Zhu88jie"
+	tag_ids = ["${qingcloud_tag.test.id}"]
 }
 `
