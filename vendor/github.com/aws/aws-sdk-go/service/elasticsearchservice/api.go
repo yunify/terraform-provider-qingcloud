@@ -2623,6 +2623,9 @@ type CreateElasticsearchDomainInput struct {
 	// a given type of Elasticsearch log.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
 
+	// Specifies the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
+
 	// Option to set time, in UTC format, of the daily automated snapshot. Default
 	// value is 0 hours.
 	SnapshotOptions *SnapshotOptions `type:"structure"`
@@ -2720,6 +2723,12 @@ func (s *CreateElasticsearchDomainInput) SetEncryptionAtRestOptions(v *Encryptio
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *CreateElasticsearchDomainInput) SetLogPublishingOptions(v map[string]*LogPublishingOption) *CreateElasticsearchDomainInput {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *CreateElasticsearchDomainInput {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3572,6 +3581,9 @@ type ElasticsearchDomainConfig struct {
 	// Log publishing options for the given domain.
 	LogPublishingOptions *LogPublishingOptionsStatus `type:"structure"`
 
+	// Specifies the NodeToNodeEncryptionOptions for the Elasticsearch domain.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptionsStatus `type:"structure"`
+
 	// Specifies the SnapshotOptions for the Elasticsearch domain.
 	SnapshotOptions *SnapshotOptionsStatus `type:"structure"`
 
@@ -3635,6 +3647,12 @@ func (s *ElasticsearchDomainConfig) SetEncryptionAtRestOptions(v *EncryptionAtRe
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *ElasticsearchDomainConfig) SetLogPublishingOptions(v *LogPublishingOptionsStatus) *ElasticsearchDomainConfig {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainConfig) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptionsStatus) *ElasticsearchDomainConfig {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3719,6 +3737,9 @@ type ElasticsearchDomainStatus struct {
 
 	// Log publishing options for the given domain.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
+	// Specifies the status of the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
 
 	// The status of the Elasticsearch domain configuration. True if Amazon Elasticsearch
 	// Service is processing configuration changes. False if the configuration is
@@ -3897,6 +3918,270 @@ func (s *ElasticsearchVersionStatus) SetOptions(v string) *ElasticsearchVersionS
 // SetStatus sets the Status field's value.
 func (s *ElasticsearchVersionStatus) SetStatus(v *OptionStatus) *ElasticsearchVersionStatus {
 	s.Status = v
+	return s
+}
+
+// Specifies the Encryption At Rest Options.
+type EncryptionAtRestOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the option to enable Encryption At Rest.
+	Enabled *bool `type:"boolean"`
+
+	// Specifies the KMS Key ID for Encryption At Rest options.
+	KmsKeyId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s EncryptionAtRestOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionAtRestOptions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionAtRestOptions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionAtRestOptions"}
+	if s.KmsKeyId != nil && len(*s.KmsKeyId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKeyId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *EncryptionAtRestOptions) SetEnabled(v bool) *EncryptionAtRestOptions {
+	s.Enabled = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *EncryptionAtRestOptions) SetKmsKeyId(v string) *EncryptionAtRestOptions {
+	s.KmsKeyId = &v
+	return s
+}
+
+// Status of the Encryption At Rest options for the specified Elasticsearch
+// domain.
+type EncryptionAtRestOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the Encryption At Rest options for the specified Elasticsearch
+	// domain.
+	//
+	// Options is a required field
+	Options *EncryptionAtRestOptions `type:"structure" required:"true"`
+
+	// Specifies the status of the Encryption At Rest options for the specified
+	// Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s EncryptionAtRestOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionAtRestOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *EncryptionAtRestOptionsStatus) SetOptions(v *EncryptionAtRestOptions) *EncryptionAtRestOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *EncryptionAtRestOptionsStatus) SetStatus(v *OptionStatus) *EncryptionAtRestOptionsStatus {
+	s.Status = v
+	return s
+}
+
+// Container for request parameters to GetCompatibleElasticsearchVersions operation.
+type GetCompatibleElasticsearchVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	DomainName *string `location:"querystring" locationName:"domainName" min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCompatibleElasticsearchVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleElasticsearchVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCompatibleElasticsearchVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCompatibleElasticsearchVersionsInput"}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *GetCompatibleElasticsearchVersionsInput) SetDomainName(v string) *GetCompatibleElasticsearchVersionsInput {
+	s.DomainName = &v
+	return s
+}
+
+// Container for response returned by GetCompatibleElasticsearchVersions operation.
+type GetCompatibleElasticsearchVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A map of compatible Elasticsearch versions returned as part of the GetCompatibleElasticsearchVersions
+	// operation.
+	CompatibleElasticsearchVersions []*CompatibleVersionsMap `type:"list"`
+}
+
+// String returns the string representation
+func (s GetCompatibleElasticsearchVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCompatibleElasticsearchVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCompatibleElasticsearchVersions sets the CompatibleElasticsearchVersions field's value.
+func (s *GetCompatibleElasticsearchVersionsOutput) SetCompatibleElasticsearchVersions(v []*CompatibleVersionsMap) *GetCompatibleElasticsearchVersionsOutput {
+	s.CompatibleElasticsearchVersions = v
+	return s
+}
+
+// Container for request parameters to GetUpgradeHistory operation.
+type GetUpgradeHistoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+
+	// Set this value to limit the number of results returned.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// Paginated APIs accepts NextToken input to returns next page results and provides
+	// a NextToken output in the response which can be used by the client to retrieve
+	// more results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetUpgradeHistoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeHistoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetUpgradeHistoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetUpgradeHistoryInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainStatus) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *ElasticsearchDomainStatus {
+	s.NodeToNodeEncryptionOptions = v
+	return s
+}
+
+// SetProcessing sets the Processing field's value.
+func (s *ElasticsearchDomainStatus) SetProcessing(v bool) *ElasticsearchDomainStatus {
+	s.Processing = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetUpgradeHistoryInput) SetMaxResults(v int64) *GetUpgradeHistoryInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetUpgradeProcessing sets the UpgradeProcessing field's value.
+func (s *ElasticsearchDomainStatus) SetUpgradeProcessing(v bool) *ElasticsearchDomainStatus {
+	s.UpgradeProcessing = &v
+	return s
+}
+
+// SetVPCOptions sets the VPCOptions field's value.
+func (s *ElasticsearchDomainStatus) SetVPCOptions(v *VPCDerivedInfo) *ElasticsearchDomainStatus {
+	s.VPCOptions = v
+	return s
+}
+
+// Container for response returned by GetUpgradeHistory operation.
+type GetUpgradeHistoryOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Pagination token that needs to be supplied to the next call to get the next
+	// page of results
+	NextToken *string `type:"string"`
+
+	// A list of UpgradeHistory objects corresponding to each Upgrade or Upgrade
+	// Eligibility Check performed on a domain returned as part of GetUpgradeHistoryResponse
+	// object.
+	UpgradeHistories []*UpgradeHistory `type:"list"`
+}
+
+// String returns the string representation
+func (s GetUpgradeHistoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetUpgradeHistoryOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetUpgradeHistoryOutput) SetNextToken(v string) *GetUpgradeHistoryOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetUpgradeHistories sets the UpgradeHistories field's value.
+func (s *GetUpgradeHistoryOutput) SetUpgradeHistories(v []*UpgradeHistory) *GetUpgradeHistoryOutput {
+	s.UpgradeHistories = v
 	return s
 }
 
@@ -4709,6 +4994,70 @@ func (s *LogPublishingOptionsStatus) SetOptions(v map[string]*LogPublishingOptio
 
 // SetStatus sets the Status field's value.
 func (s *LogPublishingOptionsStatus) SetStatus(v *OptionStatus) *LogPublishingOptionsStatus {
+	s.Status = v
+	return s
+}
+
+// Specifies the node-to-node encryption options.
+type NodeToNodeEncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specify true to enable node-to-node encryption.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *NodeToNodeEncryptionOptions) SetEnabled(v bool) *NodeToNodeEncryptionOptions {
+	s.Enabled = &v
+	return s
+}
+
+// Status of the node-to-node encryption options for the specified Elasticsearch
+// domain.
+type NodeToNodeEncryptionOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the node-to-node encryption options for the specified Elasticsearch
+	// domain.
+	//
+	// Options is a required field
+	Options *NodeToNodeEncryptionOptions `type:"structure" required:"true"`
+
+	// Specifies the status of the node-to-node encryption options for the specified
+	// Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetOptions(v *NodeToNodeEncryptionOptions) *NodeToNodeEncryptionOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetStatus(v *OptionStatus) *NodeToNodeEncryptionOptionsStatus {
 	s.Status = v
 	return s
 }

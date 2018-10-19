@@ -3709,6 +3709,91 @@ func (c *Glue) GetCrawlersPagesWithContext(ctx aws.Context, input *GetCrawlersIn
 	return p.Err()
 }
 
+const opGetDataCatalogEncryptionSettings = "GetDataCatalogEncryptionSettings"
+
+// GetDataCatalogEncryptionSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the GetDataCatalogEncryptionSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDataCatalogEncryptionSettings for more information on using the GetDataCatalogEncryptionSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDataCatalogEncryptionSettingsRequest method.
+//    req, resp := client.GetDataCatalogEncryptionSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettingsRequest(input *GetDataCatalogEncryptionSettingsInput) (req *request.Request, output *GetDataCatalogEncryptionSettingsOutput) {
+	op := &request.Operation{
+		Name:       opGetDataCatalogEncryptionSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDataCatalogEncryptionSettingsInput{}
+	}
+
+	output = &GetDataCatalogEncryptionSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDataCatalogEncryptionSettings API operation for AWS Glue.
+//
+// Retrieves the security configuration for a specified catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetDataCatalogEncryptionSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetDataCatalogEncryptionSettings
+func (c *Glue) GetDataCatalogEncryptionSettings(input *GetDataCatalogEncryptionSettingsInput) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	return out, req.Send()
+}
+
+// GetDataCatalogEncryptionSettingsWithContext is the same as GetDataCatalogEncryptionSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDataCatalogEncryptionSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetDataCatalogEncryptionSettingsWithContext(ctx aws.Context, input *GetDataCatalogEncryptionSettingsInput, opts ...request.Option) (*GetDataCatalogEncryptionSettingsOutput, error) {
+	req, out := c.GetDataCatalogEncryptionSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetDatabase = "GetDatabase"
 
 // GetDatabaseRequest generates a "aws/request.Request" representing the
@@ -5384,6 +5469,188 @@ func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, outp
 // See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
 func (c *Glue) GetTable(input *GetTableInput) (*GetTableOutput, error) {
 	req, out := c.GetTableRequest(input)
+	return out, req.Send()
+}
+
+// GetTableWithContext is the same as GetTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetTableWithContext(ctx aws.Context, input *GetTableInput, opts ...request.Option) (*GetTableOutput, error) {
+	req, out := c.GetTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetTableVersion = "GetTableVersion"
+
+// GetTableVersionRequest generates a "aws/request.Request" representing the
+// client's request for the GetTableVersion operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTableVersion for more information on using the GetTableVersion
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTableVersionRequest method.
+//    req, resp := client.GetTableVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
+func (c *Glue) GetTableVersionRequest(input *GetTableVersionInput) (req *request.Request, output *GetTableVersionOutput) {
+	op := &request.Operation{
+		Name:       opGetTableVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetSecurityConfigurationsInput{}
+	}
+
+	output = &GetSecurityConfigurationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSecurityConfigurations API operation for AWS Glue.
+//
+// Retrieves a list of all security configurations.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetSecurityConfigurations for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersion
+func (c *Glue) GetTableVersion(input *GetTableVersionInput) (*GetTableVersionOutput, error) {
+	req, out := c.GetTableVersionRequest(input)
+	return out, req.Send()
+}
+
+// GetSecurityConfigurationsWithContext is the same as GetSecurityConfigurations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSecurityConfigurations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetSecurityConfigurationsWithContext(ctx aws.Context, input *GetSecurityConfigurationsInput, opts ...request.Option) (*GetSecurityConfigurationsOutput, error) {
+	req, out := c.GetSecurityConfigurationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetTable = "GetTable"
+
+// GetTableRequest generates a "aws/request.Request" representing the
+// client's request for the GetTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTable for more information on using the GetTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTableRequest method.
+//    req, resp := client.GetTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTable
+func (c *Glue) GetTableRequest(input *GetTableInput) (req *request.Request, output *GetTableOutput) {
+	op := &request.Operation{
+		Name:       opGetTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetTableInput{}
+	}
+
+	output = &GetTableOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTable API operation for AWS Glue.
+//
+// Retrieves the Table definition in a Data Catalog for a specified table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetTable for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeEncryptionException "GlueEncryptionException"
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetTableVersions
+func (c *Glue) GetTableVersions(input *GetTableVersionsInput) (*GetTableVersionsOutput, error) {
+	req, out := c.GetTableVersionsRequest(input)
 	return out, req.Send()
 }
 
@@ -12580,6 +12847,61 @@ func (s DeleteSecurityConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration to delete.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteSecurityConfigurationInput) SetName(v string) *DeleteSecurityConfigurationInput {
+	s.Name = &v
+	return s
+}
+
+type DeleteSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteTableInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14001,6 +14323,66 @@ func (s *GetCrawlersOutput) SetCrawlers(v []*Crawler) *GetCrawlersOutput {
 // SetNextToken sets the NextToken field's value.
 func (s *GetCrawlersOutput) SetNextToken(v string) *GetCrawlersOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog for which to retrieve the security configuration.
+	// If none is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDataCatalogEncryptionSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDataCatalogEncryptionSettingsInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetDataCatalogEncryptionSettingsInput) SetCatalogId(v string) *GetDataCatalogEncryptionSettingsInput {
+	s.CatalogId = &v
+	return s
+}
+
+type GetDataCatalogEncryptionSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The requested security configuration.
+	DataCatalogEncryptionSettings *DataCatalogEncryptionSettings `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogEncryptionSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataCatalogEncryptionSettings sets the DataCatalogEncryptionSettings field's value.
+func (s *GetDataCatalogEncryptionSettingsOutput) SetDataCatalogEncryptionSettings(v *DataCatalogEncryptionSettings) *GetDataCatalogEncryptionSettingsOutput {
+	s.DataCatalogEncryptionSettings = v
 	return s
 }
 

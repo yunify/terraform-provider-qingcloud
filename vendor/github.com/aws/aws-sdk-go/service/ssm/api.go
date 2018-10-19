@@ -14290,6 +14290,21 @@ type CreatePatchBaselineInput struct {
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
 	Sources []*PatchSource `type:"list"`
@@ -14404,6 +14419,12 @@ func (s *CreatePatchBaselineInput) SetOperatingSystem(v string) *CreatePatchBase
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *CreatePatchBaselineInput) SetRejectedPatches(v []*string) *CreatePatchBaselineInput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *CreatePatchBaselineInput) SetRejectedPatchesAction(v string) *CreatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -18230,6 +18251,14 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of InstalledRejected were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstancesWithInstalledRejectedPatches will always be 0 (zero).
+	InstancesWithInstalledRejectedPatches *int64 `type:"integer"`
+
 	// The number of instances with missing patches from the patch baseline.
 	InstancesWithMissingPatches *int64 `type:"integer"`
 
@@ -18268,6 +18297,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledOtherPatches(v 
 // SetInstancesWithInstalledPatches sets the InstancesWithInstalledPatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithInstalledPatches = &v
+	return s
+}
+
+// SetInstancesWithInstalledRejectedPatches sets the InstancesWithInstalledRejectedPatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledRejectedPatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithInstalledRejectedPatches = &v
 	return s
 }
 
@@ -18386,6 +18421,124 @@ func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsO
 }
 
 type DescribeSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// One or more filters to limit the type of sessions returned by the request.
+	Filters []*SessionFilter `min:"1" type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The session status to retrieve a list of sessions for. For example, "Active".
+	//
+	// State is a required field
+	State *string `type:"string" required:"true" enum:"SessionState"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSessionsInput"}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.State == nil {
+		invalidParams.Add(request.NewErrParamRequired("State"))
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeSessionsInput) SetFilters(v []*SessionFilter) *DescribeSessionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeSessionsInput) SetMaxResults(v int64) *DescribeSessionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsInput) SetNextToken(v string) *DescribeSessionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeSessionsInput) SetState(v string) *DescribeSessionsInput {
+	s.State = &v
+	return s
+}
+
+type DescribeSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// A list of sessions meeting the request parameters.
+	Sessions []*Session `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSessionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeSessionsOutput) SetNextToken(v string) *DescribeSessionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSessions sets the Sessions field's value.
+func (s *DescribeSessionsOutput) SetSessions(v []*Session) *DescribeSessionsOutput {
+	s.Sessions = v
+	return s
+}
+
+// A default version of a document.
+type DocumentDefaultVersionDescription struct {
 	_ struct{} `type:"structure"`
 
 	// One or more filters to limit the type of sessions returned by the request.
@@ -21631,6 +21784,11 @@ type GetPatchBaselineOutput struct {
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
 
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
 	Sources []*PatchSource `type:"list"`
@@ -21721,6 +21879,12 @@ func (s *GetPatchBaselineOutput) SetPatchGroups(v []*string) *GetPatchBaselineOu
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *GetPatchBaselineOutput) SetRejectedPatches(v []*string) *GetPatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *GetPatchBaselineOutput) SetRejectedPatchesAction(v string) *GetPatchBaselineOutput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -22331,12 +22495,30 @@ type InstancePatchState struct {
 	// during the last patching operation, but failed to install.
 	FailedCount *int64 `type:"integer"`
 
+	// An https URL or an Amazon S3 path-style URL to a list of patches to be installed.
+	// This patch installation list, which you maintain in an Amazon S3 bucket in
+	// YAML format and specify in the SSM document AWS-RunPatchBaseline, overrides
+	// the patches specified by the default patch baseline.
+	//
+	// For more information about the InstallOverrideList parameter, see About the
+	// SSM Document AWS-RunPatchBaseline (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-about-aws-runpatchbaseline.html)
+	// in the AWS Systems Manager User Guide.
+	InstallOverrideList *string `min:"1" type:"string"`
+
 	// The number of patches from the patch baseline that are installed on the instance.
 	InstalledCount *int64 `type:"integer"`
 
 	// The number of patches not specified in the patch baseline that are installed
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
+
+	// The number of instances with patches installed that are specified in a RejectedPatches
+	// list. Patches with a status of InstalledRejected were typically installed
+	// before they were added to a RejectedPatches list.
+	//
+	// If ALLOW_AS_DEPENDENCY is the specified option for RejectedPatchesAction,
+	// the value of InstalledRejectedCount will always be 0 (zero).
+	InstalledRejectedCount *int64 `type:"integer"`
 
 	// The ID of the managed instance the high-level patch compliance information
 	// was collected for.
@@ -22404,6 +22586,12 @@ func (s *InstancePatchState) SetFailedCount(v int64) *InstancePatchState {
 	return s
 }
 
+// SetInstallOverrideList sets the InstallOverrideList field's value.
+func (s *InstancePatchState) SetInstallOverrideList(v string) *InstancePatchState {
+	s.InstallOverrideList = &v
+	return s
+}
+
 // SetInstalledCount sets the InstalledCount field's value.
 func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 	s.InstalledCount = &v
@@ -22413,6 +22601,12 @@ func (s *InstancePatchState) SetInstalledCount(v int64) *InstancePatchState {
 // SetInstalledOtherCount sets the InstalledOtherCount field's value.
 func (s *InstancePatchState) SetInstalledOtherCount(v int64) *InstancePatchState {
 	s.InstalledOtherCount = &v
+	return s
+}
+
+// SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
+func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchState {
+	s.InstalledRejectedCount = &v
 	return s
 }
 
@@ -23291,6 +23485,92 @@ func (s *LabelParameterVersionInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLabels sets the Labels field's value.
+func (s *LabelParameterVersionInput) SetLabels(v []*string) *LabelParameterVersionInput {
+	s.Labels = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LabelParameterVersionInput) SetName(v string) *LabelParameterVersionInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameterVersion sets the ParameterVersion field's value.
+func (s *LabelParameterVersionInput) SetParameterVersion(v int64) *LabelParameterVersionInput {
+	s.ParameterVersion = &v
+	return s
+}
+
+type LabelParameterVersionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The label does not meet the requirements. For information about parameter
+	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
+	// in the AWS Systems Manager User Guide.
+	InvalidLabels []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s LabelParameterVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LabelParameterVersionOutput) GoString() string {
+	return s.String()
+}
+
+// SetInvalidLabels sets the InvalidLabels field's value.
+func (s *LabelParameterVersionOutput) SetInvalidLabels(v []*string) *LabelParameterVersionOutput {
+	s.InvalidLabels = v
+	return s
+}
+
+type ListAssociationVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The association ID for which you want to view all versions.
+	//
+	// AssociationId is a required field
+	AssociationId *string `type:"string" required:"true"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token to start the list. Use this token to get the next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssociationVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssociationVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssociationVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssociationVersionsInput"}
+	if s.AssociationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssociationId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -32066,6 +32346,21 @@ type UpdatePatchBaselineInput struct {
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
+	// The action for Patch Manager to take on patches included in the RejectedPackages
+	// list.
+	//
+	//    * ALLOW_AS_DEPENDENCY: A package in the Rejected patches list is installed
+	//    only if it is a dependency of another package. It is considered compliant
+	//    with the patch baseline, and its status is reported as InstalledOther.
+	//    This is the default action if no option is specified.
+	//
+	//    * BLOCK: Packages in the RejectedPatches list, and packages that include
+	//    them as dependencies, are not installed under any circumstances. If a
+	//    package was installed before it was added to the Rejected patches list,
+	//    it is considered non-compliant with the patch baseline, and its status
+	//    is reported as InstalledRejected.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
+
 	// If True, then all fields that are required by the CreatePatchBaseline action
 	// are also required for this API request. Optional fields that are not specified
 	// are set to null.
@@ -32182,6 +32477,12 @@ func (s *UpdatePatchBaselineInput) SetRejectedPatches(v []*string) *UpdatePatchB
 	return s
 }
 
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineInput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineInput {
+	s.RejectedPatchesAction = &v
+	return s
+}
+
 // SetReplace sets the Replace field's value.
 func (s *UpdatePatchBaselineInput) SetReplace(v bool) *UpdatePatchBaselineInput {
 	s.Replace = &v
@@ -32235,6 +32536,11 @@ type UpdatePatchBaselineOutput struct {
 
 	// A list of explicitly rejected patches for the baseline.
 	RejectedPatches []*string `type:"list"`
+
+	// The action specified to take on patches included in the RejectedPatches list.
+	// A patch can be allowed only if it is a dependency of another package, or
+	// blocked entirely along with packages that include it as a dependency.
+	RejectedPatchesAction *string `type:"string" enum:"PatchAction"`
 
 	// Information about the patches to use to update the instances, including target
 	// operating systems and source repositories. Applies to Linux instances only.
@@ -32320,6 +32626,12 @@ func (s *UpdatePatchBaselineOutput) SetOperatingSystem(v string) *UpdatePatchBas
 // SetRejectedPatches sets the RejectedPatches field's value.
 func (s *UpdatePatchBaselineOutput) SetRejectedPatches(v []*string) *UpdatePatchBaselineOutput {
 	s.RejectedPatches = v
+	return s
+}
+
+// SetRejectedPatchesAction sets the RejectedPatchesAction field's value.
+func (s *UpdatePatchBaselineOutput) SetRejectedPatchesAction(v string) *UpdatePatchBaselineOutput {
+	s.RejectedPatchesAction = &v
 	return s
 }
 
@@ -32899,11 +33211,22 @@ const (
 )
 
 const (
+	// PatchActionAllowAsDependency is a PatchAction enum value
+	PatchActionAllowAsDependency = "ALLOW_AS_DEPENDENCY"
+
+	// PatchActionBlock is a PatchAction enum value
+	PatchActionBlock = "BLOCK"
+)
+
+const (
 	// PatchComplianceDataStateInstalled is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalled = "INSTALLED"
 
 	// PatchComplianceDataStateInstalledOther is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledOther = "INSTALLED_OTHER"
+
+	// PatchComplianceDataStateInstalledRejected is a PatchComplianceDataState enum value
+	PatchComplianceDataStateInstalledRejected = "INSTALLED_REJECTED"
 
 	// PatchComplianceDataStateMissing is a PatchComplianceDataState enum value
 	PatchComplianceDataStateMissing = "MISSING"

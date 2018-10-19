@@ -15,17 +15,20 @@ import (
 )
 
 func TestLocal_impl(t *testing.T) {
-	var _ backend.Enhanced = new(Local)
-	var _ backend.Local = new(Local)
-	var _ backend.CLI = new(Local)
+	var _ backend.Enhanced = New()
+	var _ backend.Local = New()
+	var _ backend.CLI = New()
 }
 
 func TestLocal_backend(t *testing.T) {
-	b := TestLocal(t)
-	backend.TestBackend(t, b, b)
+	defer testTmpDir(t)()
+	b := New()
+	backend.TestBackendStates(t, b)
+	backend.TestBackendStateLocks(t, b, b)
 }
 
 func checkState(t *testing.T, path, expected string) {
+	t.Helper()
 	// Read the state
 	f, err := os.Open(path)
 	if err != nil {
@@ -46,7 +49,7 @@ func checkState(t *testing.T, path, expected string) {
 }
 
 func TestLocal_StatePaths(t *testing.T) {
-	b := &Local{}
+	b := New()
 
 	// Test the defaults
 	path, out, back := b.StatePaths("")
@@ -68,7 +71,7 @@ func TestLocal_StatePaths(t *testing.T) {
 	testEnv := "test_env"
 	path, out, back = b.StatePaths(testEnv)
 
-	expectedPath := filepath.Join(DefaultEnvDir, testEnv, DefaultStateFilename)
+	expectedPath := filepath.Join(DefaultWorkspaceDir, testEnv, DefaultStateFilename)
 	expectedOut := expectedPath
 	expectedBackup := expectedPath + DefaultBackupExtension
 
@@ -91,7 +94,7 @@ func TestLocal_addAndRemoveStates(t *testing.T) {
 	dflt := backend.DefaultStateName
 	expectedStates := []string{dflt}
 
-	b := &Local{}
+	b := New()
 	states, err := b.States()
 	if err != nil {
 		t.Fatal(err)
@@ -168,6 +171,11 @@ func TestLocal_addAndRemoveStates(t *testing.T) {
 // verify it's being called.
 type testDelegateBackend struct {
 	*Local
+
+	// return a sentinel error on these calls
+	stateErr  bool
+	statesErr bool
+	deleteErr bool
 }
 
 var errTestDelegateState = errors.New("State called")
@@ -175,23 +183,38 @@ var errTestDelegateStates = errors.New("States called")
 var errTestDelegateDeleteState = errors.New("Delete called")
 
 func (b *testDelegateBackend) State(name string) (state.State, error) {
-	return nil, errTestDelegateState
+	if b.stateErr {
+		return nil, errTestDelegateState
+	}
+	s := &state.LocalState{
+		Path:    "terraform.tfstate",
+		PathOut: "terraform.tfstate",
+	}
+	return s, nil
 }
 
 func (b *testDelegateBackend) States() ([]string, error) {
-	return nil, errTestDelegateStates
+	if b.statesErr {
+		return nil, errTestDelegateStates
+	}
+	return []string{"default"}, nil
 }
 
 func (b *testDelegateBackend) DeleteState(name string) error {
-	return errTestDelegateDeleteState
+	if b.deleteErr {
+		return errTestDelegateDeleteState
+	}
+	return nil
 }
 
 // verify that the MultiState methods are dispatched to the correct Backend.
 func TestLocal_multiStateBackend(t *testing.T) {
 	// assign a separate backend where we can read the state
-	b := &Local{
-		Backend: &testDelegateBackend{},
-	}
+	b := NewWithBackend(&testDelegateBackend{
+		stateErr:  true,
+		statesErr: true,
+		deleteErr: true,
+	})
 
 	if _, err := b.State("test"); err != errTestDelegateState {
 		t.Fatal("expected errTestDelegateState, got:", err)
@@ -204,7 +227,6 @@ func TestLocal_multiStateBackend(t *testing.T) {
 	if err := b.DeleteState("test"); err != errTestDelegateDeleteState {
 		t.Fatal("expected errTestDelegateDeleteState, got:", err)
 	}
-
 }
 
 // change into a tmp dir and return a deferable func to change back and cleanup

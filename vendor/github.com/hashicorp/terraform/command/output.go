@@ -16,7 +16,10 @@ type OutputCommand struct {
 }
 
 func (c *OutputCommand) Run(args []string) int {
-	args = c.Meta.process(args, false)
+	args, err := c.Meta.process(args, false)
+	if err != nil {
+		return 1
+	}
 
 	var module string
 	var jsonOutput bool
@@ -50,7 +53,7 @@ func (c *OutputCommand) Run(args []string) int {
 		return 1
 	}
 
-	env := c.Env()
+	env := c.Workspace()
 
 	// Get the state
 	stateStore, err := b.State(env)
@@ -82,7 +85,7 @@ func (c *OutputCommand) Run(args []string) int {
 		return 1
 	}
 
-	if state.Empty() || len(mod.Outputs) == 0 {
+	if !jsonOutput && (state.Empty() || len(mod.Outputs) == 0) {
 		c.Ui.Error(
 			"The state file either has no outputs defined, or all the defined\n" +
 				"outputs are empty. Please define an output in your configuration\n" +
