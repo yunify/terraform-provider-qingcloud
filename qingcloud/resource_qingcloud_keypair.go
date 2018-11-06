@@ -16,10 +16,10 @@ package qingcloud
 import (
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	qc "github.com/yunify/qingcloud-sdk-go/service"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	qc "github.com/yunify/qingcloud-sdk-go/service"
 	"time"
 )
 
@@ -138,7 +138,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 		describeKeyPairsInput.Verbose = qc.Int(1)
 		var describeKeyPairsOutput *qc.DescribeKeyPairsOutput
 		describeKeyPairsOutput, err = clt.DescribeKeyPairs(describeKeyPairsInput)
-		if err != nil{
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 		instanceIds := describeKeyPairsOutput.KeyPairSet[0].InstanceIDs
@@ -148,7 +148,7 @@ func resourceQingcluodKeypairDelete(d *schema.ResourceData, meta interface{}) er
 			detachKeyPairsInput.KeyPairs = describeKeyPairsInput.KeyPairs
 			detachKeyPairsInput.Instances = instanceIds
 			_, err = clt.DetachKeyPairs(detachKeyPairsInput)
-			if err!= nil {
+			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 			return resource.RetryableError(fmt.Errorf("there are still other resources [%v] depending on this resource[%v]", instanceIds, []*string{qc.String(d.Id())}))
