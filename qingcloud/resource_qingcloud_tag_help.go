@@ -42,6 +42,7 @@ func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) error {
 		return err
 	}
 	d.Set(resourceTagNames, tagNames)
+	return nil
 }
 
 func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType string) error {
