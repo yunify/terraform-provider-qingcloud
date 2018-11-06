@@ -1,0 +1,74 @@
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+        <li<%#= sidebar_current("docs-home") %>>
+          <a href="/docs/providers/index.html">All Providers</a>
+        </li>
+
+        <li<%= sidebar_current("docs-qingcloud-index") %>>
+          <a href="/docs/providers/qingcloud/index.html">QingCloud Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-qingcloud-datasource") %>>
+          <a href="#">Data Sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-qingcloud-datasource-vpn-cert") %>>
+              <a href="/docs/providers/qingcloud/d/vpn_cert.html">qingcloud_vpn_cert</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-qingcloud-resource") %>>
+          <a href="#">Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-qingcloud-resource-eip") %>>
+              <a href="/docs/providers/qingcloud/r/eip.html">qingcloud_eip</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-instance") %>>
+              <a href="/docs/providers/qingcloud/r/instance.html">qingcloud_instance</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resource-keypair") %>>
+              <a href="/docs/providers/qingcloud/r/keypair.html">qingcloud_keypair</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-loadbalancer") %>>
+              <a href="/docs/providers/qingcloud/r/loadbalancer.html">qingcloud_loadbalancer</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-loadbalancer-backend") %>>
+              <a href="/docs/providers/qingcloud/r/loadbalancer_backend.html">qingcloud_loadbalancer_backend</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-loadbalancer-listener") %>>
+              <a href="/docs/providers/qingcloud/r/loadbalancer_listener.html">qingcloud_loadbalancer_listener</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-security-group") %>>
+              <a href="/docs/providers/qingcloud/r/security_group.html">qingcloud_security_group</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-security-group-rule") %>>
+              <a href="/docs/providers/qingcloud/r/security_group_rule.html">qingcloud_security_group_rule</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-security-server-certificate") %>>
+              <a href="/docs/providers/qingcloud/r/server_certificate.html">qingcloud_server_certificate</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-tag") %>>
+              <a href="/docs/providers/qingcloud/r/tag.html">qingcloud_tag</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-volume") %>>
+              <a href="/docs/providers/qingcloud/r/volume.html">qingcloud_volume</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-vpc") %>>
+              <a href="/docs/providers/qingcloud/r/vpc.html">qingcloud_vpc</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-vpc-static") %>>
+              <a href="/docs/providers/qingcloud/r/vpc_static.html">qingcloud_vpc_static</a>
+            </li>
+            <li<%= sidebar_current("docs-qingcloud-resourse-vxnet") %>>
+              <a href="/docs/providers/qingcloud/r/vxnet.html">qingcloud_vxnet</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>
