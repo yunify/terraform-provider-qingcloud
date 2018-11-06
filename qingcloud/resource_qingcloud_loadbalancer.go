@@ -215,10 +215,9 @@ func resourceQingcloudLoadBalancerDelete(d *schema.ResourceData, meta interface{
 	}
 	input := new(qc.DeleteLoadBalancersInput)
 	input.LoadBalancers = []*string{qc.String(d.Id())}
-	var output *qc.DeleteLoadBalancersOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteLoadBalancers(input)
+		_, err = clt.DeleteLoadBalancers(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

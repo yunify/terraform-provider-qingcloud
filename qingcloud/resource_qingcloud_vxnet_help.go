@@ -29,10 +29,9 @@ func modifyVxnetAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.VxNetName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		var output *qc.ModifyVxNetAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyVxNetAttributes(input)
+			_, err = clt.ModifyVxNetAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -51,10 +50,9 @@ func vxnetJoinRouter(d *schema.ResourceData, meta interface{}) error {
 	input.VxNet = qc.String(d.Id())
 	input.Router = qc.String(d.Get(resourceVxnetVpcID).(string))
 	input.IPNetwork = qc.String(d.Get(resourceVxnetVpcIPNetwork).(string))
-	var output *qc.JoinRouterOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.JoinRouter(input)
+		_, err = clt.JoinRouter(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
@@ -75,10 +73,9 @@ func vxnetLeaverRouter(d *schema.ResourceData, meta interface{}) error {
 	input := new(qc.LeaveRouterInput)
 	input.VxNets = []*string{qc.String(d.Id())}
 	input.Router = qc.String(oldVPC.(string))
-	var output *qc.LeaveRouterOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.LeaveRouter(input)
+		_, err = clt.LeaveRouter(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

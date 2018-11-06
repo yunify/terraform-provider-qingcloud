@@ -159,10 +159,9 @@ func resourceQingcloudSecurityGroupRuleDelete(d *schema.ResourceData, meta inter
 	clt := meta.(*QingCloudClient).securitygroup
 	input := new(qc.DeleteSecurityGroupRulesInput)
 	input.SecurityGroupRules = []*string{qc.String(d.Id())}
-	var output *qc.DeleteSecurityGroupRulesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteSecurityGroupRules(input)
+		_, err = clt.DeleteSecurityGroupRules(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

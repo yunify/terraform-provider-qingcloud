@@ -198,10 +198,9 @@ func resourceQingcloudLoadBalancerListenerUpdate(d *schema.ResourceData, meta in
 	input.HealthyCheckOption = getSetStringPointer(d, resourceLoadBalancerListenerHealthCheckOption)
 	input.ListenerOption = qc.Int(d.Get(resourceLoadBalancerListenerOption).(int))
 	input.Timeout = qc.Int(d.Get(resourceLoadBalancerListenerTimeOut).(int))
-	var output *qc.ModifyLoadBalancerListenerAttributesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.ModifyLoadBalancerListenerAttributes(input)
+		_, err = clt.ModifyLoadBalancerListenerAttributes(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
@@ -217,10 +216,9 @@ func resourceQingcloudLoadBalancerListnerDestroy(d *schema.ResourceData, meta in
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DeleteLoadBalancerListenersInput)
 	input.LoadBalancerListeners = []*string{qc.String(d.Id())}
-	var output *qc.DeleteLoadBalancerListenersOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteLoadBalancerListeners(input)
+		_, err = clt.DeleteLoadBalancerListeners(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

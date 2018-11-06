@@ -39,10 +39,9 @@ func ModifySecurityGroupRuleAttributes(d *schema.ResourceData, meta interface{})
 	input.Val1 = getUpdateStringPointer(d, resourceSecurityGroupRuleFromPort)
 	input.Val2 = getUpdateStringPointer(d, resourceSecurityGroupRuleToPort)
 	input.Val3 = getUpdateStringPointer(d, resourceSecurityGroupCidrBlock)
-	var output *qc.ModifySecurityGroupRuleAttributesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.ModifySecurityGroupRuleAttributes(input)
+		_, err = clt.ModifySecurityGroupRuleAttributes(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

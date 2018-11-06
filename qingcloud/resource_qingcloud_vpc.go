@@ -181,10 +181,9 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 	input := new(qc.DeleteRoutersInput)
 	input.Routers = []*string{qc.String(d.Id())}
-	var output *qc.DeleteRoutersOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteRouters(input)
+		_, err = clt.DeleteRouters(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

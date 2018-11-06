@@ -178,10 +178,9 @@ func resourceQingcloudVxnetDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 	input := new(qc.DeleteVxNetsInput)
 	input.VxNets = []*string{qc.String(d.Id())}
-	var output *qc.DeleteVxNetsOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteVxNets(input)
+		_, err = clt.DeleteVxNets(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

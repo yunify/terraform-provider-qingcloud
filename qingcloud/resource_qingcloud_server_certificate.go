@@ -112,10 +112,9 @@ func resourceQingcloudServerCertificateDelete(d *schema.ResourceData, meta inter
 	clt := meta.(*QingCloudClient).loadbalancer
 	input := new(qc.DeleteServerCertificatesInput)
 	input.ServerCertificates = []*string{qc.String(d.Id())}
-	var output *qc.DeleteServerCertificatesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteServerCertificates(input)
+		_, err = clt.DeleteServerCertificates(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

@@ -27,10 +27,9 @@ func modifyKeypairAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.KeyPairName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		var output *qc.ModifyKeyPairAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyKeyPairAttributes(input)
+			_, err = clt.ModifyKeyPairAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {

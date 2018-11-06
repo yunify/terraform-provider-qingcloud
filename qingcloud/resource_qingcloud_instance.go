@@ -298,10 +298,9 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
-	var output *qc.TerminateInstancesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.TerminateInstances(input)
+		_, err = clt.TerminateInstances(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

@@ -275,7 +275,7 @@ func LoadBalancerTransitionStateRefresh(clt *qc.LoadBalancerService, id *string)
 			return nil, "", err
 		}
 		if len(output.LoadBalancerSet) == 0 {
-			return nil, "", fmt.Errorf("error lb set is empty, request id %s", id)
+			return nil, "", fmt.Errorf("error lb set is empty, request id %s", *id)
 		}
 		return output.LoadBalancerSet[0], qc.StringValue(output.LoadBalancerSet[0].TransitionStatus), nil
 	}
