@@ -6,8 +6,8 @@ jobs:
   test:
     docker:
       # specify the version
-      - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
+      - image: circleci/golang:1.11.2
+    working_directory: /go/src/github.com/terraform-providers/terraform-provider-qingcloud
     steps:
       - checkout
       - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
@@ -41,8 +41,8 @@ jobs:
                  codeclimate-test-reporter < cov.out
   release:
     docker:
-      - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/yunify/terraform-provider-qingcloud
+      - image: circleci/golang:1.11.2
+    working_directory: /go/src/github.com/terraform-providers/terraform-provider-qingcloud
     steps:
       - checkout
       - run: git config --global user.name runzexia

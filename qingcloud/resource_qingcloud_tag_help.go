@@ -31,10 +31,9 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 		attributeUpdate = true
 	}
 	if attributeUpdate || descriptionUpdate {
-		var output *qc.ModifyTagAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyTagAttributes(input)
+			_, err = clt.ModifyTagAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -81,10 +80,9 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			}
 			input.ResourceTagPairs = append(input.ResourceTagPairs, &rtp)
 		}
-		var output *qc.DetachTagsOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.DetachTags(input)
+			_, err = clt.DetachTags(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -101,10 +99,9 @@ func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType st
 			}
 			input.ResourceTagPairs = append(input.ResourceTagPairs, &rtp)
 		}
-		var output *qc.AttachTagsOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.AttachTags(input)
+			_, err = clt.AttachTags(input)
 			return isServerBusy(err)
 		})
 		if err != nil {

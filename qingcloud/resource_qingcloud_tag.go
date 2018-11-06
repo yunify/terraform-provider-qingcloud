@@ -104,10 +104,9 @@ func resourceQingcloudTagDelete(d *schema.ResourceData, meta interface{}) error 
 	clt := meta.(*QingCloudClient).tag
 	input := new(qc.DeleteTagsInput)
 	input.Tags = []*string{qc.String(d.Id())}
-	var output *qc.DeleteTagsOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteTags(input)
+		_, err = clt.DeleteTags(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

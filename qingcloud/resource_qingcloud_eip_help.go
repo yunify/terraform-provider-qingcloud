@@ -27,10 +27,9 @@ func modifyEipAttributes(d *schema.ResourceData, meta interface{}) error {
 	input.EIPName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		var output *qc.ModifyEIPAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyEIPAttributes(input)
+			_, err = clt.ModifyEIPAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -45,10 +44,9 @@ func changeEIPBandwidth(d *schema.ResourceData, meta interface{}) error {
 		input := new(qc.ChangeEIPsBandwidthInput)
 		input.EIPs = []*string{qc.String(d.Id())}
 		input.Bandwidth = qc.Int(d.Get(resourceEipBandwidth).(int))
-		var output *qc.ChangeEIPsBandwidthOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ChangeEIPsBandwidth(input)
+			_, err = clt.ChangeEIPsBandwidth(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -66,10 +64,9 @@ func changeEIPBillMode(d *schema.ResourceData, meta interface{}) error {
 		input := new(qc.ChangeEIPsBillingModeInput)
 		input.EIPs = []*string{qc.String(d.Id())}
 		input.BillingMode = qc.String(d.Get(resourceEipBillMode).(string))
-		var output *qc.ChangeEIPsBillingModeOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ChangeEIPsBillingMode(input)
+			_, err = clt.ChangeEIPsBillingMode(input)
 			return isServerBusy(err)
 		})
 		if err != nil {

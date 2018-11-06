@@ -146,10 +146,9 @@ func resourceQingcloudVpcStaticUpdate(d *schema.ResourceData, meta interface{}) 
 	input.Val3 = getUpdateStringPointer(d, resourceVpcVal3)
 	input.Val4 = getUpdateStringPointer(d, resourceVpcVal4)
 	input.Val5 = getUpdateStringPointer(d, resourceVpcVal5)
-	var output *qc.ModifyRouterStaticAttributesOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.ModifyRouterStaticAttributes(input)
+		_, err = clt.ModifyRouterStaticAttributes(input)
 		return isServerBusy(err)
 	})
 	if err != nil {
@@ -165,10 +164,9 @@ func resourceQingcloudVpcStaticDelete(d *schema.ResourceData, meta interface{}) 
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.DeleteRouterStaticsInput)
 	input.RouterStatics = []*string{qc.String(d.Id())}
-	var output *qc.DeleteRouterStaticsOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.DeleteRouterStatics(input)
+		_, err = clt.DeleteRouterStatics(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

@@ -36,10 +36,9 @@ func modifyRouterAttributes(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if attributeUpdate || descriptionUpdate {
-		var output *qc.ModifyRouterAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyRouterAttributes(input)
+			_, err = clt.ModifyRouterAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
@@ -54,10 +53,8 @@ func applyRouterUpdate(routerId *string, meta interface{}) error {
 	clt := meta.(*QingCloudClient).router
 	input := new(qc.UpdateRoutersInput)
 	input.Routers = []*string{routerId}
-	var output *qc.UpdateRoutersOutput
 	var err error
 	simpleRetry(func() error {
-		output, err = clt.UpdateRouters(input)
 		return isServerBusy(err)
 	})
 	if err != nil {

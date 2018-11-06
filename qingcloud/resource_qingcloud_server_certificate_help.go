@@ -27,10 +27,9 @@ func modifyServerCertificateAttributes(d *schema.ResourceData, meta interface{})
 	input.ServerCertificateName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		var output *qc.ModifyServerCertificateAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifyServerCertificateAttributes(input)
+			_, err = clt.ModifyServerCertificateAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {

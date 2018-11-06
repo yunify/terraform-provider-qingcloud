@@ -30,10 +30,9 @@ func modifySecurityGroupAttributes(d *schema.ResourceData, meta interface{}) err
 	input.SecurityGroupName, nameUpdate = getNamePointer(d)
 	input.Description, descriptionUpdate = getDescriptionPointer(d)
 	if nameUpdate || descriptionUpdate {
-		var output *qc.ModifySecurityGroupAttributesOutput
 		var err error
 		simpleRetry(func() error {
-			output, err = clt.ModifySecurityGroupAttributes(input)
+			_, err = clt.ModifySecurityGroupAttributes(input)
 			return isServerBusy(err)
 		})
 		if err != nil {
