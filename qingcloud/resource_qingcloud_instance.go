@@ -119,8 +119,10 @@ func resourceQingcloudInstance() *schema.Resource {
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
 			resourceInstanceLoginPassword: &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -223,9 +225,13 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 		for _, volume := range instance.Volumes {
 			volumeIDs = append(volumeIDs, qc.StringValue(volume.VolumeID))
 		}
-		d.Set(resourceInstanceVolumeIDs, volumeIDs)
+		if err := d.Set(resourceInstanceVolumeIDs, volumeIDs); err != nil {
+			return err
+		}
 	}
-	resourceSetTag(d, instance.Tags)
+	if err := resourceSetTag(d, instance.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 

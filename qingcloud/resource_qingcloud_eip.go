@@ -119,7 +119,9 @@ func resourceQingcloudEipRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set(resourceEipResource, getEIPResourceMap(ip)); err != nil {
 		return fmt.Errorf("Error set eip resource %v", err)
 	}
-	resourceSetTag(d, ip.Tags)
+	if err := resourceSetTag(d, ip.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 

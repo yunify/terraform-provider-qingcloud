@@ -94,7 +94,9 @@ func resourceQingcloudVolumeRead(d *schema.ResourceData, meta interface{}) error
 	d.Set(resourceDescription, qc.StringValue(volume.Description))
 	d.Set(resourceVolumeSize, qc.IntValue(volume.Size))
 	d.Set(resourceVolumeType, qc.IntValue(volume.VolumeType))
-	resourceSetTag(d, volume.Tags)
+	if err := resourceSetTag(d, volume.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 

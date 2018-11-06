@@ -30,15 +30,19 @@ func modifyTagAttributes(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) {
+func resourceSetTag(d *schema.ResourceData, tags []*qc.Tag) error {
 	tagIDs := make([]string, 0, len(tags))
 	tagNames := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		tagIDs = append(tagIDs, qc.StringValue(tag.TagID))
 		tagNames = append(tagNames, qc.StringValue(tag.TagName))
 	}
-	d.Set(resourceTagIds, tagIDs)
+
+	if err := d.Set(resourceTagIds, tagIDs); err != nil {
+		return err
+	}
 	d.Set(resourceTagNames, tagNames)
+	return nil
 }
 
 func resourceUpdateTag(d *schema.ResourceData, meta interface{}, resourceType string) error {
