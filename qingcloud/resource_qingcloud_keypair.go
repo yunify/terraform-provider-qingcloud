@@ -97,7 +97,9 @@ func resourceQingcloudKeypairRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set(resourceName, qc.StringValue(kp.KeyPairName))
 	d.Set(resourceDescription, qc.StringValue(kp.Description))
 	d.Set(resourceKeyPairPublicKey, qc.StringValue(kp.EncryptMethod)+" "+qc.StringValue(kp.PubKey))
-	resourceSetTag(d, kp.Tags)
+	if err := resourceSetTag(d, kp.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 

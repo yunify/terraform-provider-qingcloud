@@ -101,7 +101,9 @@ func resourceQingcloudVxnetRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set(resourceVxnetVpcIPNetwork, "")
 	}
 	d.Set(resourceVxnetVpcID, qc.StringValue(vxnet.VpcRouterID))
-	resourceSetTag(d, vxnet.Tags)
+	if err := resourceSetTag(d, vxnet.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 

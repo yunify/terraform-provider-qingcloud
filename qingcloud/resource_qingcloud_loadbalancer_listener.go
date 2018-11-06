@@ -155,7 +155,9 @@ func resourceQingcloudLoadBalancerListenerRead(d *schema.ResourceData, meta inte
 	d.Set(resourceLoadBalancerListenerPort, qc.IntValue(output.LoadBalancerListenerSet[0].ListenerPort))
 	d.Set(resourceLoadBalancerListenerProtocol, qc.StringValue(output.LoadBalancerListenerSet[0].ListenerProtocol))
 	d.Set(resourceLoadBalancerListenerBalancerMode, qc.StringValue(output.LoadBalancerListenerSet[0].BalanceMode))
-	d.Set(resourceLoadBalancerListenerServerCertificateId, qc.StringValueSlice(output.LoadBalancerListenerSet[0].ServerCertificateID))
+	if err := d.Set(resourceLoadBalancerListenerServerCertificateId, qc.StringValueSlice(output.LoadBalancerListenerSet[0].ServerCertificateID)); err != nil {
+		return err
+	}
 	d.Set(resourceLoadBalancerListenerSessionSticky, qc.StringValue(output.LoadBalancerListenerSet[0].SessionSticky))
 	d.Set(resourceLoadBalancerListenerForwardfor, qc.IntValue(output.LoadBalancerListenerSet[0].Forwardfor))
 	d.Set(resourceLoadBalancerListenerHealthCheckMethod, qc.StringValue(output.LoadBalancerListenerSet[0].HealthyCheckMethod))

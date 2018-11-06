@@ -63,7 +63,9 @@ func resourceQingcloudSecurityGroupRead(d *schema.ResourceData, meta interface{}
 	sg := output.SecurityGroupSet[0]
 	d.Set(resourceName, qc.StringValue(sg.SecurityGroupName))
 	d.Set(resourceDescription, qc.StringValue(sg.Description))
-	resourceSetTag(d, sg.Tags)
+	if err := resourceSetTag(d, sg.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 func resourceQingcloudSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {

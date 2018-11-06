@@ -174,7 +174,9 @@ func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{})
 	d.Set(resourceDescription, qc.StringValue(lb.Description))
 	d.Set(resourceLoadBalancerType, qc.IntValue(lb.LoadBalancerType))
 	d.Set(resourceLoadBalancerVxnetID, qc.StringValue(lb.VxNetID))
-	d.Set(resourceLoadBalancerPrivateIPs, qc.StringValueSlice(lb.PrivateIPs))
+	if err := d.Set(resourceLoadBalancerPrivateIPs, qc.StringValueSlice(lb.PrivateIPs)); err != nil {
+		return err
+	}
 	d.Set(resourceLoadBalancerSecurityGroupID, qc.StringValue(lb.SecurityGroupID))
 	d.Set(resourceLoadBalancerNodeCount, qc.IntValue(lb.NodeCount))
 	var eipIDs []string
@@ -188,7 +190,9 @@ func resourceQingcloudLoadBalancerRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 	d.Set(resourceLoadBalancerEipIDs, eipIDs)
-	resourceSetTag(d, lb.Tags)
+	if err := resourceSetTag(d, lb.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 
