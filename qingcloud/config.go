@@ -39,6 +39,8 @@ type QingCloudClient struct {
 	loadbalancer  *qc.LoadBalancerService
 	tag           *qc.TagService
 	userdata      *qc.UserDataService
+	app           *qc.AppService
+	cluster       *qc.ClusterService
 }
 
 func (c *Config) Client() (*QingCloudClient, error) {
@@ -88,6 +90,14 @@ func (c *Config) Client() (*QingCloudClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	app, err := clt.App(c.Zone)
+	if err != nil {
+		return nil, err
+	}
+	cluster, err := clt.Cluster(c.Zone)
+	if err != nil {
+		return nil, err
+	}
 	loadbalancer, err := clt.LoadBalancer(c.Zone)
 	if err != nil {
 		return nil, err
@@ -110,5 +120,7 @@ func (c *Config) Client() (*QingCloudClient, error) {
 		loadbalancer:  loadbalancer,
 		tag:           tag,
 		userdata:      userdata,
+		app:           app,
+		cluster:       cluster,
 	}, nil
 }

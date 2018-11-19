@@ -18,6 +18,8 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
+	"github.com/hashicorp/terraform/helper/resource"
+	"time"
 )
 
 const (
@@ -190,9 +192,43 @@ func resourceQingcloudVpcDelete(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-	if _, err := RouterTransitionStateRefresh(clt, d.Id()); err != nil {
+	if _, err := RouterDeleteStateRefresh(clt, d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")
 	return nil
 }
+
+func RouterDeleteStateRefresh(clt *qc.RouterService, id string) (interface{}, error) {
+	if id == "" {
+		return nil, nil
+	}
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeRoutersInput)
+		input.Routers = []*string{qc.String(id)}
+		input.Verbose = qc.Int(1)
+		var output *qc.DescribeRoutersOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeRouters(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return nil, "", fmt.Errorf("Errorf describe router: %s", err)
+		}
+		if len(output.RouterSet) == 0 {
+			return nil, "", fmt.Errorf("Error router set is empty, request id %s", id)
+		}
+		return output.RouterSet[0], qc.StringValue(output.RouterSet[0].Status), nil
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "active", "poweroffed", "suspended"},
+		Target:     []string{"deleted", "ceased"},
+		Refresh:    refreshFunc,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+

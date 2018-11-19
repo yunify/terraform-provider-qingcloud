@@ -52,6 +52,37 @@ func EIPTransitionStateRefresh(clt *qc.EIPService, id string) (interface{}, erro
 	return stateConf.WaitForState()
 }
 
+func ClusterTransitionStateRefresh(clt *qc.ClusterService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeClustersInput)
+		input.Clusters = []*string{qc.String(id)}
+		var output *qc.DescribeClustersOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeClusters(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		if len(output.ClusterSet) != 1 {
+			return output, "creating", nil
+		}
+		cluster := output.ClusterSet[0]
+		return cluster, qc.StringValue(cluster.TransitionStatus), nil
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating", "updating","deleting","ceasing"},
+		Target:     []string{""},
+		Refresh:    refreshFunc,
+		Timeout:    20 * time.Minute,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
 func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVolumesInput)

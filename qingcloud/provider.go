@@ -64,6 +64,7 @@ func Provider() terraform.ResourceProvider {
 			"qingcloud_loadbalancer_listener": resourceQingcloudLoadBalancerListener(),
 			"qingcloud_loadbalancer_backend":  resourceQingcloudLoadBalancerBackend(),
 			"qingcloud_server_certificate":    resourceQingcloudServerCertificate(),
+			"qingcloud_app":                   resourceQingcloudApp(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
