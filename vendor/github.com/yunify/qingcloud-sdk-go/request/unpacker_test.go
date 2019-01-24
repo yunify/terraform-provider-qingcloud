@@ -149,3 +149,50 @@ func TestUnpacker_UnpackHTTPRequestWithError(t *testing.T) {
 		assert.Equal(t, e.RetCode, 1400)
 	}
 }
+
+func TestUnpacker_UnpackHTTPRequestWithWrongType2(t *testing.T) {
+	type DescribeInstanceTypesOutput struct {
+		RetCode *int    `json:"ret_code" name:"ret_code"`
+		Message *string `json:"message" name:"message"`
+	}
+
+	httpResponse := &http.Response{Header: http.Header{}}
+	httpResponse.StatusCode = 200
+	httpResponse.Header.Set("Content-Type", "application/json")
+	responseString := `{
+     "message": null,
+     "ret_code":1400
+ 	}`
+	httpResponse.Body = ioutil.NopCloser(bytes.NewReader([]byte(responseString)))
+
+	output := &DescribeInstanceTypesOutput{}
+	outputValue := reflect.ValueOf(output)
+	unpacker := Unpacker{}
+	err := unpacker.UnpackHTTPRequest(&data.Operation{}, httpResponse, &outputValue)
+	if !assert.NotNil(t, err) {
+		t.FailNow()
+	}
+	println("err", err.Error())
+}
+
+func TestUnpacker_UnpackHTTPRequestWithWrongHTTPStatus(t *testing.T) {
+	type DescribeInstanceTypesOutput struct {
+		RetCode *int    `json:"ret_code" name:"ret_code"`
+		Message *string `json:"message" name:"message"`
+	}
+
+	httpResponse := &http.Response{Header: http.Header{}}
+	httpResponse.StatusCode = 500
+	httpResponse.Header.Set("Content-Type", "application/json")
+	responseString := "{}"
+	httpResponse.Body = ioutil.NopCloser(bytes.NewReader([]byte(responseString)))
+
+	output := &DescribeInstanceTypesOutput{}
+	outputValue := reflect.ValueOf(output)
+	unpacker := Unpacker{}
+	err := unpacker.UnpackHTTPRequest(&data.Operation{}, httpResponse, &outputValue)
+	if !assert.NotNil(t, err) {
+		t.FailNow()
+	}
+	println("err", err.Error())
+}

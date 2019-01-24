@@ -135,10 +135,10 @@ func (is *Signer) BuildStringToSignByValues(requestDate string, requestMethod st
 				value = strings.Replace(value, "+", "%20", -1)
 				parts = append(parts, key+"="+value)
 			} else {
-				parts = append(parts, key)
+				parts = append(parts, key+"=")
 			}
 		} else {
-			parts = append(parts, key)
+			parts = append(parts, key+"=")
 		}
 	}
 
