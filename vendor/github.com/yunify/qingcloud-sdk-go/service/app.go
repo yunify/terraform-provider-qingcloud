@@ -294,3 +294,45 @@ type DescribeAppsOutput struct {
 	RetCode    *int    `json:"ret_code" name:"ret_code" location:"elements"`
 	TotalCount *int    `json:"total_count" name:"total_count" location:"elements"`
 }
+
+// Documentation URL: https://docs.qingcloud.com/api/bot/describe_app_version_attachments.html
+func (s *AppService) GetGlobalUniqueId(i *GetGlobalUniqueIdInput) (*GetGlobalUniqueIdOutput, error) {
+	if i == nil {
+		i = &GetGlobalUniqueIdInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "GetGlobalUniqueId",
+		RequestMethod: "GET",
+	}
+
+	x := &GetGlobalUniqueIdOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type GetGlobalUniqueIdInput struct {
+	UserID *string `json:"user_id" name:"user_id" location:"params"`
+}
+
+func (v *GetGlobalUniqueIdInput) Validate() error {
+
+	return nil
+}
+
+type GetGlobalUniqueIdOutput struct {
+	Message *string `json:"message" name:"message"`
+	Action  *string `json:"action" name:"action" location:"elements"`
+	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
+	UUID    *string `json:"uuid" name:"uuid" location:"elements"`
+}

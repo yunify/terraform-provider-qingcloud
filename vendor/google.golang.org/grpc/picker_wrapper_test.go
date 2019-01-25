@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 	_ "google.golang.org/grpc/grpclog/glogger"
 	"google.golang.org/grpc/internal/leakcheck"
-	"google.golang.org/grpc/internal/transport"
+	"google.golang.org/grpc/transport"
 )
 
 const goroutineCount = 5

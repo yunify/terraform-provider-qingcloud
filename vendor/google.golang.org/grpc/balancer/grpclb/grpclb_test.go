@@ -125,13 +125,13 @@ func fakeNameDialer(addr string, timeout time.Duration) (net.Conn, error) {
 // merge merges the new client stats into current stats.
 //
 // It's a test-only method. rpcStats is defined in grpclb_picker.
-func (s *rpcStats) merge(cs *lbpb.ClientStats) {
-	atomic.AddInt64(&s.numCallsStarted, cs.NumCallsStarted)
-	atomic.AddInt64(&s.numCallsFinished, cs.NumCallsFinished)
-	atomic.AddInt64(&s.numCallsFinishedWithClientFailedToSend, cs.NumCallsFinishedWithClientFailedToSend)
-	atomic.AddInt64(&s.numCallsFinishedKnownReceived, cs.NumCallsFinishedKnownReceived)
+func (s *rpcStats) merge(new *lbpb.ClientStats) {
+	atomic.AddInt64(&s.numCallsStarted, new.NumCallsStarted)
+	atomic.AddInt64(&s.numCallsFinished, new.NumCallsFinished)
+	atomic.AddInt64(&s.numCallsFinishedWithClientFailedToSend, new.NumCallsFinishedWithClientFailedToSend)
+	atomic.AddInt64(&s.numCallsFinishedKnownReceived, new.NumCallsFinishedKnownReceived)
 	s.mu.Lock()
-	for _, perToken := range cs.CallsFinishedWithDrop {
+	for _, perToken := range new.CallsFinishedWithDrop {
 		s.numCallsDropped[perToken.LoadBalanceToken] += perToken.NumCalls
 	}
 	s.mu.Unlock()
@@ -156,24 +156,24 @@ func atomicEqual(a, b *int64) bool {
 // equal compares two rpcStats.
 //
 // It's a test-only method. rpcStats is defined in grpclb_picker.
-func (s *rpcStats) equal(o *rpcStats) bool {
-	if !atomicEqual(&s.numCallsStarted, &o.numCallsStarted) {
+func (s *rpcStats) equal(new *rpcStats) bool {
+	if !atomicEqual(&s.numCallsStarted, &new.numCallsStarted) {
 		return false
 	}
-	if !atomicEqual(&s.numCallsFinished, &o.numCallsFinished) {
+	if !atomicEqual(&s.numCallsFinished, &new.numCallsFinished) {
 		return false
 	}
-	if !atomicEqual(&s.numCallsFinishedWithClientFailedToSend, &o.numCallsFinishedWithClientFailedToSend) {
+	if !atomicEqual(&s.numCallsFinishedWithClientFailedToSend, &new.numCallsFinishedWithClientFailedToSend) {
 		return false
 	}
-	if !atomicEqual(&s.numCallsFinishedKnownReceived, &o.numCallsFinishedKnownReceived) {
+	if !atomicEqual(&s.numCallsFinishedKnownReceived, &new.numCallsFinishedKnownReceived) {
 		return false
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	if !mapsEqual(s.numCallsDropped, o.numCallsDropped) {
+	new.mu.Lock()
+	defer new.mu.Unlock()
+	if !mapsEqual(s.numCallsDropped, new.numCallsDropped) {
 		return false
 	}
 	return true

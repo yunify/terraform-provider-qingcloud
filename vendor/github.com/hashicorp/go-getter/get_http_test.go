@@ -3,11 +3,14 @@ package getter
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -38,6 +41,34 @@ func TestHttpGetter_header(t *testing.T) {
 	if _, err := os.Stat(mainPath); err != nil {
 		t.Fatalf("err: %s", err)
 	}
+}
+
+func TestHttpGetter_requestHeader(t *testing.T) {
+	ln := testHttpServer(t)
+	defer ln.Close()
+
+	g := new(HttpGetter)
+	g.Header = make(http.Header)
+	g.Header.Add("X-Foobar", "foobar")
+	dst := tempDir(t)
+	defer os.RemoveAll(dst)
+
+	var u url.URL
+	u.Scheme = "http"
+	u.Host = ln.Addr().String()
+	u.Path = "/expect-header"
+	u.RawQuery = "expected=X-Foobar"
+
+	// Get it!
+	if err := g.GetFile(dst, &u); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	// Verify the main file exists
+	if _, err := os.Stat(dst); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	assertContents(t, dst, "Hello\n")
 }
 
 func TestHttpGetter_meta(t *testing.T) {
@@ -134,13 +165,53 @@ func TestHttpGetter_none(t *testing.T) {
 	}
 }
 
+func TestHttpGetter_resume(t *testing.T) {
+	load := []byte(testHttpMetaStr)
+	downloadFrom := len(load) / 2
+
+	ln := testHttpServer(t)
+	defer ln.Close()
+
+	g := new(HttpGetter)
+	dst := tempDir(t)
+	defer os.RemoveAll(dst)
+
+	dst = filepath.Join(dst, "..", "range")
+	f, err := os.Create(dst)
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	f.Write(load[:downloadFrom])
+	f.Close()
+
+	var u url.URL
+	u.Scheme = "http"
+	u.Host = ln.Addr().String()
+	u.Path = "/range"
+
+	// Get it!
+	if err := g.GetFile(dst, &u); err != nil {
+		t.Fatalf("should not error: %v", err)
+	}
+
+	b, err := ioutil.ReadFile(dst)
+	if err != nil {
+		t.Fatalf("should not error: %v", err)
+	}
+
+	if string(b) != string(load) {
+		t.Fatalf("file differs: got:\n%s\n expected:\n%s\n", string(b), string(load))
+	}
+
+}
+
 func TestHttpGetter_file(t *testing.T) {
 	ln := testHttpServer(t)
 	defer ln.Close()
 
 	g := new(HttpGetter)
-	dst := tempFile(t)
-	defer os.RemoveAll(dst)
+	dst := tempTestFile(t)
+	defer os.RemoveAll(filepath.Dir(dst))
 
 	var u url.URL
 	u.Scheme = "http"
@@ -255,18 +326,31 @@ func testHttpServer(t *testing.T) net.Listener {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/expect-header", testHttpHandlerExpectHeader)
 	mux.HandleFunc("/file", testHttpHandlerFile)
 	mux.HandleFunc("/header", testHttpHandlerHeader)
 	mux.HandleFunc("/meta", testHttpHandlerMeta)
 	mux.HandleFunc("/meta-auth", testHttpHandlerMetaAuth)
 	mux.HandleFunc("/meta-subdir", testHttpHandlerMetaSubdir)
 	mux.HandleFunc("/meta-subdir-glob", testHttpHandlerMetaSubdirGlob)
+	mux.HandleFunc("/range", testHttpHandlerRange)
 
 	var server http.Server
 	server.Handler = mux
 	go server.Serve(ln)
 
 	return ln
+}
+
+func testHttpHandlerExpectHeader(w http.ResponseWriter, r *http.Request) {
+	if expected, ok := r.URL.Query()["expected"]; ok {
+		if r.Header.Get(expected[0]) != "" {
+			w.Write([]byte("Hello\n"))
+			return
+		}
+	}
+
+	w.WriteHeader(400)
 }
 
 func testHttpHandlerFile(w http.ResponseWriter, r *http.Request) {
@@ -307,6 +391,24 @@ func testHttpHandlerMetaSubdirGlob(w http.ResponseWriter, r *http.Request) {
 
 func testHttpHandlerNone(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(testHttpNoneStr))
+}
+
+func testHttpHandlerRange(w http.ResponseWriter, r *http.Request) {
+	load := []byte(testHttpMetaStr)
+	switch r.Method {
+	case "HEAD":
+		w.Header().Add("accept-ranges", "bytes")
+		w.Header().Add("content-length", strconv.Itoa(len(load)))
+	default:
+		// request should have header "Range: bytes=0-1023"
+		// or                         "Range: bytes=123-"
+		rangeHeaderValue := strings.Split(r.Header.Get("Range"), "=")[1]
+		rng, _ := strconv.Atoi(strings.Split(rangeHeaderValue, "-")[0])
+		if rng < 1 || rng > len(load) {
+			http.Error(w, "", http.StatusBadRequest)
+		}
+		w.Write(load[rng:])
+	}
 }
 
 const testHttpMetaStr = `

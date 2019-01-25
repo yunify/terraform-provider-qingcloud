@@ -417,10 +417,13 @@ type ResizeInstancesInput struct {
 
 	// CPU's available values: 1, 2, 4, 8, 16
 	CPU          *int      `json:"cpu" name:"cpu" location:"params"`
+	CPUModel     *string   `json:"cpu_model" name:"cpu_model" location:"params"`
+	Gpu          *int      `json:"gpu" name:"gpu" location:"params"`
 	InstanceType *string   `json:"instance_type" name:"instance_type" location:"params"`
 	Instances    []*string `json:"instances" name:"instances" location:"params"` // Required
 	// Memory's available values: 1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768
-	Memory *int `json:"memory" name:"memory" location:"params"`
+	Memory     *int `json:"memory" name:"memory" location:"params"`
+	OSDiskSize *int `json:"os_disk_size" name:"os_disk_size" location:"params"`
 }
 
 func (v *ResizeInstancesInput) Validate() error {
@@ -585,6 +588,7 @@ type RunInstancesInput struct {
 	NeedNewSID *int `json:"need_newsid" name:"need_newsid" default:"0" location:"params"`
 	// NeedUserdata's available values: 0, 1
 	NeedUserdata  *int    `json:"need_userdata" name:"need_userdata" default:"0" location:"params"`
+	OSDiskSize    *int    `json:"os_disk_size" name:"os_disk_size" location:"params"`
 	SecurityGroup *string `json:"security_group" name:"security_group" location:"params"`
 	UIType        *string `json:"ui_type" name:"ui_type" location:"params"`
 	UserdataFile  *string `json:"userdata_file" name:"userdata_file" default:"/etc/rc.local" location:"params"`

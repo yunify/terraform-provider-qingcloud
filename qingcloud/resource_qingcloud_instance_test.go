@@ -38,6 +38,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 						"qingcloud_instance.foo", "memory", "1024"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_instance.foo", "instance_class", "0"),
+					resource.TestCheckResourceAttr("qingcloud_instance.foo", "os_disk_size", "20"),
 				),
 			},
 			resource.TestStep{
@@ -58,6 +59,7 @@ func TestAccQingcloudInstance_basic(t *testing.T) {
 						"qingcloud_instance.foo", "memory", "2048"),
 					resource.TestCheckResourceAttr(
 						"qingcloud_instance.foo", "instance_class", "0"),
+					resource.TestCheckResourceAttr("qingcloud_instance.foo", "os_disk_size", "50"),
 				),
 			},
 		},
@@ -420,6 +422,7 @@ resource "qingcloud_instance" "foo" {
 	name = "instance"
 	description = "instance"
 	tag_ids = ["${qingcloud_tag.test.id}"]
+    os_disk_size = "50"
 }
 `
 const testAccInstanceConfigTagTemplate = `

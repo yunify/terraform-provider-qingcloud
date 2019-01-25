@@ -11,6 +11,7 @@ FILES_TO_RELEASE=$(shell find . -name "*.go" | grep -vE "/vendor/|/test|.*_test.
 FILES_TO_RELEASE_WITH_VENDOR=$(shell find . -name "*.go" | grep -vE "/test|.*_test.go")
 LINT_IGNORE_DOC="service\/.*\.go:.+(comment on exported|should have comment or be unexported)"
 LINT_IGNORE_CONFLICT="service\/.*\.go:.+(type name will be used as)"
+LINT_IGNORE_METHOD="GetGlobalUniqueId"
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -41,7 +42,7 @@ vet:
 lint:
 	@echo "golint, skipping vendor packages"
 	@lint=$$(for pkg in ${PKGS_TO_CHECK}; do golint $${pkg}; done); \
-	 lint=$$(echo "$${lint}" | grep -vE -e ${LINT_IGNORE_DOC} -e ${LINT_IGNORE_CONFLICT}); \
+	 lint=$$(echo "$${lint}" | grep -vE -e ${LINT_IGNORE_DOC} -e ${LINT_IGNORE_CONFLICT} -e ${LINT_IGNORE_METHOD}); \
 	 if [[ -n $${lint} ]]; then echo "$${lint}"; exit 1; fi
 	@echo "ok"
 
@@ -97,29 +98,10 @@ unit-race:
 	go test -v -race -cpu=1,2,4 ${PKGS_TO_CHECK}
 	@echo "ok"
 
-unit-runtime: unit-runtime-go-1.5 unit-runtime-go-1.6 unit-runtime-go-1.7
+unit-runtime: unit-runtime-go-1.9 unit-runtime-go-1.10 unit-runtime-go-1.11
 
-export define DOCKERFILE_GO_1_7
-FROM golang:1.7
-
-ADD . /go/src/github.com/yunify/qingcloud-sdk-go
-WORKDIR /go/src/github.com/yunify/qingcloud-sdk-go
-
-CMD ["make", "build", "unit"]
-endef
-
-unit-runtime-go-1.7:
-	@echo "run test in go 1.7"
-	echo "$${DOCKERFILE_GO_1_7}" > "dockerfile_go_1.7"
-	docker build -f "./dockerfile_go_1.7" -t "${PREFIX}:go-1.7" .
-	rm -f "./dockerfile_go_1.7"
-	docker run --name "${PREFIX}-go-1.7-unit" -t "${PREFIX}:go-1.7"
-	docker rm "${PREFIX}-go-1.7-unit"
-	docker rmi "${PREFIX}:go-1.7"
-	@echo "ok"
-
-export define DOCKERFILE_GO_1_6
-FROM golang:1.6
+export define DOCKERFILE_GO_1_11
+FROM golang:1.11
 
 ADD . /go/src/github.com/yunify/qingcloud-sdk-go
 WORKDIR /go/src/github.com/yunify/qingcloud-sdk-go
@@ -127,18 +109,37 @@ WORKDIR /go/src/github.com/yunify/qingcloud-sdk-go
 CMD ["make", "build", "unit"]
 endef
 
-unit-runtime-go-1.6:
-	@echo "run test in go 1.6"
-	echo "$${DOCKERFILE_GO_1_6}" > "dockerfile_go_1.6"
-	docker build -f "./dockerfile_go_1.6" -t "${PREFIX}:go-1.6" .
-	rm -f "./dockerfile_go_1.6"
-	docker run --name "${PREFIX}-go-1.6-unit" -t "${PREFIX}:go-1.6"
-	docker rm "${PREFIX}-go-1.6-unit"
-	docker rmi "${PREFIX}:go-1.6"
+unit-runtime-go-1.11:
+	@echo "run test in go 1.11"
+	echo "$${DOCKERFILE_GO_1_11}" > "dockerfile_go_1.11"
+	docker build -f "./dockerfile_go_1.11" -t "${PREFIX}:go-1.11" .
+	rm -f "./dockerfile_go_1.11"
+	docker run --name "${PREFIX}-go-1.11-unit" -t "${PREFIX}:go-1.11"
+	docker rm "${PREFIX}-go-1.11-unit"
+	docker rmi "${PREFIX}:go-1.11"
 	@echo "ok"
 
-export define DOCKERFILE_GO_1_5
-FROM golang:1.5
+export define DOCKERFILE_GO_1_10
+FROM golang:1.10
+
+ADD . /go/src/github.com/yunify/qingcloud-sdk-go
+WORKDIR /go/src/github.com/yunify/qingcloud-sdk-go
+
+CMD ["make", "build", "unit"]
+endef
+
+unit-runtime-go-1.10:
+	@echo "run test in go 1.10"
+	echo "$${DOCKERFILE_GO_1_10}" > "dockerfile_go_1.10"
+	docker build -f "./dockerfile_go_1.10" -t "${PREFIX}:go-1.10" .
+	rm -f "./dockerfile_go_1.10"
+	docker run --name "${PREFIX}-go-1.10-unit" -t "${PREFIX}:go-1.10"
+	docker rm "${PREFIX}-go-1.10-unit"
+	docker rmi "${PREFIX}:go-1.10"
+	@echo "ok"
+
+export define DOCKERFILE_GO_1_9
+FROM golang:1.9
 ENV GO15VENDOREXPERIMENT="1"
 
 ADD . /go/src/github.com/yunify/qingcloud-sdk-go
@@ -147,14 +148,14 @@ WORKDIR /go/src/github.com/yunify/qingcloud-sdk-go
 CMD ["make", "build", "unit"]
 endef
 
-unit-runtime-go-1.5:
-	@echo "run test in go 1.5"
-	echo "$${DOCKERFILE_GO_1_5}" > "dockerfile_go_1.5"
-	docker build -f "./dockerfile_go_1.5" -t "${PREFIX}:go-1.5" .
-	rm -f "./dockerfile_go_1.5"
-	docker run --name "${PREFIX}-go-1.5-unit" -t "${PREFIX}:go-1.5"
-	docker rm "${PREFIX}-go-1.5-unit"
-	docker rmi "${PREFIX}:go-1.5"
+unit-runtime-go-1.9:
+	@echo "run test in go 1.9"
+	echo "$${DOCKERFILE_GO_1_9}" > "dockerfile_go_1.9"
+	docker build -f "./dockerfile_go_1.9" -t "${PREFIX}:go-1.9" .
+	rm -f "./dockerfile_go_1.9"
+	docker run --name "${PREFIX}-go-1.9-unit" -t "${PREFIX}:go-1.9"
+	docker rm "${PREFIX}-go-1.9-unit"
+	docker rmi "${PREFIX}:go-1.9"
 	@echo "ok"
 
 test:

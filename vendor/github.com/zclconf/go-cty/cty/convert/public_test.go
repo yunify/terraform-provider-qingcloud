@@ -425,6 +425,52 @@ func TestConvert(t *testing.T) {
 			}),
 			WantError: true, // recursive conversion from bool to number is impossible
 		},
+		{
+			Value: cty.NullVal(cty.String),
+			Type:  cty.DynamicPseudoType,
+			Want:  cty.NullVal(cty.String),
+		},
+		{
+			Value: cty.UnknownVal(cty.String),
+			Type:  cty.DynamicPseudoType,
+			Want:  cty.UnknownVal(cty.String),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.StringVal("hello"),
+			}),
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			Want: cty.TupleVal([]cty.Value{
+				cty.StringVal("hello"),
+			}),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.True,
+			}),
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			Want: cty.TupleVal([]cty.Value{
+				cty.StringVal("true"),
+			}),
+		},
+		{
+			Value: cty.TupleVal([]cty.Value{
+				cty.True,
+			}),
+			Type:      cty.EmptyTuple,
+			WantError: true,
+		},
+		{
+			Value: cty.EmptyTupleVal,
+			Type: cty.Tuple([]cty.Type{
+				cty.String,
+			}),
+			WantError: true,
+		},
 	}
 
 	for _, test := range tests {

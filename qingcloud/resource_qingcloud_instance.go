@@ -21,6 +21,7 @@ const (
 	resourceInstancePublicIP        = "public_ip"
 	resourceInstanceUserData        = "userdata"
 	resourceInstanceLoginPassword   = "login_passwd"
+	resourceInstanceOsDiskSize      = "os_disk_size"
 )
 
 func resourceQingcloudInstance() *schema.Resource {
@@ -75,6 +76,13 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+			},
+			resourceInstanceOsDiskSize: &schema.Schema{
+				Type:         schema.TypeInt,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: withinArrayIntRange(20, 100),
 			},
 			resourceInstanceKeyPairIDs: &schema.Schema{
 				Type:     schema.TypeSet,
@@ -139,6 +147,9 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	input.Memory = qc.Int(d.Get(resourceInstanceMemory).(int))
 	input.InstanceClass = qc.Int(d.Get(resourceInstanceClass).(int))
 	input.SecurityGroup = getSetStringPointer(d, resourceInstanceSecurityGroupId)
+	if d.Get(resourceInstanceOsDiskSize).(int) != 0 {
+		input.OSDiskSize = qc.Int(d.Get(resourceInstanceOsDiskSize).(int))
+	}
 
 	kps := d.Get(resourceInstanceKeyPairIDs).(*schema.Set).List()
 	if len(kps) > 0 {
@@ -198,6 +209,7 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set(resourceInstanceCPU, qc.IntValue(instance.VCPUsCurrent))
 	d.Set(resourceInstanceMemory, qc.IntValue(instance.MemoryCurrent))
 	d.Set(resourceInstanceClass, qc.IntValue(instance.InstanceClass))
+	d.Set(resourceInstanceOsDiskSize, qc.IntValue(instance.Extra.OSDiskSize))
 	//set managed vxnet
 	for _, vxnet := range instance.VxNets {
 		if qc.IntValue(vxnet.VxNetType) != 0 {

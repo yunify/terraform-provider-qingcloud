@@ -76,29 +76,40 @@ func (u *Unpacker) parseResponse() error {
 				return fmt.Errorf("API Gateway output format error")
 			}
 		}
+	} else {
+		u.httpResponse.Body.Close()
+		err := fmt.Errorf("Response StatusCode: %d", u.httpResponse.StatusCode)
+		logger.Error(err.Error())
+		return err
 	}
 
 	return nil
 }
 
 func (u *Unpacker) parseError() error {
-
+	if u.output.IsNil() {
+		return fmt.Errorf("nil returned")
+	}
 	retCodeValue := u.output.Elem().FieldByName("RetCode")
 	messageValue := u.output.Elem().FieldByName("Message")
 
-	if !retCodeValue.Elem().IsValid() || retCodeValue.Type().String() != "*int" {
-		return fmt.Errorf("can not get retcode")
-	}
-
-	if retCodeValue.Elem().Int() != 0 {
-		if !messageValue.Elem().IsValid() || messageValue.Type().String() != "*string" {
-			return fmt.Errorf("can not get error message")
+	if retCodeValue.IsValid() && retCodeValue.Type().String() == "*int" &&
+		retCodeValue.Elem().IsValid() {
+		if retCodeValue.Elem().Int() == 0 {
+			return nil
 		}
-
-		return &errors.QingCloudError{
+		err := &errors.QingCloudError{
 			RetCode: int(retCodeValue.Elem().Int()),
-			Message: messageValue.Elem().String(),
 		}
+		if messageValue.IsValid() && messageValue.Type().String() == "*string" {
+			if messageValue.Elem().IsValid() {
+				err.Message = messageValue.Elem().String()
+			} else {
+				err.Message = "null"
+			}
+		}
+		return err
 	}
-	return nil
+
+	return fmt.Errorf("invalid retCodeValue %v returned", retCodeValue)
 }
