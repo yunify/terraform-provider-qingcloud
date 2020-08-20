@@ -23,6 +23,17 @@ terraform {
 
 ```bash
 terraform init
+```
+
+```bash
+terraform version
+
+Terraform v0.13.0
++ provider registry.terraform.io/hashicorp/null v2.1.2
++ provider registry.terraform.io/shaowenchen/qingcloud v1.2.6
+```
+
+```
 terraform apply
 ```
 
