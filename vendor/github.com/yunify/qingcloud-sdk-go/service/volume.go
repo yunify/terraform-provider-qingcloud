@@ -104,6 +104,82 @@ type AttachVolumesOutput struct {
 	RetCode *int    `json:"ret_code" name:"ret_code" location:"elements"`
 }
 
+// Documentation URL: https://docs.qingcloud.com
+func (s *VolumeService) CloneVolumes(i *CloneVolumesInput) (*CloneVolumesOutput, error) {
+	if i == nil {
+		i = &CloneVolumesInput{}
+	}
+	o := &data.Operation{
+		Config:        s.Config,
+		Properties:    s.Properties,
+		APIName:       "CloneVolumes",
+		RequestMethod: "GET",
+	}
+
+	x := &CloneVolumesOutput{}
+	r, err := request.New(o, i, x)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Send()
+	if err != nil {
+		return nil, err
+	}
+
+	return x, err
+}
+
+type CloneVolumesInput struct {
+	Count      *int    `json:"count" name:"count" default:"1" location:"params"`
+	SubZones   *string `json:"sub_zones" name:"sub_zones" location:"params"`
+	Volume     *string `json:"volume" name:"volume" location:"params"` // Required
+	VolumeName *string `json:"volume_name" name:"volume_name" location:"params"`
+	// VolumeType's available values: 0, 1, 2, 3, 4, 5, 6, 10, 100, 200
+	VolumeType *int    `json:"volume_type" name:"volume_type" default:"0" location:"params"`
+	Zone       *string `json:"zone" name:"zone" location:"params"`
+}
+
+func (v *CloneVolumesInput) Validate() error {
+
+	if v.Volume == nil {
+		return errors.ParameterRequiredError{
+			ParameterName: "Volume",
+			ParentName:    "CloneVolumesInput",
+		}
+	}
+
+	if v.VolumeType != nil {
+		volumeTypeValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "10", "100", "200"}
+		volumeTypeParameterValue := fmt.Sprint(*v.VolumeType)
+
+		volumeTypeIsValid := false
+		for _, value := range volumeTypeValidValues {
+			if value == volumeTypeParameterValue {
+				volumeTypeIsValid = true
+			}
+		}
+
+		if !volumeTypeIsValid {
+			return errors.ParameterValueNotAllowedError{
+				ParameterName:  "VolumeType",
+				ParameterValue: volumeTypeParameterValue,
+				AllowedValues:  volumeTypeValidValues,
+			}
+		}
+	}
+
+	return nil
+}
+
+type CloneVolumesOutput struct {
+	Message *string   `json:"message" name:"message"`
+	Action  *string   `json:"action" name:"action" location:"elements"`
+	JobID   *string   `json:"job_id" name:"job_id" location:"elements"`
+	RetCode *int      `json:"ret_code" name:"ret_code" location:"elements"`
+	Volumes []*string `json:"volumes" name:"volumes" location:"elements"`
+}
+
 // Documentation URL: https://docs.qingcloud.com/api/volume/create_volumes.html
 func (s *VolumeService) CreateVolumes(i *CreateVolumesInput) (*CreateVolumesOutput, error) {
 	if i == nil {
@@ -132,10 +208,12 @@ func (s *VolumeService) CreateVolumes(i *CreateVolumesInput) (*CreateVolumesOutp
 
 type CreateVolumesInput struct {
 	Count      *int    `json:"count" name:"count" default:"1" location:"params"`
+	Repl       *string `json:"repl" name:"repl" location:"params"`
 	Size       *int    `json:"size" name:"size" location:"params"` // Required
 	VolumeName *string `json:"volume_name" name:"volume_name" location:"params"`
-	// VolumeType's available values: 0, 1, 2, 3
-	VolumeType *int `json:"volume_type" name:"volume_type" default:"0" location:"params"`
+	// VolumeType's available values: 0, 1, 2, 3, 4, 5, 6, 10, 100, 200
+	VolumeType *int    `json:"volume_type" name:"volume_type" default:"0" location:"params"`
+	Zone       *string `json:"zone" name:"zone" location:"params"`
 }
 
 func (v *CreateVolumesInput) Validate() error {
@@ -148,7 +226,7 @@ func (v *CreateVolumesInput) Validate() error {
 	}
 
 	if v.VolumeType != nil {
-		volumeTypeValidValues := []string{"0", "1", "2", "3"}
+		volumeTypeValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "10", "100", "200"}
 		volumeTypeParameterValue := fmt.Sprint(*v.VolumeType)
 
 		volumeTypeIsValid := false
@@ -257,14 +335,16 @@ type DescribeVolumesInput struct {
 	Limit      *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset     *int      `json:"offset" name:"offset" default:"0" location:"params"`
 	Owner      *string   `json:"owner" name:"owner" location:"params"`
+	ProjectID  *string   `json:"project_id" name:"project_id" location:"params"`
 	SearchWord *string   `json:"search_word" name:"search_word" location:"params"`
 	Status     []*string `json:"status" name:"status" location:"params"`
 	Tags       []*string `json:"tags" name:"tags" location:"params"`
 	// Verbose's available values: 0, 1
 	Verbose *int `json:"verbose" name:"verbose" default:"0" location:"params"`
-	// VolumeType's available values: 0, 1, 2, 3, 5
+	// VolumeType's available values: 0, 1, 2, 3, 4, 5, 6, 10, 100, 200
 	VolumeType *int      `json:"volume_type" name:"volume_type" location:"params"`
 	Volumes    []*string `json:"volumes" name:"volumes" location:"params"`
+	Zone       *string   `json:"zone" name:"zone" location:"params"`
 }
 
 func (v *DescribeVolumesInput) Validate() error {
@@ -290,7 +370,7 @@ func (v *DescribeVolumesInput) Validate() error {
 	}
 
 	if v.VolumeType != nil {
-		volumeTypeValidValues := []string{"0", "1", "2", "3", "5"}
+		volumeTypeValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "10", "100", "200"}
 		volumeTypeParameterValue := fmt.Sprint(*v.VolumeType)
 
 		volumeTypeIsValid := false

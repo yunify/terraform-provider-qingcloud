@@ -1,50 +1,21 @@
 package terraform
 
 import (
-	"strings"
-
-	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/terraform/addrs"
+	"github.com/hashicorp/terraform/configs"
+	"github.com/hashicorp/terraform/providers"
 )
 
 // ProviderEvalTree returns the evaluation tree for initializing and
 // configuring providers.
-func ProviderEvalTree(n *NodeApplyableProvider, config *config.ProviderConfig) EvalNode {
-	var provider ResourceProvider
-	var resourceConfig *ResourceConfig
+func ProviderEvalTree(n *NodeApplyableProvider, config *configs.Provider) EvalNode {
+	var provider providers.Interface
 
-	typeName := strings.SplitN(n.NameValue, ".", 2)[0]
+	addr := n.Addr
 
 	seq := make([]EvalNode, 0, 5)
 	seq = append(seq, &EvalInitProvider{
-		TypeName: typeName,
-		Name:     n.Name(),
-	})
-
-	// Input stuff
-	seq = append(seq, &EvalOpFilter{
-		Ops: []walkOperation{walkInput, walkImport},
-		Node: &EvalSequence{
-			Nodes: []EvalNode{
-				&EvalGetProvider{
-					Name:   n.Name(),
-					Output: &provider,
-				},
-				&EvalInterpolateProvider{
-					Config: config,
-					Output: &resourceConfig,
-				},
-				&EvalBuildProviderConfig{
-					Provider: n.NameValue,
-					Config:   &resourceConfig,
-					Output:   &resourceConfig,
-				},
-				&EvalInputProvider{
-					Name:     n.NameValue,
-					Provider: &provider,
-					Config:   &resourceConfig,
-				},
-			},
-		},
+		Addr: addr,
 	})
 
 	seq = append(seq, &EvalOpFilter{
@@ -52,43 +23,25 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *config.ProviderConfig) E
 		Node: &EvalSequence{
 			Nodes: []EvalNode{
 				&EvalGetProvider{
-					Name:   n.Name(),
+					Addr:   addr,
 					Output: &provider,
 				},
-				&EvalInterpolateProvider{
-					Config: config,
-					Output: &resourceConfig,
-				},
-				&EvalBuildProviderConfig{
-					Provider: n.NameValue,
-					Config:   &resourceConfig,
-					Output:   &resourceConfig,
-				},
 				&EvalValidateProvider{
+					Addr:     addr,
 					Provider: &provider,
-					Config:   &resourceConfig,
+					Config:   config,
 				},
 			},
 		},
 	})
 
-	// Apply stuff
 	seq = append(seq, &EvalOpFilter{
 		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy, walkImport},
 		Node: &EvalSequence{
 			Nodes: []EvalNode{
 				&EvalGetProvider{
-					Name:   n.Name(),
+					Addr:   addr,
 					Output: &provider,
-				},
-				&EvalInterpolateProvider{
-					Config: config,
-					Output: &resourceConfig,
-				},
-				&EvalBuildProviderConfig{
-					Provider: n.NameValue,
-					Config:   &resourceConfig,
-					Output:   &resourceConfig,
 				},
 			},
 		},
@@ -97,12 +50,26 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *config.ProviderConfig) E
 	// We configure on everything but validate, since validate may
 	// not have access to all the variables.
 	seq = append(seq, &EvalOpFilter{
-		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy, walkImport},
+		Ops: []walkOperation{walkRefresh, walkPlan, walkApply, walkDestroy},
 		Node: &EvalSequence{
 			Nodes: []EvalNode{
 				&EvalConfigProvider{
-					Provider: n.Name(),
-					Config:   &resourceConfig,
+					Addr:     addr,
+					Provider: &provider,
+					Config:   config,
+				},
+			},
+		},
+	})
+	seq = append(seq, &EvalOpFilter{
+		Ops: []walkOperation{walkImport},
+		Node: &EvalSequence{
+			Nodes: []EvalNode{
+				&EvalConfigProvider{
+					Addr:                addr,
+					Provider:            &provider,
+					Config:              config,
+					VerifyConfigIsKnown: true,
 				},
 			},
 		},
@@ -113,6 +80,6 @@ func ProviderEvalTree(n *NodeApplyableProvider, config *config.ProviderConfig) E
 
 // CloseProviderEvalTree returns the evaluation tree for closing
 // provider connections that aren't needed anymore.
-func CloseProviderEvalTree(n string) EvalNode {
-	return &EvalCloseProvider{Name: n}
+func CloseProviderEvalTree(addr addrs.AbsProviderConfig) EvalNode {
+	return &EvalCloseProvider{Addr: addr}
 }

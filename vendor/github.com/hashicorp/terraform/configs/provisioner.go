@@ -3,8 +3,7 @@ package configs
 import (
 	"fmt"
 
-	"github.com/hashicorp/hcl2/gohcl"
-	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl/v2"
 )
 
 // Provisioner represents a "provisioner" block when used within a
@@ -51,6 +50,11 @@ func decodeProvisionerBlock(block *hcl.Block) (*Provisioner, hcl.Diagnostics) {
 		}
 	}
 
+	// destroy provisioners can only refer to self
+	if pv.When == ProvisionerWhenDestroy {
+		diags = append(diags, onlySelfRefs(config)...)
+	}
+
 	if attr, exists := content.Attributes["on_failure"]; exists {
 		expr, shimDiags := shimTraversalInString(attr.Expr, true)
 		diags = append(diags, shimDiags...)
@@ -86,57 +90,89 @@ func decodeProvisionerBlock(block *hcl.Block) (*Provisioner, hcl.Diagnostics) {
 			}
 			seenConnection = block
 
-			conn, connDiags := decodeConnectionBlock(block)
-			diags = append(diags, connDiags...)
-			pv.Connection = conn
+			// destroy provisioners can only refer to self
+			if pv.When == ProvisionerWhenDestroy {
+				diags = append(diags, onlySelfRefs(block.Body)...)
+			}
+
+			pv.Connection = &Connection{
+				Config:    block.Body,
+				DeclRange: block.DefRange,
+			}
 
 		default:
-			// Should never happen because there are no other block types
-			// declared in our schema.
+			// Any other block types are ones we've reserved for future use,
+			// so they get a generic message.
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Reserved block type name in provisioner block",
+				Detail:   fmt.Sprintf("The block type name %q is reserved for use by Terraform in a future version.", block.Type),
+				Subject:  &block.TypeRange,
+			})
 		}
 	}
 
 	return pv, diags
 }
 
+func onlySelfRefs(body hcl.Body) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	// Provisioners currently do not use any blocks in their configuration.
+	// Blocks are likely to remain solely for meta parameters, but in the case
+	// that blocks are supported for provisioners, we will want to extend this
+	// to find variables in nested blocks.
+	attrs, _ := body.JustAttributes()
+	for _, attr := range attrs {
+		for _, v := range attr.Expr.Variables() {
+			valid := false
+			switch v.RootName() {
+			case "self", "path", "terraform":
+				valid = true
+			case "count":
+				// count must use "index"
+				if len(v) == 2 {
+					if t, ok := v[1].(hcl.TraverseAttr); ok && t.Name == "index" {
+						valid = true
+					}
+				}
+
+			case "each":
+				if len(v) == 2 {
+					if t, ok := v[1].(hcl.TraverseAttr); ok && t.Name == "key" {
+						valid = true
+					}
+				}
+			}
+
+			if !valid {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid reference from destroy provisioner",
+					Detail: "Destroy-time provisioners and their connection configurations may only " +
+						"reference attributes of the related resource, via 'self', 'count.index', " +
+						"or 'each.key'.\n\nReferences to other resources during the destroy phase " +
+						"can cause dependency cycles and interact poorly with create_before_destroy.",
+					Subject: attr.Expr.Range().Ptr(),
+				})
+			}
+		}
+	}
+	return diags
+}
+
 // Connection represents a "connection" block when used within either a
 // "resource" or "provisioner" block in a module or file.
 type Connection struct {
-	Type   string
 	Config hcl.Body
 
 	DeclRange hcl.Range
-	TypeRange *hcl.Range // nil if type is not set
-}
-
-func decodeConnectionBlock(block *hcl.Block) (*Connection, hcl.Diagnostics) {
-	content, config, diags := block.Body.PartialContent(&hcl.BodySchema{
-		Attributes: []hcl.AttributeSchema{
-			{
-				Name: "type",
-			},
-		},
-	})
-
-	conn := &Connection{
-		Type:      "ssh",
-		Config:    config,
-		DeclRange: block.DefRange,
-	}
-
-	if attr, exists := content.Attributes["type"]; exists {
-		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &conn.Type)
-		diags = append(diags, valDiags...)
-		conn.TypeRange = attr.Expr.Range().Ptr()
-	}
-
-	return conn, diags
 }
 
 // ProvisionerWhen is an enum for valid values for when to run provisioners.
 type ProvisionerWhen int
 
-//go:generate stringer -type ProvisionerWhen
+//go:generate go run golang.org/x/tools/cmd/stringer -type ProvisionerWhen
 
 const (
 	ProvisionerWhenInvalid ProvisionerWhen = iota
@@ -148,7 +184,7 @@ const (
 // for provisioners.
 type ProvisionerOnFailure int
 
-//go:generate stringer -type ProvisionerOnFailure
+//go:generate go run golang.org/x/tools/cmd/stringer -type ProvisionerOnFailure
 
 const (
 	ProvisionerOnFailureInvalid ProvisionerOnFailure = iota
@@ -158,16 +194,11 @@ const (
 
 var provisionerBlockSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
-		{
-			Name: "when",
-		},
-		{
-			Name: "on_failure",
-		},
+		{Name: "when"},
+		{Name: "on_failure"},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
-		{
-			Type: "connection",
-		},
+		{Type: "connection"},
+		{Type: "lifecycle"}, // reserved for future use
 	},
 }

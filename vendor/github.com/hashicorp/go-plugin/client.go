@@ -21,7 +21,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"unicode"
 
 	hclog "github.com/hashicorp/go-hclog"
 )
@@ -87,6 +86,10 @@ type Client struct {
 	// clientWaitGroup is used to manage the lifecycle of the plugin management
 	// goroutines.
 	clientWaitGroup sync.WaitGroup
+
+	// stderrWaitGroup is used to prevent the command's Wait() function from
+	// being called before we've finished reading from the stderr pipe.
+	stderrWaitGroup sync.WaitGroup
 
 	// processKilled is used for testing only, to flag when the process was
 	// forcefully killed.
@@ -156,11 +159,8 @@ type ClientConfig struct {
 
 	// SyncStdout, SyncStderr can be set to override the
 	// respective os.Std* values in the plugin. Care should be taken to
-	// avoid races here. If these are nil, then this will automatically be
-	// hooked up to os.Stdin, Stdout, and Stderr, respectively.
-	//
-	// If the default values (nil) are used, then this package will not
-	// sync any of these streams.
+	// avoid races here. If these are nil, then this will be set to
+	// ioutil.Discard.
 	SyncStdout io.Writer
 	SyncStderr io.Writer
 
@@ -212,6 +212,12 @@ type ReattachConfig struct {
 	Protocol Protocol
 	Addr     net.Addr
 	Pid      int
+
+	// Test is set to true if this is reattaching to to a plugin in "test mode"
+	// (see ServeConfig.Test). In this mode, client.Kill will NOT kill the
+	// process and instead will rely on the plugin to terminate itself. This
+	// should not be used in non-test environments.
+	Test bool
 }
 
 // SecureConfig is used to configure a client to verify the integrity of an
@@ -591,6 +597,12 @@ func (c *Client) Start() (addr net.Addr, err error) {
 	// Create a context for when we kill
 	c.doneCtx, c.ctxCancel = context.WithCancel(context.Background())
 
+	// Start goroutine that logs the stderr
+	c.clientWaitGroup.Add(1)
+	c.stderrWaitGroup.Add(1)
+	// logStderr calls Done()
+	go c.logStderr(cmdStderr)
+
 	c.clientWaitGroup.Add(1)
 	go func() {
 		// ensure the context is cancelled when we're done
@@ -602,6 +614,10 @@ func (c *Client) Start() (addr net.Addr, err error) {
 		// in Kill.
 		pid := c.process.Pid
 		path := cmd.Path
+
+		// wait to finish reading from stderr since the stderr pipe reader
+		// will be closed by the subsequent call to cmd.Wait().
+		c.stderrWaitGroup.Wait()
 
 		// Wait for the command to end.
 		err := cmd.Wait()
@@ -624,11 +640,6 @@ func (c *Client) Start() (addr net.Addr, err error) {
 		defer c.l.Unlock()
 		c.exited = true
 	}()
-
-	// Start goroutine that logs the stderr
-	c.clientWaitGroup.Add(1)
-	// logStderr calls Done()
-	go c.logStderr(cmdStderr)
 
 	// Start a goroutine that is going to be reading the lines
 	// out of stdout
@@ -682,14 +693,14 @@ func (c *Client) Start() (addr net.Addr, err error) {
 
 		// Check the core protocol. Wrapped in a {} for scoping.
 		{
-			var coreProtocol int64
-			coreProtocol, err = strconv.ParseInt(parts[0], 10, 0)
+			var coreProtocol int
+			coreProtocol, err = strconv.Atoi(parts[0])
 			if err != nil {
 				err = fmt.Errorf("Error parsing core protocol version: %s", err)
 				return
 			}
 
-			if int(coreProtocol) != CoreProtocolVersion {
+			if coreProtocol != CoreProtocolVersion {
 				err = fmt.Errorf("Incompatible core API version with plugin. "+
 					"Plugin version: %s, Core version: %d\n\n"+
 					"To fix this, the plugin usually only needs to be recompiled.\n"+
@@ -780,7 +791,10 @@ func (c *Client) reattach() (net.Addr, error) {
 	// Verify the process still exists. If not, then it is an error
 	p, err := os.FindProcess(c.config.Reattach.Pid)
 	if err != nil {
-		return nil, err
+		// On Unix systems, FindProcess never returns an error.
+		// On Windows, for non-existent pids it returns:
+		// os.SyscallError - 'OpenProcess: the paremter is incorrect'
+		return nil, ErrProcessNotFound
 	}
 
 	// Attempt to connect to the addr since on Unix systems FindProcess
@@ -817,13 +831,19 @@ func (c *Client) reattach() (net.Addr, error) {
 		c.exited = true
 	}(p.Pid)
 
-	// Set the address and process
+	// Set the address and protocol
 	c.address = c.config.Reattach.Addr
-	c.process = p
 	c.protocol = c.config.Reattach.Protocol
 	if c.protocol == "" {
 		// Default the protocol to net/rpc for backwards compatibility
 		c.protocol = ProtocolNetRPC
+	}
+
+	// If we're in test mode, we do NOT set the process. This avoids the
+	// process being killed (the only purpose we have for c.process), since
+	// in test mode the process is responsible for exiting on its own.
+	if !c.config.Reattach.Test {
+		c.process = p
 	}
 
 	return c.address, nil
@@ -933,21 +953,64 @@ func (c *Client) dialer(_ string, timeout time.Duration) (net.Conn, error) {
 	return conn, nil
 }
 
+var stdErrBufferSize = 64 * 1024
+
 func (c *Client) logStderr(r io.Reader) {
 	defer c.clientWaitGroup.Done()
-
-	scanner := bufio.NewScanner(r)
+	defer c.stderrWaitGroup.Done()
 	l := c.logger.Named(filepath.Base(c.config.Cmd.Path))
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		c.config.Stderr.Write([]byte(line + "\n"))
-		line = strings.TrimRightFunc(line, unicode.IsSpace)
+	reader := bufio.NewReaderSize(r, stdErrBufferSize)
+	// continuation indicates the previous line was a prefix
+	continuation := false
+
+	for {
+		line, isPrefix, err := reader.ReadLine()
+		switch {
+		case err == io.EOF:
+			return
+		case err != nil:
+			l.Error("reading plugin stderr", "error", err)
+			return
+		}
+
+		c.config.Stderr.Write(line)
+
+		// The line was longer than our max token size, so it's likely
+		// incomplete and won't unmarshal.
+		if isPrefix || continuation {
+			l.Debug(string(line))
+
+			// if we're finishing a continued line, add the newline back in
+			if !isPrefix {
+				c.config.Stderr.Write([]byte{'\n'})
+			}
+
+			continuation = isPrefix
+			continue
+		}
+
+		c.config.Stderr.Write([]byte{'\n'})
 
 		entry, err := parseJSON(line)
 		// If output is not JSON format, print directly to Debug
 		if err != nil {
-			l.Debug(line)
+			// Attempt to infer the desired log level from the commonly used
+			// string prefixes
+			switch line := string(line); {
+			case strings.HasPrefix(line, "[TRACE]"):
+				l.Trace(line)
+			case strings.HasPrefix(line, "[DEBUG]"):
+				l.Debug(line)
+			case strings.HasPrefix(line, "[INFO]"):
+				l.Info(line)
+			case strings.HasPrefix(line, "[WARN]"):
+				l.Warn(line)
+			case strings.HasPrefix(line, "[ERROR]"):
+				l.Error(line)
+			default:
+				l.Debug(line)
+			}
 		} else {
 			out := flattenKVPairs(entry.KVPairs)
 
@@ -963,11 +1026,12 @@ func (c *Client) logStderr(r io.Reader) {
 				l.Warn(entry.Message, out...)
 			case hclog.Error:
 				l.Error(entry.Message, out...)
+			default:
+				// if there was no log level, it's likely this is unexpected
+				// json from something other than hclog, and we should output
+				// it verbatim.
+				l.Debug(string(line))
 			}
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		l.Error("reading plugin stderr", "error", err)
 	}
 }

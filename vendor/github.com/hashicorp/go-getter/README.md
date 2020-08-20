@@ -1,10 +1,10 @@
 # go-getter
 
-[![Build Status](http://img.shields.io/travis/hashicorp/go-getter.svg?style=flat-square)][travis]
+[![CircleCI](https://circleci.com/gh/hashicorp/go-getter/tree/master.svg?style=svg)][circleci]
 [![Build status](https://ci.appveyor.com/api/projects/status/ulq3qr43n62croyq/branch/master?svg=true)][appveyor]
 [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godocs]
 
-[travis]: http://travis-ci.org/hashicorp/go-getter
+[circleci]: https://circleci.com/gh/hashicorp/go-getter/tree/master
 [godocs]: http://godoc.org/github.com/hashicorp/go-getter
 [appveyor]: https://ci.appveyor.com/project/hashicorp/go-getter/branch/master
 
@@ -71,6 +71,7 @@ can be augmented at runtime by implementing the `Getter` interface.
   * Mercurial
   * HTTP
   * Amazon S3
+  * Google GCP
 
 In addition to the above protocols, go-getter has what are called "detectors."
 These take a URL and attempt to automatically choose the best protocol for
@@ -127,14 +128,14 @@ go-getter will first download the URL specified _before_ the double-slash
 path after the double slash into the target directory.
 
 For example, if you're downloading this GitHub repository, but you only
-want to download the `test-fixtures` directory, you can do the following:
+want to download the `testdata` directory, you can do the following:
 
 ```
-https://github.com/hashicorp/go-getter.git//test-fixtures
+https://github.com/hashicorp/go-getter.git//testdata
 ```
 
 If you downloaded this to the `/tmp` directory, then the file
-`/tmp/archive.gz` would exist. Notice that this file is in the `test-fixtures`
+`/tmp/archive.gz` would exist. Notice that this file is in the `testdata`
 directory in this repository, but because we specified a subdirectory,
 go-getter automatically copied only that directory contents.
 
@@ -275,6 +276,19 @@ None
     from a private key file on disk, you would run `base64 -w0 <file>`.
 
     **Note**: Git 2.3+ is required to use this feature.
+  
+  * `depth` - The Git clone depth. The provided number specifies the last `n`
+    revisions to clone from the repository.
+
+
+The `git` getter accepts both URL-style SSH addresses like
+`git::ssh://git@example.com/foo/bar`, and "scp-style" addresses like
+`git::git@example.com/foo/bar`. In the latter case, omitting the `git::`
+force prefix is allowed if the username prefix is exactly `git@`.
+
+The "scp-style" addresses _cannot_ be used in conjunction with the `ssh://`
+scheme prefix, because in that case the colon is used to mark an optional
+port number to connect on, rather than to delimit the path from the host.
 
 ### Mercurial (`hg`)
 
@@ -331,3 +345,18 @@ Some examples for these addressing schemes:
 - bucket.s3-eu-west-1.amazonaws.com/foo/bar
 - "s3::http://127.0.0.1:9000/test-bucket/hello.txt?aws_access_key_id=KEYID&aws_access_key_secret=SECRETKEY&region=us-east-2"
 
+### GCS (`gcs`)
+
+#### GCS Authentication
+
+In order to access to GCS, authentication credentials should be provided. More information can be found [here](https://cloud.google.com/docs/authentication/getting-started)
+
+#### GCS Bucket Examples
+
+- gcs::https://www.googleapis.com/storage/v1/bucket
+- gcs::https://www.googleapis.com/storage/v1/bucket/foo.zip
+- www.googleapis.com/storage/v1/bucket/foo
+
+#### GCS Testing
+
+The tests for `get_gcs.go` require you to have GCP credentials set in your environment.  These credentials can have any level of permissions to any project, they just need to exist.  This means setting `GOOGLE_APPLICATION_CREDENTIALS="~/path/to/credentials.json"` or `GOOGLE_CREDENTIALS="{stringified-credentials-json}"`.  Due to this configuration, `get_gcs_test.go` will fail for external contributors in CircleCI.

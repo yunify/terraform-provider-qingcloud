@@ -2,12 +2,11 @@ package dag
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform/tfdiags"
 )
 
 // Walker is used to walk every vertex of a graph in parallel.
@@ -16,7 +15,7 @@ import (
 // been walked. If two vertices can be walked at the same time, they will be.
 //
 // Update can be called to update the graph. This can be called even during
-// a walk, cahnging vertices/edges mid-walk. This should be done carefully.
+// a walk, changing vertices/edges mid-walk. This should be done carefully.
 // If a vertex is removed but has already been executed, the result of that
 // execution (any error) is still returned by Wait. Changing or re-adding
 // a vertex that has already executed has no effect. Changing edges of
@@ -54,10 +53,24 @@ type Walker struct {
 	// if new vertices are added.
 	wait sync.WaitGroup
 
-	// errMap contains the errors recorded so far for execution. Reading
-	// and writing should hold errLock.
-	errMap  map[Vertex]error
-	errLock sync.Mutex
+	// diagsMap contains the diagnostics recorded so far for execution,
+	// and upstreamFailed contains all the vertices whose problems were
+	// caused by upstream failures, and thus whose diagnostics should be
+	// excluded from the final set.
+	//
+	// Readers and writers of either map must hold diagsLock.
+	diagsMap       map[Vertex]tfdiags.Diagnostics
+	upstreamFailed map[Vertex]struct{}
+	diagsLock      sync.Mutex
+}
+
+func (w *Walker) init() {
+	if w.vertices == nil {
+		w.vertices = make(Set)
+	}
+	if w.edges == nil {
+		w.edges = make(Set)
+	}
 }
 
 type walkerVertex struct {
@@ -98,31 +111,30 @@ type walkerVertex struct {
 // user-returned error.
 var errWalkUpstream = errors.New("upstream dependency failed")
 
-// Wait waits for the completion of the walk and returns any errors (
-// in the form of a multierror) that occurred. Update should be called
-// to populate the walk with vertices and edges prior to calling this.
+// Wait waits for the completion of the walk and returns diagnostics describing
+// any problems that arose. Update should be called to populate the walk with
+// vertices and edges prior to calling this.
 //
 // Wait will return as soon as all currently known vertices are complete.
 // If you plan on calling Update with more vertices in the future, you
 // should not call Wait until after this is done.
-func (w *Walker) Wait() error {
+func (w *Walker) Wait() tfdiags.Diagnostics {
 	// Wait for completion
 	w.wait.Wait()
 
-	// Grab the error lock
-	w.errLock.Lock()
-	defer w.errLock.Unlock()
-
-	// Build the error
-	var result error
-	for v, err := range w.errMap {
-		if err != nil && err != errWalkUpstream {
-			result = multierror.Append(result, fmt.Errorf(
-				"%s: %s", VertexName(v), err))
+	var diags tfdiags.Diagnostics
+	w.diagsLock.Lock()
+	for v, vDiags := range w.diagsMap {
+		if _, upstream := w.upstreamFailed[v]; upstream {
+			// Ignore diagnostics for nodes that had failed upstreams, since
+			// the downstream diagnostics are likely to be redundant.
+			continue
 		}
+		diags = diags.Append(vDiags)
 	}
+	w.diagsLock.Unlock()
 
-	return result
+	return diags
 }
 
 // Update updates the currently executing walk with the given graph.
@@ -136,7 +148,9 @@ func (w *Walker) Wait() error {
 // Multiple Updates can be called in parallel. Update can be called at any
 // time during a walk.
 func (w *Walker) Update(g *AcyclicGraph) {
-	var v, e *Set
+	w.init()
+	v := make(Set)
+	e := make(Set)
 	if g != nil {
 		v, e = g.vertices, g.edges
 	}
@@ -153,20 +167,19 @@ func (w *Walker) Update(g *AcyclicGraph) {
 	}
 
 	// Calculate all our sets
-	newEdges := e.Difference(&w.edges)
+	newEdges := e.Difference(w.edges)
 	oldEdges := w.edges.Difference(e)
-	newVerts := v.Difference(&w.vertices)
+	newVerts := v.Difference(w.vertices)
 	oldVerts := w.vertices.Difference(v)
 
 	// Add the new vertices
-	for _, raw := range newVerts.List() {
+	for _, raw := range newVerts {
 		v := raw.(Vertex)
 
 		// Add to the waitgroup so our walk is not done until everything finishes
 		w.wait.Add(1)
 
 		// Add to our own set so we know about it already
-		log.Printf("[TRACE] dag/walk: added new vertex: %q", VertexName(v))
 		w.vertices.Add(raw)
 
 		// Initialize the vertex info
@@ -181,7 +194,7 @@ func (w *Walker) Update(g *AcyclicGraph) {
 	}
 
 	// Remove the old vertices
-	for _, raw := range oldVerts.List() {
+	for _, raw := range oldVerts {
 		v := raw.(Vertex)
 
 		// Get the vertex info so we can cancel it
@@ -197,14 +210,12 @@ func (w *Walker) Update(g *AcyclicGraph) {
 
 		// Delete it out of the map
 		delete(w.vertexMap, v)
-
-		log.Printf("[TRACE] dag/walk: removed vertex: %q", VertexName(v))
 		w.vertices.Delete(raw)
 	}
 
 	// Add the new edges
-	var changedDeps Set
-	for _, raw := range newEdges.List() {
+	changedDeps := make(Set)
+	for _, raw := range newEdges {
 		edge := raw.(Edge)
 		waiter, dep := w.edgeParts(edge)
 
@@ -227,15 +238,11 @@ func (w *Walker) Update(g *AcyclicGraph) {
 
 		// Record that the deps changed for this waiter
 		changedDeps.Add(waiter)
-
-		log.Printf(
-			"[TRACE] dag/walk: added edge: %q waiting on %q",
-			VertexName(waiter), VertexName(dep))
 		w.edges.Add(raw)
 	}
 
-	// Process reoved edges
-	for _, raw := range oldEdges.List() {
+	// Process removed edges
+	for _, raw := range oldEdges {
 		edge := raw.(Edge)
 		waiter, dep := w.edgeParts(edge)
 
@@ -251,16 +258,12 @@ func (w *Walker) Update(g *AcyclicGraph) {
 
 		// Record that the deps changed for this waiter
 		changedDeps.Add(waiter)
-
-		log.Printf(
-			"[TRACE] dag/walk: removed edge: %q waiting on %q",
-			VertexName(waiter), VertexName(dep))
 		w.edges.Delete(raw)
 	}
 
 	// For each vertex with changed dependencies, we need to kick off
 	// a new waiter and notify the vertex of the changes.
-	for _, raw := range changedDeps.List() {
+	for _, raw := range changedDeps {
 		v := raw.(Vertex)
 		info, ok := w.vertexMap[v]
 		if !ok {
@@ -295,17 +298,13 @@ func (w *Walker) Update(g *AcyclicGraph) {
 		}
 		info.depsCancelCh = cancelCh
 
-		log.Printf(
-			"[TRACE] dag/walk: dependencies changed for %q, sending new deps",
-			VertexName(v))
-
 		// Start the waiter
 		go w.waitDeps(v, deps, doneCh, cancelCh)
 	}
 
 	// Start all the new vertices. We do this at the end so that all
 	// the edge waiters and changes are setup above.
-	for _, raw := range newVerts.List() {
+	for _, raw := range newVerts {
 		v := raw.(Vertex)
 		go w.walkVertex(v, w.vertexMap[v])
 	}
@@ -381,25 +380,34 @@ func (w *Walker) walkVertex(v Vertex, info *walkerVertex) {
 	}
 
 	// Run our callback or note that our upstream failed
-	var err error
+	var diags tfdiags.Diagnostics
+	var upstreamFailed bool
 	if depsSuccess {
-		log.Printf("[TRACE] dag/walk: walking %q", VertexName(v))
-		err = w.Callback(v)
+		log.Printf("[TRACE] dag/walk: visiting %q", VertexName(v))
+		diags = w.Callback(v)
 	} else {
-		log.Printf("[TRACE] dag/walk: upstream errored, not walking %q", VertexName(v))
-		err = errWalkUpstream
+		log.Printf("[TRACE] dag/walk: upstream of %q errored, so skipping", VertexName(v))
+		// This won't be displayed to the user because we'll set upstreamFailed,
+		// but we need to ensure there's at least one error in here so that
+		// the failures will cascade downstream.
+		diags = diags.Append(errors.New("upstream dependencies failed"))
+		upstreamFailed = true
 	}
 
-	// Record the error
-	if err != nil {
-		w.errLock.Lock()
-		defer w.errLock.Unlock()
-
-		if w.errMap == nil {
-			w.errMap = make(map[Vertex]error)
-		}
-		w.errMap[v] = err
+	// Record the result (we must do this after execution because we mustn't
+	// hold diagsLock while visiting a vertex.)
+	w.diagsLock.Lock()
+	if w.diagsMap == nil {
+		w.diagsMap = make(map[Vertex]tfdiags.Diagnostics)
 	}
+	w.diagsMap[v] = diags
+	if w.upstreamFailed == nil {
+		w.upstreamFailed = make(map[Vertex]struct{})
+	}
+	if upstreamFailed {
+		w.upstreamFailed[v] = struct{}{}
+	}
+	w.diagsLock.Unlock()
 }
 
 func (w *Walker) waitDeps(
@@ -407,6 +415,7 @@ func (w *Walker) waitDeps(
 	deps map[Vertex]<-chan struct{},
 	doneCh chan<- bool,
 	cancelCh <-chan struct{}) {
+
 	// For each dependency given to us, wait for it to complete
 	for dep, depCh := range deps {
 	DepSatisfied:
@@ -423,17 +432,17 @@ func (w *Walker) waitDeps(
 				return
 
 			case <-time.After(time.Second * 5):
-				log.Printf("[TRACE] dag/walk: vertex %q, waiting for: %q",
+				log.Printf("[TRACE] dag/walk: vertex %q is waiting for %q",
 					VertexName(v), VertexName(dep))
 			}
 		}
 	}
 
 	// Dependencies satisfied! We need to check if any errored
-	w.errLock.Lock()
-	defer w.errLock.Unlock()
-	for dep, _ := range deps {
-		if w.errMap[dep] != nil {
+	w.diagsLock.Lock()
+	defer w.diagsLock.Unlock()
+	for dep := range deps {
+		if w.diagsMap[dep].HasErrors() {
 			// One of our dependencies failed, so return false
 			doneCh <- false
 			return
