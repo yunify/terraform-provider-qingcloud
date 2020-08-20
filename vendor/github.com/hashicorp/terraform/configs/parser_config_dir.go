@@ -2,10 +2,11 @@ package configs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl/v2"
 )
 
 // LoadConfigDir reads the .tf and .tf.json files in the given directory
@@ -41,7 +42,18 @@ func (p *Parser) LoadConfigDir(path string) (*Module, hcl.Diagnostics) {
 	mod, modDiags := NewModule(primary, override)
 	diags = append(diags, modDiags...)
 
+	mod.SourceDir = path
+
 	return mod, diags
+}
+
+// ConfigDirFiles returns lists of the primary and override files configuration
+// files in the given directory.
+//
+// If the given directory does not exist or cannot be read, error diagnostics
+// are returned. If errors are returned, the resulting lists may be incomplete.
+func (p Parser) ConfigDirFiles(dir string) (primary, override []string, diags hcl.Diagnostics) {
+	return p.dirFiles(dir)
 }
 
 // IsConfigDir determines whether the given path refers to a directory that
@@ -128,4 +140,24 @@ func IsIgnoredFile(name string) bool {
 	return strings.HasPrefix(name, ".") || // Unix-like hidden files
 		strings.HasSuffix(name, "~") || // vim
 		strings.HasPrefix(name, "#") && strings.HasSuffix(name, "#") // emacs
+}
+
+// IsEmptyDir returns true if the given filesystem path contains no Terraform
+// configuration files.
+//
+// Unlike the methods of the Parser type, this function always consults the
+// real filesystem, and thus it isn't appropriate to use when working with
+// configuration loaded from a plan file.
+func IsEmptyDir(path string) (bool, error) {
+	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
+		return true, nil
+	}
+
+	p := NewParser(nil)
+	fs, os, diags := p.dirFiles(path)
+	if diags.HasErrors() {
+		return false, diags
+	}
+
+	return len(fs) == 0 && len(os) == 0, nil
 }

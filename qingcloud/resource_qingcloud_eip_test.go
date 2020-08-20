@@ -26,7 +26,7 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccEIPConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
@@ -43,7 +43,7 @@ func TestAccQingcloudEIP_basic(t *testing.T) {
 						"qingcloud_eip.foo", "need_icp", "0"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccEIPConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
@@ -104,7 +104,7 @@ func TestAccQingcloudEIP_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccEipConfigTagTemplate, eipTag1Name, eipTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(
@@ -112,7 +112,7 @@ func TestAccQingcloudEIP_tag(t *testing.T) {
 					testTagNameValue(eipTag1Name, eipTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccEipConfigTagTwoTemplate, eipTag1Name, eipTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(

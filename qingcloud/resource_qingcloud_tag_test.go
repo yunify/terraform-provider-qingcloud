@@ -23,7 +23,7 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccTagConfigTempalte, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),
@@ -33,7 +33,7 @@ func TestAccQingcloudTag_basic(t *testing.T) {
 						"qingcloud_tag.foo", "color", "#9f9bb7"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccTagConfigTwoTemplate, Tag1Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists("qingcloud_tag.foo", &tag),

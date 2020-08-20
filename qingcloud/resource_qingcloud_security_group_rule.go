@@ -23,47 +23,47 @@ func resourceQingcloudSecurityGroupRule() *schema.Resource {
 		Update: resourceQingcloudSecurityGroupRuleUpdate,
 		Delete: resourceQingcloudSecurityGroupRuleDelete,
 		Schema: map[string]*schema.Schema{
-			resourceSecurityGroupRuleSecurityGroupID: &schema.Schema{
+			resourceSecurityGroupRuleSecurityGroupID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceSecurityGroupRuleProtocol: &schema.Schema{
+			resourceSecurityGroupRuleProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: withinArrayString("tcp", "udp", "icmp", "gre", "esp", "ah", "ipip"),
 			},
-			resourceSecurityGroupRulePriority: &schema.Schema{
+			resourceSecurityGroupRulePriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayIntRange(0, 100),
 				Default:      0,
 			},
-			resourceSecurityGroupRuleAction: &schema.Schema{
+			resourceSecurityGroupRuleAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: withinArrayString("accept", "drop"),
 			},
-			resourceSecurityGroupRuleDirection: &schema.Schema{
+			resourceSecurityGroupRuleDirection: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
-			resourceSecurityGroupRuleFromPort: &schema.Schema{
+			resourceSecurityGroupRuleFromPort: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validatePortString,
 			},
-			resourceSecurityGroupRuleToPort: &schema.Schema{
+			resourceSecurityGroupRuleToPort: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validatePortString,
 			},
-			resourceSecurityGroupCidrBlock: &schema.Schema{
+			resourceSecurityGroupCidrBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,

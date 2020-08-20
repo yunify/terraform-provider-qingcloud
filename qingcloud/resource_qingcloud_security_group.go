@@ -12,11 +12,11 @@ func resourceQingcloudSecurityGroup() *schema.Resource {
 		Update: resourceQingcloudSecurityGroupUpdate,
 		Delete: resourceQingcloudSecurityGroupDelete,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

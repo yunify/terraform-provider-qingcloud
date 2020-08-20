@@ -33,3 +33,5 @@ build
 bin
 .idea/
 glide.lock
+
+dist/*

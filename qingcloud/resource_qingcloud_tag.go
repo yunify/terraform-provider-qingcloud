@@ -20,17 +20,17 @@ func resourceQingcloudTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceTagColor: &schema.Schema{
+			resourceTagColor: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      DEFAULT_TAG_COLOR,
 				ValidateFunc: validateColorString,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

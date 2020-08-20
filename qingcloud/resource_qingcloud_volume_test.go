@@ -24,7 +24,7 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVolumeConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
@@ -32,7 +32,7 @@ func TestAccQingcloudVolume_basic(t *testing.T) {
 						"qingcloud_volume.foo", "size", "10"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVolumeConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
@@ -88,14 +88,14 @@ func TestAccQingcloudVolume_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVolumeConfigTagTemplate, volumeTag1Name, volumeTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),
 					testTagNameValue(volumeTag1Name, volumeTag1Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVolmeConfigTagTwoTemplate, volumeTag1Name, volumeTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists("qingcloud_volume.foo", &volume),

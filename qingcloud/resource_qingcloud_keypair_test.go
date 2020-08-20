@@ -24,13 +24,13 @@ func TestAccQingcloudKeypair_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckKeypairDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccKeypairConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccKeypairConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists("qingcloud_keypair.foo", &keypair),
@@ -81,7 +81,7 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccKeypairConfigTagTemplate, keypairTag1Name, keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(
@@ -89,7 +89,7 @@ func TestAccQingcloudKeypair_tag(t *testing.T) {
 					testTagNameValue(keypairTag1Name, keypairTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccKeypairConfigTagTwoTemplate, keypairTag1Name, keypairTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeypairExists(

@@ -1,9 +1,11 @@
 package configs
 
 import (
-	"github.com/hashicorp/hcl2/gohcl"
-	"github.com/hashicorp/hcl2/hcl"
-	"github.com/hashicorp/hcl2/hcl/hclsyntax"
+	"fmt"
+
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
 // ModuleCall represents a "module" block in a module or file.
@@ -20,6 +22,8 @@ type ModuleCall struct {
 
 	Count   hcl.Expression
 	ForEach hcl.Expression
+
+	Providers []PassedProviderConfig
 
 	DependsOn []hcl.Traversal
 
@@ -67,6 +71,15 @@ func decodeModuleBlock(block *hcl.Block, override bool) (*ModuleCall, hcl.Diagno
 	}
 
 	if attr, exists := content.Attributes["for_each"]; exists {
+		if mc.Count != nil {
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  `Invalid combination of "count" and "for_each"`,
+				Detail:   `The "count" and "for_each" meta-arguments are mutually-exclusive, only one should be used to be explicit about the number of resources to be created.`,
+				Subject:  &attr.NameRange,
+			})
+		}
+
 		mc.ForEach = attr.Expr
 	}
 
@@ -76,7 +89,57 @@ func decodeModuleBlock(block *hcl.Block, override bool) (*ModuleCall, hcl.Diagno
 		mc.DependsOn = append(mc.DependsOn, deps...)
 	}
 
+	if attr, exists := content.Attributes["providers"]; exists {
+		seen := make(map[string]hcl.Range)
+		pairs, pDiags := hcl.ExprMap(attr.Expr)
+		diags = append(diags, pDiags...)
+		for _, pair := range pairs {
+			key, keyDiags := decodeProviderConfigRef(pair.Key, "providers")
+			diags = append(diags, keyDiags...)
+			value, valueDiags := decodeProviderConfigRef(pair.Value, "providers")
+			diags = append(diags, valueDiags...)
+			if keyDiags.HasErrors() || valueDiags.HasErrors() {
+				continue
+			}
+
+			matchKey := key.String()
+			if prev, exists := seen[matchKey]; exists {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Duplicate provider address",
+					Detail:   fmt.Sprintf("A provider configuration was already passed to %s at %s. Each child provider configuration can be assigned only once.", matchKey, prev),
+					Subject:  pair.Value.Range().Ptr(),
+				})
+				continue
+			}
+
+			rng := hcl.RangeBetween(pair.Key.Range(), pair.Value.Range())
+			seen[matchKey] = rng
+			mc.Providers = append(mc.Providers, PassedProviderConfig{
+				InChild:  key,
+				InParent: value,
+			})
+		}
+	}
+
+	// Reserved block types (all of them)
+	for _, block := range content.Blocks {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Reserved block type name in module block",
+			Detail:   fmt.Sprintf("The block type name %q is reserved for use by Terraform in a future version.", block.Type),
+			Subject:  &block.TypeRange,
+		})
+	}
+
 	return mc, diags
+}
+
+// PassedProviderConfig represents a provider config explicitly passed down to
+// a child module, possibly giving it a new local address in the process.
+type PassedProviderConfig struct {
+	InChild  *ProviderConfigRef
+	InParent *ProviderConfigRef
 }
 
 var moduleBlockSchema = &hcl.BodySchema{
@@ -97,5 +160,14 @@ var moduleBlockSchema = &hcl.BodySchema{
 		{
 			Name: "depends_on",
 		},
+		{
+			Name: "providers",
+		},
+	},
+	Blocks: []hcl.BlockHeaderSchema{
+		// These are all reserved for future use.
+		{Type: "lifecycle"},
+		{Type: "locals"},
+		{Type: "provider", LabelNames: []string{"type"}},
 	},
 }

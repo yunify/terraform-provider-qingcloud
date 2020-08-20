@@ -24,19 +24,19 @@ func resourceQingcloudVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceVolumeSize: &schema.Schema{
+			resourceVolumeSize: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVolumeType: &schema.Schema{
+			resourceVolumeType: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,

@@ -3,7 +3,9 @@ package configs
 import (
 	"fmt"
 
-	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/terraform/addrs"
+
+	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 )
@@ -28,21 +30,9 @@ func (p *Provider) merge(op *Provider) hcl.Diagnostics {
 		p.Version = op.Version
 	}
 
-	p.Config = mergeBodies(p.Config, op.Config)
+	p.Config = MergeBodies(p.Config, op.Config)
 
 	return diags
-}
-
-func mergeProviderVersionConstraints(recv map[string][]VersionConstraint, ovrd []*ProviderRequirement) {
-	// Any provider name that's mentioned in the override gets nilled out in
-	// our map so that we'll rebuild it below. Any provider not mentioned is
-	// left unchanged.
-	for _, reqd := range ovrd {
-		delete(recv, reqd.Name)
-	}
-	for _, reqd := range ovrd {
-		recv[reqd.Name] = append(recv[reqd.Name], reqd.Requirement)
-	}
 }
 
 func (v *Variable) merge(ov *Variable) hcl.Diagnostics {
@@ -172,7 +162,7 @@ func (mc *ModuleCall) merge(omc *ModuleCall) hcl.Diagnostics {
 		mc.Version = omc.Version
 	}
 
-	mc.Config = mergeBodies(mc.Config, omc.Config)
+	mc.Config = MergeBodies(mc.Config, omc.Config)
 
 	// We don't allow depends_on to be overridden because that is likely to
 	// cause confusing misbehavior.
@@ -188,54 +178,14 @@ func (mc *ModuleCall) merge(omc *ModuleCall) hcl.Diagnostics {
 	return diags
 }
 
-func (r *ManagedResource) merge(or *ManagedResource) hcl.Diagnostics {
+func (r *Resource) merge(or *Resource, rps map[string]*RequiredProvider) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	if or.Connection != nil {
-		r.Connection = or.Connection
+	if r.Mode != or.Mode {
+		// This is always a programming error, since managed and data resources
+		// are kept in separate maps in the configuration structures.
+		panic(fmt.Errorf("can't merge %s into %s", or.Mode, r.Mode))
 	}
-	if or.Count != nil {
-		r.Count = or.Count
-	}
-	if or.CreateBeforeDestroySet {
-		r.CreateBeforeDestroy = or.CreateBeforeDestroy
-		r.CreateBeforeDestroySet = or.CreateBeforeDestroySet
-	}
-	if or.ForEach != nil {
-		r.ForEach = or.ForEach
-	}
-	if len(or.IgnoreChanges) != 0 {
-		r.IgnoreChanges = or.IgnoreChanges
-	}
-	if or.PreventDestroySet {
-		r.PreventDestroy = or.PreventDestroy
-		r.PreventDestroySet = or.PreventDestroySet
-	}
-	if or.ProviderConfigRef != nil {
-		r.ProviderConfigRef = or.ProviderConfigRef
-	}
-	if len(or.Provisioners) != 0 {
-		r.Provisioners = or.Provisioners
-	}
-
-	r.Config = mergeBodies(r.Config, or.Config)
-
-	// We don't allow depends_on to be overridden because that is likely to
-	// cause confusing misbehavior.
-	if len(r.DependsOn) != 0 {
-		diags = append(diags, &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "Unsupported override",
-			Detail:   "The depends_on argument may not be overridden.",
-			Subject:  r.DependsOn[0].SourceRange().Ptr(), // the first item is the closest range we have
-		})
-	}
-
-	return diags
-}
-
-func (r *DataResource) merge(or *DataResource) hcl.Diagnostics {
-	var diags hcl.Diagnostics
 
 	if or.Count != nil {
 		r.Count = or.Count
@@ -243,20 +193,50 @@ func (r *DataResource) merge(or *DataResource) hcl.Diagnostics {
 	if or.ForEach != nil {
 		r.ForEach = or.ForEach
 	}
+
 	if or.ProviderConfigRef != nil {
 		r.ProviderConfigRef = or.ProviderConfigRef
+		if existing, exists := rps[or.ProviderConfigRef.Name]; exists {
+			r.Provider = existing.Type
+		} else {
+			r.Provider = addrs.ImpliedProviderForUnqualifiedType(r.ProviderConfigRef.Name)
+		}
 	}
 
-	r.Config = mergeBodies(r.Config, or.Config)
+	// Provider FQN is set by Terraform during Merge
+
+	if r.Mode == addrs.ManagedResourceMode {
+		// or.Managed is always non-nil for managed resource mode
+
+		if or.Managed.Connection != nil {
+			r.Managed.Connection = or.Managed.Connection
+		}
+		if or.Managed.CreateBeforeDestroySet {
+			r.Managed.CreateBeforeDestroy = or.Managed.CreateBeforeDestroy
+			r.Managed.CreateBeforeDestroySet = or.Managed.CreateBeforeDestroySet
+		}
+		if len(or.Managed.IgnoreChanges) != 0 {
+			r.Managed.IgnoreChanges = or.Managed.IgnoreChanges
+		}
+		if or.Managed.PreventDestroySet {
+			r.Managed.PreventDestroy = or.Managed.PreventDestroy
+			r.Managed.PreventDestroySet = or.Managed.PreventDestroySet
+		}
+		if len(or.Managed.Provisioners) != 0 {
+			r.Managed.Provisioners = or.Managed.Provisioners
+		}
+	}
+
+	r.Config = MergeBodies(r.Config, or.Config)
 
 	// We don't allow depends_on to be overridden because that is likely to
 	// cause confusing misbehavior.
-	if len(r.DependsOn) != 0 {
+	if len(or.DependsOn) != 0 {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Unsupported override",
 			Detail:   "The depends_on argument may not be overridden.",
-			Subject:  r.DependsOn[0].SourceRange().Ptr(), // the first item is the closest range we have
+			Subject:  or.DependsOn[0].SourceRange().Ptr(), // the first item is the closest range we have
 		})
 	}
 

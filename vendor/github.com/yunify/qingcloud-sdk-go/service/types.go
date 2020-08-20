@@ -23,6 +23,26 @@ import (
 	"github.com/yunify/qingcloud-sdk-go/request/errors"
 )
 
+type AccessKey struct {
+	AccessKeyID     *string `json:"access_key_id" name:"access_key_id"`
+	AccessKeyName   *string `json:"access_key_name" name:"access_key_name"`
+	ConsoleID       *string `json:"console_id" name:"console_id"`
+	Controller      *string `json:"controller" name:"controller"`
+	CreateTime      *string `json:"create_time" name:"create_time"`
+	Description     *string `json:"description" name:"description"`
+	IPWhiteList     *string `json:"ip_white_list" name:"ip_white_list"`
+	Owner           *string `json:"owner" name:"owner"`
+	RootUserID      *string `json:"root_user_id" name:"root_user_id"`
+	SecretAccessKey *string `json:"secret_access_key" name:"secret_access_key"`
+	Status          *string `json:"status" name:"status"`
+	StatusTime      *string `json:"status_time" name:"status_time"`
+}
+
+func (v *AccessKey) Validate() error {
+
+	return nil
+}
+
 type App struct {
 	Abstraction           *string   `json:"abstraction" name:"abstraction"`
 	AppContractStatus     *string   `json:"app_contract_status" name:"app_contract_status"`
@@ -488,14 +508,14 @@ type Cluster struct {
 	IncrementalBackupSupported *bool              `json:"incremental_backup_supported" name:"incremental_backup_supported"`
 	LatestSnapshotTime         *string            `json:"latest_snapshot_time" name:"latest_snapshot_time"`
 	Links                      map[string]*string `json:"links" name:"links"`
-	MetadataRootAccess         *int               `json:"metadata_root_access" name:"metadata_root_access"`
+	MetadataRootAccess         *bool              `json:"metadata_root_access" name:"metadata_root_access"`
 	Name                       *string            `json:"name" name:"name"`
 	NodeCount                  *int               `json:"node_count" name:"node_count"`
 	Nodes                      []*ClusterNode     `json:"nodes" name:"nodes"`
 	Owner                      *string            `json:"owner" name:"owner"`
 	PartnerAccess              *bool              `json:"partner_access" name:"partner_access"`
 	RestoreService             interface{}        `json:"restore_service" name:"restore_service"`
-	ReuseHyper                 *int               `json:"reuse_hyper" name:"reuse_hyper"`
+	ReuseHyper                 *bool              `json:"reuse_hyper" name:"reuse_hyper"`
 	RoleCount                  map[string]*int    `json:"role_count" name:"role_count"`
 	Roles                      []*string          `json:"roles" name:"roles"`
 	RootUserID                 *string            `json:"root_user_id" name:"root_user_id"`
@@ -504,7 +524,7 @@ type Cluster struct {
 	StatusTime                 *time.Time         `json:"status_time" name:"status_time" format:"ISO 8601"`
 	SubCode                    *int               `json:"sub_code" name:"sub_code"`
 	TransitionStatus           *string            `json:"transition_status" name:"transition_status"`
-	UpgradePolicy              []*string          `json:"upgrade_policy" name:"upgrade_policy"`
+	UpgradePolicy              []interface{}      `json:"upgrade_policy" name:"upgrade_policy"`
 	UpgradeStatus              *string            `json:"upgrade_status" name:"upgrade_status"`
 	UpgradeTime                *time.Time         `json:"upgrade_time" name:"upgrade_time" format:"ISO 8601"`
 	VxNet                      *VxNet             `json:"vxnet" name:"vxnet"`
@@ -992,6 +1012,7 @@ type Instance struct {
 	InstanceType     *string        `json:"instance_type" name:"instance_type"`
 	KeyPairIDs       []*string      `json:"keypair_ids" name:"keypair_ids"`
 	MemoryCurrent    *int           `json:"memory_current" name:"memory_current"`
+	Repl             *string        `json:"repl" name:"repl"`
 	SecurityGroup    *SecurityGroup `json:"security_group" name:"security_group"`
 	// Status's available values: pending, running, stopped, suspended, terminated, ceased
 	Status     *string    `json:"status" name:"status"`
@@ -1004,6 +1025,7 @@ type Instance struct {
 	VolumeIDs        []*string   `json:"volume_ids" name:"volume_ids"`
 	Volumes          []*Volume   `json:"volumes" name:"volumes"`
 	VxNets           []*NICVxNet `json:"vxnets" name:"vxnets"`
+	ZoneID           *string     `json:"zone_id" name:"zone_id"`
 }
 
 func (v *Instance) Validate() error {
@@ -1828,6 +1850,103 @@ func (v *NICVxNet) Validate() error {
 	return nil
 }
 
+type NotificationData struct {
+	AlarmPolicy   *string `json:"alarm_policy" name:"alarm_policy"`
+	PrevStatus    *string `json:"prev_status" name:"prev_status"`
+	Rules         *string `json:"rules" name:"rules"`
+	TriggerStatus *string `json:"trigger_status" name:"trigger_status"`
+	UserID        *string `json:"user_id" name:"user_id"`
+}
+
+func (v *NotificationData) Validate() error {
+
+	return nil
+}
+
+type NotificationList struct {
+	ConsoleID            *string                 `json:"console_id" name:"console_id"`
+	CreateTime           *string                 `json:"create_time" name:"create_time"`
+	IsMine               *string                 `json:"is_mine" name:"is_mine"`
+	Items                []*NotificationListItem `json:"items" name:"items"`
+	NotificationListID   *string                 `json:"notification_list_id" name:"notification_list_id"`
+	NotificationListName *string                 `json:"notification_list_name" name:"notification_list_name"`
+	Owner                *string                 `json:"owner" name:"owner"`
+	RootUserID           *string                 `json:"root_user_id" name:"root_user_id"`
+	Shared               *string                 `json:"shared" name:"shared"`
+	Visibility           *string                 `json:"visibility" name:"visibility"`
+}
+
+func (v *NotificationList) Validate() error {
+
+	if len(v.Items) > 0 {
+		for _, property := range v.Items {
+			if err := property.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+type NotificationListItem struct {
+	ConsoleID            *string `json:"console_id" name:"console_id"`
+	Content              *string `json:"content" name:"content"`
+	CreateTime           *string `json:"create_time" name:"create_time"`
+	NotificationItemID   *string `json:"notification_item_id" name:"notification_item_id"`
+	NotificationItemType *string `json:"notification_item_type" name:"notification_item_type"`
+	Owner                *string `json:"owner" name:"owner"`
+	Remarks              *string `json:"remarks" name:"remarks"`
+	RootUserID           *string `json:"root_user_id" name:"root_user_id"`
+	ValidStatus          *int    `json:"valid_status" name:"valid_status"`
+	VerificationCode     *string `json:"verification_code" name:"verification_code"`
+	Verified             *int    `json:"verified" name:"verified"`
+	VerifyTime           *string `json:"verify_time" name:"verify_time"`
+}
+
+func (v *NotificationListItem) Validate() error {
+
+	return nil
+}
+
+type Project struct {
+	ConsoleID       *string `json:"console_id" name:"console_id"`
+	CreateTime      *string `json:"create_time" name:"create_time"`
+	Description     *string `json:"description" name:"description"`
+	Enabled         *int    `json:"enabled" name:"enabled"`
+	Meta            *string `json:"meta" name:"meta"`
+	Owner           *string `json:"owner" name:"owner"`
+	OwnerName       *string `json:"owner_name" name:"owner_name"`
+	ProjectID       *string `json:"project_id" name:"project_id"`
+	ProjectName     *string `json:"project_name" name:"project_name"`
+	ResourceGroupID *string `json:"resource_group_id" name:"resource_group_id"`
+	RootUserID      *string `json:"root_user_id" name:"root_user_id"`
+	Status          *string `json:"status" name:"status"`
+}
+
+func (v *Project) Validate() error {
+
+	return nil
+}
+
+type ProjectResourceItem struct {
+	CreateTime      *string `json:"create_time" name:"create_time"`
+	Meta            *string `json:"meta" name:"meta"`
+	Owner           *string `json:"owner" name:"owner"`
+	ProjectID       *string `json:"project_id" name:"project_id"`
+	ProjectName     *string `json:"project_name" name:"project_name"`
+	ResourceGroupID *string `json:"resource_group_id" name:"resource_group_id"`
+	ResourceID      *string `json:"resource_id" name:"resource_id"`
+	ResourceType    *string `json:"resource_type" name:"resource_type"`
+	RootUserID      *string `json:"root_user_id" name:"root_user_id"`
+	ZoneID          *string `json:"zone_id" name:"zone_id"`
+}
+
+func (v *ProjectResourceItem) Validate() error {
+
+	return nil
+}
+
 type QuotaLeft struct {
 	Left         *int    `json:"left" name:"left"`
 	ResourceType *string `json:"resource_type" name:"resource_type"`
@@ -2120,12 +2239,93 @@ func (v *Resource) Validate() error {
 	return nil
 }
 
+type ResourceLimits struct {
+	Comments                          *string     `json:"__comments" name:"__comments"`
+	BanMmVxNets                       *int        `json:"ban_mm_vxnets" name:"ban_mm_vxnets"`
+	BmZones                           []*string   `json:"bm_zones" name:"bm_zones"`
+	BucketCreateWhitelist             *string     `json:"bucket_create_whitelist" name:"bucket_create_whitelist"`
+	DisabledActions                   []*string   `json:"disabled_actions" name:"disabled_actions"`
+	DisabledFeatures                  []*string   `json:"disabled_features" name:"disabled_features"`
+	EnableNICBandwidth                *int        `json:"enable_nic_bandwidth" name:"enable_nic_bandwidth"`
+	GpuZones                          []*string   `json:"gpu_zones" name:"gpu_zones"`
+	HadoopTypes                       interface{} `json:"hadoop_types" name:"hadoop_types"`
+	HbaseTypes                        interface{} `json:"hbase_types" name:"hbase_types"`
+	HcVolumeStep                      *int        `json:"hc_volume_step" name:"hc_volume_step"`
+	HcsVolumeStep                     *int        `json:"hcs_volume_step" name:"hcs_volume_step"`
+	HdfsDisksPerNode                  *int        `json:"hdfs_disks_per_node" name:"hdfs_disks_per_node"`
+	HpsVolumeStep                     *int        `json:"hps_volume_step" name:"hps_volume_step"`
+	IgnoreMmVxNetUsers                *string     `json:"ignore_mm_vxnet_users" name:"ignore_mm_vxnet_users"`
+	MaxAbuseEIPCnt                    *int        `json:"max_abuse_eip_cnt" name:"max_abuse_eip_cnt"`
+	MaxAlarmPolicyActions             *int        `json:"max_alarm_policy_actions" name:"max_alarm_policy_actions"`
+	MaxAlarmPolicyResources           *int        `json:"max_alarm_policy_resources" name:"max_alarm_policy_resources"`
+	MaxAlarmPolicyRules               *int        `json:"max_alarm_policy_rules" name:"max_alarm_policy_rules"`
+	MaxChangeEIPBillingModeCnt        *int        `json:"max_change_eip_billing_mode_cnt" name:"max_change_eip_billing_mode_cnt"`
+	MaxEIPBandwidth                   *int        `json:"max_eip_bandwidth" name:"max_eip_bandwidth"`
+	MaxEIPCount                       *int        `json:"max_eip_count" name:"max_eip_count"`
+	MaxGpuCount                       *int        `json:"max_gpu_count" name:"max_gpu_count"`
+	MaxHcVolumeSize                   *int        `json:"max_hc_volume_size" name:"max_hc_volume_size"`
+	MaxHcsVolumeSize                  *int        `json:"max_hcs_volume_size" name:"max_hcs_volume_size"`
+	MaxHpsVolumeSize                  *int        `json:"max_hps_volume_size" name:"max_hps_volume_size"`
+	MaxImageSharedUsers               *int        `json:"max_image_shared_users" name:"max_image_shared_users"`
+	MaxInstanceCount                  *int        `json:"max_instance_count" name:"max_instance_count"`
+	MaxItemInResourceGroup            *int        `json:"max_item_in_resource_group" name:"max_item_in_resource_group"`
+	MaxListenerBackends               *int        `json:"max_listener_backends" name:"max_listener_backends"`
+	MaxLoadBalancerListeners          *int        `json:"max_loadbalancer_listeners" name:"max_loadbalancer_listeners"`
+	MaxLoadBalancerPolicyRewriteRules *int        `json:"max_loadbalancer_policy_rewrite_rules" name:"max_loadbalancer_policy_rewrite_rules"`
+	MaxLoadBalancerPolicyRules        *int        `json:"max_loadbalancer_policy_rules" name:"max_loadbalancer_policy_rules"`
+	MaxMemberInUserGroup              *int        `json:"max_member_in_user_group" name:"max_member_in_user_group"`
+	MaxNICPerInstance                 *int        `json:"max_nic_per_instance" name:"max_nic_per_instance"`
+	MaxResourceSharedUsers            *int        `json:"max_resource_shared_users" name:"max_resource_shared_users"`
+	MaxRgCntItemCanJoin               *int        `json:"max_rg_cnt_item_can_join" name:"max_rg_cnt_item_can_join"`
+	MaxRouterCount                    *int        `json:"max_router_count" name:"max_router_count"`
+	MaxRouterEntries                  *int        `json:"max_router_entries" name:"max_router_entries"`
+	MaxRouterStatics                  *int        `json:"max_router_statics" name:"max_router_statics"`
+	MaxRouterVxNets                   *int        `json:"max_router_vxnets" name:"max_router_vxnets"`
+	MaxRuleInGroupRole                *int        `json:"max_rule_in_group_role" name:"max_rule_in_group_role"`
+	MaxSecurityGroupRules             *int        `json:"max_security_group_rules" name:"max_security_group_rules"`
+	MaxSecurityGroupRulesets          *int        `json:"max_security_group_rulesets" name:"max_security_group_rulesets"`
+	MaxSecurityGroupSnapshots         *int        `json:"max_security_group_snapshots" name:"max_security_group_snapshots"`
+	MaxUsersInOneDepartment           *int        `json:"max_users_in_one_department" name:"max_users_in_one_department"`
+	MaxVolumeCount                    *int        `json:"max_volume_count" name:"max_volume_count"`
+	MaxVolumePerInst                  *int        `json:"max_volume_per_inst" name:"max_volume_per_inst"`
+	MaxVolumeSize                     *int        `json:"max_volume_size" name:"max_volume_size"`
+	MaxVosReplicaCount                *int        `json:"max_vos_replica_count" name:"max_vos_replica_count"`
+	MaxVxNetCount                     *int        `json:"max_vxnet_count" name:"max_vxnet_count"`
+	MinAbuseEIPSec                    *int        `json:"min_abuse_eip_sec" name:"min_abuse_eip_sec"`
+	MinHcVolumeSize                   *int        `json:"min_hc_volume_size" name:"min_hc_volume_size"`
+	MinHcsVolumeSize                  *int        `json:"min_hcs_volume_size" name:"min_hcs_volume_size"`
+	MinHostsPerDedicatedGroup         *int        `json:"min_hosts_per_dedicated_group" name:"min_hosts_per_dedicated_group"`
+	MinHpsVolumeSize                  *int        `json:"min_hps_volume_size" name:"min_hps_volume_size"`
+	MinReservedHostsInPool            *int        `json:"min_reserved_hosts_in_pool" name:"min_reserved_hosts_in_pool"`
+	MinVolumeSize                     *int        `json:"min_volume_size" name:"min_volume_size"`
+	PrivilegeOfLxc                    *int        `json:"privilege_of_lxc" name:"privilege_of_lxc"`
+	SparkTypes                        interface{} `json:"spark_types" name:"spark_types"`
+	StormTypes                        interface{} `json:"storm_types" name:"storm_types"`
+	ValidCacheSize                    []*int      `json:"valid_cache_size" name:"valid_cache_size"`
+	ValidCPUCores                     []*int      `json:"valid_cpu_cores" name:"valid_cpu_cores"`
+	ValidCPUMemoryPairs               interface{} `json:"valid_cpu_memory_pairs" name:"valid_cpu_memory_pairs"`
+	ValidDedicatedHostGroupClasses    []*int      `json:"valid_dedicated_host_group_classes" name:"valid_dedicated_host_group_classes"`
+	ValidInstanceClasses              []*int      `json:"valid_instance_classes" name:"valid_instance_classes"`
+	ValidLoadBalancerTypes            []*int      `json:"valid_loadbalancer_types" name:"valid_loadbalancer_types"`
+	ValidMemorySize                   []*int      `json:"valid_memory_size" name:"valid_memory_size"`
+	ValidResourceClasses              []*int      `json:"valid_resource_classes" name:"valid_resource_classes"`
+	ValidVolumeTypes                  []*int      `json:"valid_volume_types" name:"valid_volume_types"`
+	VolumeStep                        *int        `json:"volume_step" name:"volume_step"`
+	VpcIpv6Prefixlen                  *int        `json:"vpc_ipv6_prefixlen" name:"vpc_ipv6_prefixlen"`
+	VxNetIpv6Prefixlen                *int        `json:"vxnet_ipv6_prefixlen" name:"vxnet_ipv6_prefixlen"`
+	VxNetKsWhiteList                  *string     `json:"vxnet_ks_white_list" name:"vxnet_ks_white_list"`
+}
+
+func (v *ResourceLimits) Validate() error {
+
+	return nil
+}
+
 type ResourceTagPair struct {
-	ResourceID   *string    `json:"resource_id" name:"resource_id"`
-	ResourceType *string    `json:"resource_type" name:"resource_type"`
-	Status       *string    `json:"status" name:"status"`
-	StatusTime   *time.Time `json:"status_time" name:"status_time" format:"ISO 8601"`
-	TagID        *string    `json:"tag_id" name:"tag_id"`
+	ResourceID   *string `json:"resource_id" name:"resource_id"`
+	ResourceType *string `json:"resource_type" name:"resource_type"`
+	Status       *string `json:"status" name:"status"`
+	TagID        *string `json:"tag_id" name:"tag_id"`
 }
 
 func (v *ResourceTagPair) Validate() error {
@@ -2879,8 +3079,13 @@ func (v *Snapshot) Validate() error {
 }
 
 type SnapshotResource struct {
-	OSFamily *string `json:"os_family" name:"os_family"`
-	Platform *string `json:"platform" name:"platform"`
+	Architecture *string `json:"architecture" name:"architecture"`
+	Filesystem   *string `json:"filesystem" name:"filesystem"`
+	MountOptions *string `json:"mount_options" name:"mount_options"`
+	MountPoint   *string `json:"mount_point" name:"mount_point"`
+	Size         *int    `json:"size" name:"size"`
+	VolumeID     *string `json:"volume_id" name:"volume_id"`
+	VolumeType   *int    `json:"volume_type" name:"volume_type"`
 }
 
 func (v *SnapshotResource) Validate() error {
@@ -2941,6 +3146,7 @@ type Volume struct {
 	LatestSnapshotTime *time.Time  `json:"latest_snapshot_time" name:"latest_snapshot_time" format:"ISO 8601"`
 	Owner              *string     `json:"owner" name:"owner"`
 	PlaceGroupID       *string     `json:"place_group_id" name:"place_group_id"`
+	Repl               *string     `json:"repl" name:"repl"`
 	Size               *int        `json:"size" name:"size"`
 	// Status's available values: pending, available, in-use, suspended, deleted, ceased
 	Status     *string    `json:"status" name:"status"`
@@ -2952,7 +3158,8 @@ type Volume struct {
 	VolumeID         *string `json:"volume_id" name:"volume_id"`
 	VolumeName       *string `json:"volume_name" name:"volume_name"`
 	// VolumeType's available values: 0, 1, 2, 3
-	VolumeType *int `json:"volume_type" name:"volume_type"`
+	VolumeType *int    `json:"volume_type" name:"volume_type"`
+	ZoneID     *string `json:"zone_id" name:"zone_id"`
 }
 
 func (v *Volume) Validate() error {

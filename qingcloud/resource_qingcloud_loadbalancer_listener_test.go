@@ -25,7 +25,7 @@ func TestAccQingcloudLoadBalancerListener_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerListenerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBLConfigBasic, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerListenerExists(
@@ -36,7 +36,7 @@ func TestAccQingcloudLoadBalancerListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("qingcloud_loadbalancer_listener.foo", "balance_mode", "roundrobin"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBLConfigBasicTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerListenerExists(
@@ -48,7 +48,7 @@ func TestAccQingcloudLoadBalancerListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("qingcloud_loadbalancer_listener.foo", "listener_option", "256"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBLConfigBasicThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerListenerExists(

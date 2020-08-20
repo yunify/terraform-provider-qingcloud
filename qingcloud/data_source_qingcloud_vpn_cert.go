@@ -22,33 +22,33 @@ func dataSourceQingcloudVpnCert() *schema.Resource {
 		Read: dataSourceVpnCertRead,
 
 		Schema: map[string]*schema.Schema{
-			resourceVPNCertRouterId: &schema.Schema{
+			resourceVPNCertRouterId: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceVPNCertPlatform: &schema.Schema{
+			resourceVPNCertPlatform: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "linux",
 				ValidateFunc: withinArrayString("linux", "windows", "mac"),
 			},
-			resourceVPNCertClientCrt: &schema.Schema{
+			resourceVPNCertClientCrt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceVPNCertClientKey: &schema.Schema{
+			resourceVPNCertClientKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceVPNCertStaticKey: &schema.Schema{
+			resourceVPNCertStaticKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceVPNCertCaCert: &schema.Schema{
+			resourceVPNCertCaCert: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceVPNCertConfSample: &schema.Schema{
+			resourceVPNCertConfSample: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

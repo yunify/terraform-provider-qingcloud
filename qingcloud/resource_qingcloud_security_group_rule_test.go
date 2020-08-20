@@ -24,7 +24,7 @@ func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSecurityGroupRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupRuleConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("qingcloud_security_group_rule.foo", &sgr),
@@ -42,7 +42,7 @@ func TestAccQingcloudSecurityGroupRule_basic(t *testing.T) {
 						"qingcloud_security_group_rule.foo", "to_port", "0"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupRuleConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupRuleExists("qingcloud_security_group_rule.foo", &sgr),

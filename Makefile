@@ -1,72 +1,28 @@
-GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
-VETARGS?=-all
-TEST?=$$(go list ./... |grep -v 'vendor')
-RELEASE_TAG=$$(git describe --abbrev=0 --tags)
+BINARY="terraform-provider-qingcloud"
+BUILD=`date +%FT%T%z`
 
+PACKAGES=`go list ./... | grep -v /vendor/`
+VETPACKAGES=`go list ./... | grep -v /vendor/ | grep -v /examples/`
+GOFILES=`find . -name "*.go" -type f -not -path "./vendor/*"`
 
-all: build test
+default:
+	@go build -o ${BINARY} -tags=jsoniter
 
-build: fmt
-	go build -o terraform-provider-qingcloud
-
-install:
-	cp terraform-provider-qingcloud $(shell dirname `which terraform`)
-
-test: fmtcheck
-	go test -i $(TEST) || exit 1
-	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
-
-testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
-
-vet:
-	@echo "go tool vet $(VETARGS) ."
-	@go tool vet $(VETARGS) $$(ls -d */ | grep -v vendor) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
+list:
+	@echo ${PACKAGES}
+	@echo ${VETPACKAGES}
+	@echo ${GOFILES}
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	@gofmt -s -w ${GOFILES}
 
-fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+test:
+	@go test -cpu=1,2,4 -v -tags integration ./...
 
-errcheck:
-	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+vet:
+	@go vet $(VETPACKAGES)
 
-dist-tools:
-	@go get github.com/mitchellh/gox
+clean:
+	@if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
 
-dist: dist-tools
-	rm -rf ./bin/*
-	mkdir -p ./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)
-	mkdir -p ./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
-	mkdir -p ./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)
-	gox -osarch="linux/amd64" -output=./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
-	gox -osarch="darwin/amd64" -output=./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
-	gox -osarch="windows/amd64" -output=./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)/terraform-provider-qingcloud_$(RELEASE_TAG)
-	cd bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG) \
-	&& zip terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG).zip terraform-provider-qingcloud_$(RELEASE_TAG).exe \
-	&& mv terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG).zip ../
-	cd bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG) \
-	&& tar -czf terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG).tgz terraform-provider-qingcloud_$(RELEASE_TAG) \
-	&& mv terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG).tgz ../
-	cd bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG) \
-	&& tar -czf terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG).tgz terraform-provider-qingcloud_$(RELEASE_TAG) \
-	&& mv terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG).tgz ../
-	rm -rf ./bin/terraform-provider-qingcloud_linux-amd64_$(RELEASE_TAG)
-	rm -rf ./bin/terraform-provider-qingcloud_darwin-amd64_$(RELEASE_TAG)
-	rm -rf ./bin/terraform-provider-qingcloud_windows-amd64_$(RELEASE_TAG)
-
-
-release-tools:
-	@go get github.com/tcnksm/ghr
-
-release: release-tools
-	ghr -u yunify $(RELEASE_TAG) ./bin/
-
-.PHONY: all build copy test vet fmt fmtcheck errcheck dist-tools dist release-tools release
+.PHONY: default fmt fmt-check install test vet docker clean

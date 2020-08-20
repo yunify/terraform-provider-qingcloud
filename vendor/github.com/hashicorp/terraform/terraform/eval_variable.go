@@ -4,255 +4,221 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"strconv"
-	"strings"
 
-	"github.com/hashicorp/terraform/config"
-	"github.com/hashicorp/terraform/config/module"
-	"github.com/hashicorp/terraform/helper/hilmapstructure"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/terraform/addrs"
+	"github.com/hashicorp/terraform/configs"
+	"github.com/hashicorp/terraform/instances"
+	"github.com/hashicorp/terraform/tfdiags"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 )
 
-// EvalTypeCheckVariable is an EvalNode which ensures that the variable
-// values which are assigned as inputs to a module (including the root)
-// match the types which are either declared for the variables explicitly
-// or inferred from the default values.
-//
-// In order to achieve this three things are required:
-//     - a map of the proposed variable values
-//     - the configuration tree of the module in which the variable is
-//       declared
-//     - the path to the module (so we know which part of the tree to
-//       compare the values against).
-type EvalTypeCheckVariable struct {
-	Variables  map[string]interface{}
-	ModulePath []string
-	ModuleTree *module.Tree
-}
-
-func (n *EvalTypeCheckVariable) Eval(ctx EvalContext) (interface{}, error) {
-	currentTree := n.ModuleTree
-	for _, pathComponent := range n.ModulePath[1:] {
-		currentTree = currentTree.Children()[pathComponent]
-	}
-	targetConfig := currentTree.Config()
-
-	prototypes := make(map[string]config.VariableType)
-	for _, variable := range targetConfig.Variables {
-		prototypes[variable.Name] = variable.Type()
-	}
-
-	// Only display a module in an error message if we are not in the root module
-	modulePathDescription := fmt.Sprintf(" in module %s", strings.Join(n.ModulePath[1:], "."))
-	if len(n.ModulePath) == 1 {
-		modulePathDescription = ""
-	}
-
-	for name, declaredType := range prototypes {
-		proposedValue, ok := n.Variables[name]
-		if !ok {
-			// This means the default value should be used as no overriding value
-			// has been set. Therefore we should continue as no check is necessary.
-			continue
-		}
-
-		if proposedValue == config.UnknownVariableValue {
-			continue
-		}
-
-		switch declaredType {
-		case config.VariableTypeString:
-			switch proposedValue.(type) {
-			case string:
-				continue
-			default:
-				return nil, fmt.Errorf("variable %s%s should be type %s, got %s",
-					name, modulePathDescription, declaredType.Printable(), hclTypeName(proposedValue))
-			}
-		case config.VariableTypeMap:
-			switch proposedValue.(type) {
-			case map[string]interface{}:
-				continue
-			default:
-				return nil, fmt.Errorf("variable %s%s should be type %s, got %s",
-					name, modulePathDescription, declaredType.Printable(), hclTypeName(proposedValue))
-			}
-		case config.VariableTypeList:
-			switch proposedValue.(type) {
-			case []interface{}:
-				continue
-			default:
-				return nil, fmt.Errorf("variable %s%s should be type %s, got %s",
-					name, modulePathDescription, declaredType.Printable(), hclTypeName(proposedValue))
-			}
-		default:
-			return nil, fmt.Errorf("variable %s%s should be type %s, got type string",
-				name, modulePathDescription, declaredType.Printable())
-		}
-	}
-
-	return nil, nil
-}
-
-// EvalSetVariables is an EvalNode implementation that sets the variables
-// explicitly for interpolation later.
-type EvalSetVariables struct {
-	Module    *string
-	Variables map[string]interface{}
+// EvalSetModuleCallArguments is an EvalNode implementation that sets values
+// for arguments of a child module call, for later retrieval during
+// expression evaluation.
+type EvalSetModuleCallArguments struct {
+	Module addrs.ModuleCallInstance
+	Values map[string]cty.Value
 }
 
 // TODO: test
-func (n *EvalSetVariables) Eval(ctx EvalContext) (interface{}, error) {
-	ctx.SetVariables(*n.Module, n.Variables)
+func (n *EvalSetModuleCallArguments) Eval(ctx EvalContext) (interface{}, error) {
+	ctx.SetModuleCallArguments(n.Module, n.Values)
 	return nil, nil
 }
 
-// EvalVariableBlock is an EvalNode implementation that evaluates the
-// given configuration, and uses the final values as a way to set the
-// mapping.
-type EvalVariableBlock struct {
-	Config         **ResourceConfig
-	VariableValues map[string]interface{}
-}
-
-func (n *EvalVariableBlock) Eval(ctx EvalContext) (interface{}, error) {
-	// Clear out the existing mapping
-	for k, _ := range n.VariableValues {
-		delete(n.VariableValues, k)
-	}
-
-	// Get our configuration
-	rc := *n.Config
-	for k, v := range rc.Config {
-		vKind := reflect.ValueOf(v).Type().Kind()
-
-		switch vKind {
-		case reflect.Slice:
-			var vSlice []interface{}
-			if err := hilmapstructure.WeakDecode(v, &vSlice); err == nil {
-				n.VariableValues[k] = vSlice
-				continue
-			}
-		case reflect.Map:
-			var vMap map[string]interface{}
-			if err := hilmapstructure.WeakDecode(v, &vMap); err == nil {
-				n.VariableValues[k] = vMap
-				continue
-			}
-		default:
-			var vString string
-			if err := hilmapstructure.WeakDecode(v, &vString); err == nil {
-				n.VariableValues[k] = vString
-				continue
-			}
-		}
-
-		return nil, fmt.Errorf("Variable value for %s is not a string, list or map type", k)
-	}
-
-	for _, path := range rc.ComputedKeys {
-		log.Printf("[DEBUG] Setting Unknown Variable Value for computed key: %s", path)
-		err := n.setUnknownVariableValueForPath(path)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return nil, nil
-}
-
-func (n *EvalVariableBlock) setUnknownVariableValueForPath(path string) error {
-	pathComponents := strings.Split(path, ".")
-
-	if len(pathComponents) < 1 {
-		return fmt.Errorf("No path comoponents in %s", path)
-	}
-
-	if len(pathComponents) == 1 {
-		// Special case the "top level" since we know the type
-		if _, ok := n.VariableValues[pathComponents[0]]; !ok {
-			n.VariableValues[pathComponents[0]] = config.UnknownVariableValue
-		}
-		return nil
-	}
-
-	// Otherwise find the correct point in the tree and then set to unknown
-	var current interface{} = n.VariableValues[pathComponents[0]]
-	for i := 1; i < len(pathComponents); i++ {
-		switch tCurrent := current.(type) {
-		case []interface{}:
-			index, err := strconv.Atoi(pathComponents[i])
-			if err != nil {
-				return fmt.Errorf("Cannot convert %s to slice index in path %s",
-					pathComponents[i], path)
-			}
-			current = tCurrent[index]
-		case []map[string]interface{}:
-			index, err := strconv.Atoi(pathComponents[i])
-			if err != nil {
-				return fmt.Errorf("Cannot convert %s to slice index in path %s",
-					pathComponents[i], path)
-			}
-			current = tCurrent[index]
-		case map[string]interface{}:
-			if val, hasVal := tCurrent[pathComponents[i]]; hasVal {
-				current = val
-				continue
-			}
-
-			tCurrent[pathComponents[i]] = config.UnknownVariableValue
-			break
-		}
-	}
-
-	return nil
-}
-
-// EvalCoerceMapVariable is an EvalNode implementation that recognizes a
-// specific ambiguous HCL parsing situation and resolves it. In HCL parsing, a
-// bare map literal is indistinguishable from a list of maps w/ one element.
+// EvalModuleCallArgument is an EvalNode implementation that produces the value
+// for a particular variable as will be used by a child module instance.
 //
-// We take all the same inputs as EvalTypeCheckVariable above, since we need
-// both the target type and the proposed value in order to properly coerce.
-type EvalCoerceMapVariable struct {
-	Variables  map[string]interface{}
-	ModulePath []string
-	ModuleTree *module.Tree
+// The result is written into the map given in Values, with its key
+// set to the local name of the variable, disregarding the module instance
+// address. Any existing values in that map are deleted first. This weird
+// interface is a result of trying to be convenient for use with
+// EvalContext.SetModuleCallArguments, which expects a map to merge in with
+// any existing arguments.
+type EvalModuleCallArgument struct {
+	Addr           addrs.InputVariable
+	Config         *configs.Variable
+	Expr           hcl.Expression
+	ModuleInstance addrs.ModuleInstance
+
+	Values map[string]cty.Value
+
+	// validateOnly indicates that this evaluation is only for config
+	// validation, and we will not have any expansion module instance
+	// repetition data.
+	validateOnly bool
 }
 
-// Eval implements the EvalNode interface. See EvalCoerceMapVariable for
-// details.
-func (n *EvalCoerceMapVariable) Eval(ctx EvalContext) (interface{}, error) {
-	currentTree := n.ModuleTree
-	for _, pathComponent := range n.ModulePath[1:] {
-		currentTree = currentTree.Children()[pathComponent]
-	}
-	targetConfig := currentTree.Config()
-
-	prototypes := make(map[string]config.VariableType)
-	for _, variable := range targetConfig.Variables {
-		prototypes[variable.Name] = variable.Type()
+func (n *EvalModuleCallArgument) Eval(ctx EvalContext) (interface{}, error) {
+	// Clear out the existing mapping
+	for k := range n.Values {
+		delete(n.Values, k)
 	}
 
-	for name, declaredType := range prototypes {
-		if declaredType != config.VariableTypeMap {
+	wantType := n.Config.Type
+	name := n.Addr.Name
+	expr := n.Expr
+
+	if expr == nil {
+		// Should never happen, but we'll bail out early here rather than
+		// crash in case it does. We set no value at all in this case,
+		// making a subsequent call to EvalContext.SetModuleCallArguments
+		// a no-op.
+		log.Printf("[ERROR] attempt to evaluate %s with nil expression", n.Addr.String())
+		return nil, nil
+	}
+
+	var moduleInstanceRepetitionData instances.RepetitionData
+
+	switch {
+	case n.validateOnly:
+		// the instance expander does not track unknown expansion values, so we
+		// have to assume all RepetitionData is unknown.
+		moduleInstanceRepetitionData = instances.RepetitionData{
+			CountIndex: cty.UnknownVal(cty.Number),
+			EachKey:    cty.UnknownVal(cty.String),
+			EachValue:  cty.DynamicVal,
+		}
+
+	default:
+		// Get the repetition data for this module instance,
+		// so we can create the appropriate scope for evaluating our expression
+		moduleInstanceRepetitionData = ctx.InstanceExpander().GetModuleInstanceRepetitionData(n.ModuleInstance)
+	}
+
+	scope := ctx.EvaluationScope(nil, moduleInstanceRepetitionData)
+	val, diags := scope.EvalExpr(expr, cty.DynamicPseudoType)
+
+	// We intentionally passed DynamicPseudoType to EvalExpr above because
+	// now we can do our own local type conversion and produce an error message
+	// with better context if it fails.
+	var convErr error
+	val, convErr = convert.Convert(val, wantType)
+	if convErr != nil {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid value for module argument",
+			Detail: fmt.Sprintf(
+				"The given value is not suitable for child module variable %q defined at %s: %s.",
+				name, n.Config.DeclRange.String(), convErr,
+			),
+			Subject: expr.Range().Ptr(),
+		})
+		// We'll return a placeholder unknown value to avoid producing
+		// redundant downstream errors.
+		val = cty.UnknownVal(wantType)
+	}
+
+	n.Values[name] = val
+	return nil, diags.ErrWithWarnings()
+}
+
+// evalVariableValidations is an EvalNode implementation that ensures that
+// all of the configured custom validations for a variable are passing.
+//
+// This must be used only after any side-effects that make the value of the
+// variable available for use in expression evaluation, such as
+// EvalModuleCallArgument for variables in descendent modules.
+type evalVariableValidations struct {
+	Addr   addrs.AbsInputVariableInstance
+	Config *configs.Variable
+
+	// Expr is the expression that provided the value for the variable, if any.
+	// This will be nil for root module variables, because their values come
+	// from outside the configuration.
+	Expr hcl.Expression
+}
+
+func (n *evalVariableValidations) Eval(ctx EvalContext) (interface{}, error) {
+	if n.Config == nil || len(n.Config.Validations) == 0 {
+		log.Printf("[TRACE] evalVariableValidations: not active for %s, so skipping", n.Addr)
+		return nil, nil
+	}
+
+	var diags tfdiags.Diagnostics
+
+	// Variable nodes evaluate in the parent module to where they were declared
+	// because the value expression (n.Expr, if set) comes from the calling
+	// "module" block in the parent module.
+	//
+	// Validation expressions are statically validated (during configuration
+	// loading) to refer only to the variable being validated, so we can
+	// bypass our usual evaluation machinery here and just produce a minimal
+	// evaluation context containing just the required value, and thus avoid
+	// the problem that ctx's evaluation functions refer to the wrong module.
+	val := ctx.GetVariableValue(n.Addr)
+	hclCtx := &hcl.EvalContext{
+		Variables: map[string]cty.Value{
+			"var": cty.ObjectVal(map[string]cty.Value{
+				n.Config.Name: val,
+			}),
+		},
+		Functions: ctx.EvaluationScope(nil, EvalDataForNoInstanceKey).Functions(),
+	}
+
+	for _, validation := range n.Config.Validations {
+		const errInvalidCondition = "Invalid variable validation result"
+		const errInvalidValue = "Invalid value for variable"
+
+		result, moreDiags := validation.Condition.Value(hclCtx)
+		diags = diags.Append(moreDiags)
+		if moreDiags.HasErrors() {
+			log.Printf("[TRACE] evalVariableValidations: %s rule %s condition expression failed: %s", n.Addr, validation.DeclRange, diags.Err().Error())
+		}
+		if !result.IsKnown() {
+			log.Printf("[TRACE] evalVariableValidations: %s rule %s condition value is unknown, so skipping validation for now", n.Addr, validation.DeclRange)
+			continue // We'll wait until we've learned more, then.
+		}
+		if result.IsNull() {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity:    hcl.DiagError,
+				Summary:     errInvalidCondition,
+				Detail:      "Validation condition expression must return either true or false, not null.",
+				Subject:     validation.Condition.Range().Ptr(),
+				Expression:  validation.Condition,
+				EvalContext: hclCtx,
+			})
+			continue
+		}
+		var err error
+		result, err = convert.Convert(result, cty.Bool)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity:    hcl.DiagError,
+				Summary:     errInvalidCondition,
+				Detail:      fmt.Sprintf("Invalid validation condition result value: %s.", tfdiags.FormatError(err)),
+				Subject:     validation.Condition.Range().Ptr(),
+				Expression:  validation.Condition,
+				EvalContext: hclCtx,
+			})
 			continue
 		}
 
-		proposedValue, ok := n.Variables[name]
-		if !ok {
-			continue
-		}
-
-		if list, ok := proposedValue.([]interface{}); ok && len(list) == 1 {
-			if m, ok := list[0].(map[string]interface{}); ok {
-				log.Printf("[DEBUG] EvalCoerceMapVariable: "+
-					"Coercing single element list into map: %#v", m)
-				n.Variables[name] = m
+		if result.False() {
+			if n.Expr != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  errInvalidValue,
+					Detail:   fmt.Sprintf("%s\n\nThis was checked by the validation rule at %s.", validation.ErrorMessage, validation.DeclRange.String()),
+					Subject:  n.Expr.Range().Ptr(),
+				})
+			} else {
+				// Since we don't have a source expression for a root module
+				// variable, we'll just report the error from the perspective
+				// of the variable declaration itself.
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  errInvalidValue,
+					Detail:   fmt.Sprintf("%s\n\nThis was checked by the validation rule at %s.", validation.ErrorMessage, validation.DeclRange.String()),
+					Subject:  n.Config.DeclRange.Ptr(),
+				})
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, diags.ErrWithWarnings()
 }
 
 // hclTypeName returns the name of the type that would represent this value in

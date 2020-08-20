@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/hcl2/hcl"
-	"github.com/hashicorp/hcl2/hclparse"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/spf13/afero"
 )
 
@@ -82,4 +82,19 @@ func (p *Parser) LoadHCLFile(path string) (hcl.Body, hcl.Diagnostics) {
 // when each file was opened) as the keys.
 func (p *Parser) Sources() map[string][]byte {
 	return p.p.Sources()
+}
+
+// ForceFileSource artificially adds source code to the cache of file sources,
+// as if it had been loaded from the given filename.
+//
+// This should be used only in special situations where configuration is loaded
+// some other way. Most callers should load configuration via methods of
+// Parser, which will update the sources cache automatically.
+func (p *Parser) ForceFileSource(filename string, src []byte) {
+	// We'll make a synthetic hcl.File here just so we can reuse the
+	// existing cache.
+	p.p.AddFile(filename, &hcl.File{
+		Body:  hcl.EmptyBody(),
+		Bytes: src,
+	})
 }

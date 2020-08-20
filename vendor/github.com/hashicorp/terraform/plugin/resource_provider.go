@@ -3,17 +3,20 @@ package plugin
 import (
 	"net/rpc"
 
-	"github.com/hashicorp/go-plugin"
+	plugin "github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 // ResourceProviderPlugin is the plugin.Plugin implementation.
 type ResourceProviderPlugin struct {
-	F func() terraform.ResourceProvider
+	ResourceProvider func() terraform.ResourceProvider
 }
 
 func (p *ResourceProviderPlugin) Server(b *plugin.MuxBroker) (interface{}, error) {
-	return &ResourceProviderServer{Broker: b, Provider: p.F()}, nil
+	return &ResourceProviderServer{
+		Broker:   b,
+		Provider: p.ResourceProvider(),
+	}, nil
 }
 
 func (p *ResourceProviderPlugin) Client(

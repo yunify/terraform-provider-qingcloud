@@ -237,10 +237,10 @@ type DescribeNicsInput struct {
 	Nics      []*string `json:"nics" name:"nics" location:"params"`
 	Offset    *int      `json:"offset" name:"offset" default:"0" location:"params"`
 	Owner     *string   `json:"owner" name:"owner" location:"params"`
+	ProjectID *string   `json:"project_id" name:"project_id" location:"params"`
 	// Status's available values: available, in-use
-	Status *string `json:"status" name:"status" location:"params"`
-	// VxNetType's available values: 0, 1
-	VxNetType *int      `json:"vxnet_type" name:"vxnet_type" location:"params"`
+	Status    *string   `json:"status" name:"status" location:"params"`
+	VxNetType []*int    `json:"vxnet_type" name:"vxnet_type" location:"params"`
 	VxNets    []*string `json:"vxnets" name:"vxnets" location:"params"`
 }
 
@@ -262,26 +262,6 @@ func (v *DescribeNicsInput) Validate() error {
 				ParameterName:  "Status",
 				ParameterValue: statusParameterValue,
 				AllowedValues:  statusValidValues,
-			}
-		}
-	}
-
-	if v.VxNetType != nil {
-		vxnetTypeValidValues := []string{"0", "1"}
-		vxnetTypeParameterValue := fmt.Sprint(*v.VxNetType)
-
-		vxnetTypeIsValid := false
-		for _, value := range vxnetTypeValidValues {
-			if value == vxnetTypeParameterValue {
-				vxnetTypeIsValid = true
-			}
-		}
-
-		if !vxnetTypeIsValid {
-			return errors.ParameterValueNotAllowedError{
-				ParameterName:  "VxNetType",
-				ParameterValue: vxnetTypeParameterValue,
-				AllowedValues:  vxnetTypeValidValues,
 			}
 		}
 	}

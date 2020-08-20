@@ -25,7 +25,7 @@ func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigBasic, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -38,7 +38,7 @@ func TestAccQingcloudLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("qingcloud_loadbalancer.foo", "http_header_size", "15"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigBasicTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -94,7 +94,7 @@ func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigTagTemplate, lbTag1Name, lbTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -102,7 +102,7 @@ func TestAccQingcloudLoadBalancer_tag(t *testing.T) {
 					testTagNameValue(lbTag1Name, lbTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigTagTwoTemplate, lbTag1Name, lbTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -140,7 +140,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigMutiEips, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -148,7 +148,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 					testCheck(1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigMutiEipsTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -156,7 +156,7 @@ func TestAccQingcloudLoadBalancer_mutiEipsByCount(t *testing.T) {
 					testCheck(3),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigMutiEipsThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -190,7 +190,7 @@ func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigInternal, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(
@@ -198,7 +198,7 @@ func TestAccQingcloudLoadBalancer_inter_private_ip(t *testing.T) {
 					testCheck("192.168.0.3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBConfigInternalTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(

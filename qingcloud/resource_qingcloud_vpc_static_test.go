@@ -25,7 +25,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcStaticDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcStaticConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcStaticExists(
@@ -42,7 +42,7 @@ func TestAccQingcloudVpcStatic_basic(t *testing.T) {
 						"qingcloud_vpc_static.foo", "val4", "tcp"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcStaticConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcStaticExists(

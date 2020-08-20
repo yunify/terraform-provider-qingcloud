@@ -25,7 +25,7 @@ func TestAccQingcloudLoadBalancerBackend_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckLoadBalancerBackendDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBBConfigBasic, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerBackendExists(
@@ -34,7 +34,7 @@ func TestAccQingcloudLoadBalancerBackend_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("qingcloud_loadbalancer_backend.foo", "weight", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccLBBConfigBasicTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerBackendExists(

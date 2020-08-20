@@ -175,6 +175,7 @@ type DescribeInstancesInput struct {
 	Limit         *int      `json:"limit" name:"limit" default:"20" location:"params"`
 	Offset        *int      `json:"offset" name:"offset" default:"0" location:"params"`
 	Owner         *string   `json:"owner" name:"owner" location:"params"`
+	ProjectID     *string   `json:"project_id" name:"project_id" location:"params"`
 	SearchWord    *string   `json:"search_word" name:"search_word" location:"params"`
 	Status        []*string `json:"status" name:"status" location:"params"`
 	Tags          []*string `json:"tags" name:"tags" location:"params"`
@@ -572,7 +573,7 @@ type RunInstancesInput struct {
 	Gpu      *int    `json:"gpu" name:"gpu" default:"0" location:"params"`
 	Hostname *string `json:"hostname" name:"hostname" location:"params"`
 	ImageID  *string `json:"image_id" name:"image_id" location:"params"` // Required
-	// InstanceClass's available values: 0, 1
+	// InstanceClass's available values: 0, 1, 2, 3, 4, 5, 6, 100, 101, 200, 201, 300, 301
 	InstanceClass *int    `json:"instance_class" name:"instance_class" location:"params"`
 	InstanceName  *string `json:"instance_name" name:"instance_name" location:"params"`
 	InstanceType  *string `json:"instance_type" name:"instance_type" location:"params"`
@@ -670,7 +671,7 @@ func (v *RunInstancesInput) Validate() error {
 	}
 
 	if v.InstanceClass != nil {
-		instanceClassValidValues := []string{"0", "1"}
+		instanceClassValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "100", "101", "200", "201", "300", "301"}
 		instanceClassParameterValue := fmt.Sprint(*v.InstanceClass)
 
 		instanceClassIsValid := false

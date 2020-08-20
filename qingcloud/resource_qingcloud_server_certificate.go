@@ -21,22 +21,22 @@ func resourceQingcloudServerCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceServerCertificateContent: &schema.Schema{
+			resourceServerCertificateContent: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			resourceServerCertificatePrivateKey: &schema.Schema{
+			resourceServerCertificatePrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
