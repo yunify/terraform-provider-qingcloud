@@ -26,7 +26,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
@@ -37,7 +37,7 @@ func TestAccQingcloudVpc_basic(t *testing.T) {
 						"qingcloud_vpc.foo", "type", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
@@ -103,7 +103,7 @@ func TestAccQingcloudVpc_eip(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfigEIP, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
@@ -111,7 +111,7 @@ func TestAccQingcloudVpc_eip(t *testing.T) {
 					testEIP(),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfigEIPTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
@@ -163,7 +163,7 @@ func TestAccQingcloudVpc_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfigTagTemplate, vpcTag1Name, vpcTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(
@@ -171,7 +171,7 @@ func TestAccQingcloudVpc_tag(t *testing.T) {
 					testTagNameValue(vpcTag1Name, vpcTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVpcConfigTagTwoTemplate, vpcTag1Name, vpcTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(

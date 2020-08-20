@@ -12,22 +12,22 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"access_key": &schema.Schema{
+			"access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["access_key"],
 			},
-			"secret_key": &schema.Schema{
+			"secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["secret_key"],
 			},
-			"zone": &schema.Schema{
+			"zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["zone"],
 			},
-			"endpoint": &schema.Schema{
+			"endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["endpoint"],

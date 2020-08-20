@@ -28,25 +28,25 @@ func resourceQingcloudEip() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceEipBandwidth: &schema.Schema{
+			resourceEipBandwidth: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			resourceEipBillMode: &schema.Schema{
+			resourceEipBillMode: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "bandwidth",
 				ValidateFunc: withinArrayString("traffic", "bandwidth"),
 			},
-			resourceEipNeedIcp: &schema.Schema{
+			resourceEipNeedIcp: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
@@ -54,11 +54,11 @@ func resourceQingcloudEip() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			resourceEipAddr: &schema.Schema{
+			resourceEipAddr: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceEipResource: &schema.Schema{
+			resourceEipResource: {
 				Type:         schema.TypeMap,
 				Computed:     true,
 				ComputedWhen: []string{"id"},

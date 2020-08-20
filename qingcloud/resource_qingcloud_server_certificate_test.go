@@ -22,13 +22,13 @@ func TestAccQingcloudServerCertificate_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckServerCertificateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServerCertificateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerCertificateExists("qingcloud_server_certificate.foo", &cert),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServerCertificateConfigTwo,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerCertificateExists("qingcloud_server_certificate.foo", &cert),

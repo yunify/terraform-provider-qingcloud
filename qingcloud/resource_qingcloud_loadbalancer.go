@@ -25,48 +25,48 @@ func resourceQingcloudLoadBalancer() *schema.Resource {
 		Update: resourceQingcloudLoadBalancerUpdate,
 		Delete: resourceQingcloudLoadBalancerDelete,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceLoadBalancerType: &schema.Schema{
+			resourceLoadBalancerType: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: withinArrayInt(0, 1, 2, 3, 4, 5),
 			},
-			resourceLoadBalancerPrivateIPs: &schema.Schema{
+			resourceLoadBalancerPrivateIPs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			resourceLoadBalancerEipIDs: &schema.Schema{
+			resourceLoadBalancerEipIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			resourceLoadBalancerNodeCount: &schema.Schema{
+			resourceLoadBalancerNodeCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			resourceLoadBalancerSecurityGroupID: &schema.Schema{
+			resourceLoadBalancerSecurityGroupID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceLoadBalancerVxnetID: &schema.Schema{
+			resourceLoadBalancerVxnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  BasicNetworkID,
 				ForceNew: true,
 			},
-			resourceLoadBalancerHttpHeaderSize: &schema.Schema{
+			resourceLoadBalancerHttpHeaderSize: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      15,

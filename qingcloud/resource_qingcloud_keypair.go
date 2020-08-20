@@ -25,11 +25,11 @@ func resourceQingcloudKeypair() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceKeyPairPublicKey: &schema.Schema{
+			resourceKeyPairPublicKey: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -46,7 +46,7 @@ func resourceQingcloudKeypair() *schema.Resource {
 					}
 				},
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

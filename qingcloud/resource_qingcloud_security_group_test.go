@@ -24,7 +24,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
@@ -32,7 +32,7 @@ func TestAccQingcloudSecurityGroup_basic(t *testing.T) {
 						"qingcloud_security_group.foo", resourceName, "first_sg"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists("qingcloud_security_group.foo", &sg),
@@ -84,7 +84,7 @@ func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(
@@ -92,7 +92,7 @@ func TestAccQingcloudSecurityGroup_tag(t *testing.T) {
 					testTagNameValue(sgTag1Name, sgTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccSecurityGroupConfigTagTwoTemplate, sgTag1Name, sgTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(

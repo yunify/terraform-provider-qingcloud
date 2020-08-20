@@ -6,28 +6,28 @@ import (
 
 func TestStringSliceDiff(t *testing.T) {
 	nls := [][]string{
-		[]string{"hello", "world", "golang"},
-		[]string{"hello", "world", "golang"},
-		[]string{"hello", "world"},
-		[]string{"hello"},
+		{"hello", "world", "golang"},
+		{"hello", "world", "golang"},
+		{"hello", "world"},
+		{"hello"},
 	}
 	ols := [][]string{
-		[]string{"hello", "world", "golang"},
-		[]string{"hello", "world", "java"},
-		[]string{"hello"},
-		[]string{"hello", "world"},
+		{"hello", "world", "golang"},
+		{"hello", "world", "java"},
+		{"hello"},
+		{"hello", "world"},
 	}
 	additionsList := [][]string{
-		[]string{},
-		[]string{"golang"},
-		[]string{"world"},
-		[]string{},
+		{},
+		{"golang"},
+		{"world"},
+		{},
 	}
 	deletionsList := [][]string{
-		[]string{},
-		[]string{"java"},
-		[]string{},
-		[]string{"world"},
+		{},
+		{"java"},
+		{},
+		{"world"},
 	}
 	for k, nl := range nls {
 		additions, deletions := stringSliceDiff(nl, ols[k])

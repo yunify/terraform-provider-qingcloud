@@ -26,66 +26,66 @@ func resourceQingcloudLoadBalancerListener() *schema.Resource {
 		Update: resourceQingcloudLoadBalancerListenerUpdate,
 		Delete: resourceQingcloudLoadBalancerListnerDestroy,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceLoadBalancerListenerLBId: &schema.Schema{
+			resourceLoadBalancerListenerLBId: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			resourceLoadBalancerListenerPort: &schema.Schema{
+			resourceLoadBalancerListenerPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayIntRange(1, 65536),
 			},
-			resourceLoadBalancerListenerProtocol: &schema.Schema{
+			resourceLoadBalancerListenerProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayString("http", "https", "tcp", "ssl"),
 			},
-			resourceLoadBalancerListenerBalancerMode: &schema.Schema{
+			resourceLoadBalancerListenerBalancerMode: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "roundrobin",
 				ValidateFunc: withinArrayString("roundrobin", "leastconn", "source"),
 			},
-			resourceLoadBalancerListenerServerCertificateId: &schema.Schema{
+			resourceLoadBalancerListenerServerCertificateId: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			resourceLoadBalancerListenerSessionSticky: &schema.Schema{
+			resourceLoadBalancerListenerSessionSticky: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceLoadBalancerListenerForwardfor: &schema.Schema{
+			resourceLoadBalancerListenerForwardfor: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: withinArrayIntRange(0, 7),
 			},
-			resourceLoadBalancerListenerHealthCheckMethod: &schema.Schema{
+			resourceLoadBalancerListenerHealthCheckMethod: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "tcp",
 			},
-			resourceLoadBalancerListenerHealthCheckOption: &schema.Schema{
+			resourceLoadBalancerListenerHealthCheckOption: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10|5|2|5",
 			},
-			resourceLoadBalancerListenerOption: &schema.Schema{
+			resourceLoadBalancerListenerOption: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayIntRange(0, 1023),
 			},
-			resourceLoadBalancerListenerTimeOut: &schema.Schema{
+			resourceLoadBalancerListenerTimeOut: {
 				Type:     schema.TypeInt,
 				Default:  50,
 				Optional: true,

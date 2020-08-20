@@ -23,18 +23,18 @@ func resourceQingcloudVpc() *schema.Resource {
 		Update: resourceQingcloudVpcUpdate,
 		Delete: resourceQingcloudVpcDelete,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVpcType: &schema.Schema{
+			resourceVpcType: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      1,
 				ValidateFunc: withinArrayInt(0, 1, 2, 3),
 			},
-			resourceVpcNetwork: &schema.Schema{
+			resourceVpcNetwork: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -45,23 +45,23 @@ func resourceQingcloudVpc() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			resourceVpcEipID: &schema.Schema{
+			resourceVpcEipID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVpcSecurityGroupID: &schema.Schema{
+			resourceVpcSecurityGroupID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVpcPrivateIP: &schema.Schema{
+			resourceVpcPrivateIP: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceVpcPublicIP: &schema.Schema{
+			resourceVpcPublicIP: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

@@ -25,25 +25,25 @@ func resourceQingcloudVxnet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVxnetType: &schema.Schema{
+			resourceVxnetType: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayInt(0, 1),
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVxnetVpcID: &schema.Schema{
+			resourceVxnetVpcID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVxnetVpcIPNetwork: &schema.Schema{
+			resourceVxnetVpcIPNetwork: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateNetworkCIDR,

@@ -22,41 +22,41 @@ func resourceQingcloudVpcStatic() *schema.Resource {
 		Update: resourceQingcloudVpcStaticUpdate,
 		Delete: resourceQingcloudVpcStaticDelete,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceVpcStaticVpcid: &schema.Schema{
+			resourceVpcStaticVpcid: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			resourceVpcStaticType: &schema.Schema{
+			resourceVpcStaticType: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayInt(1, 2, 3, 4, 6, 7, 8),
 			},
-			resourceVpcVal1: &schema.Schema{
+			resourceVpcVal1: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			resourceVpcVal2: &schema.Schema{
+			resourceVpcVal2: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceVpcVal3: &schema.Schema{
+			resourceVpcVal3: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceVpcVal4: &schema.Schema{
+			resourceVpcVal4: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceVpcVal5: &schema.Schema{
+			resourceVpcVal5: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

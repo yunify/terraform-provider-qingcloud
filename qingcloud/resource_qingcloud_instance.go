@@ -35,82 +35,82 @@ func resourceQingcloudInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceDescription: &schema.Schema{
+			resourceDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceInstanceImageID: &schema.Schema{
+			resourceInstanceImageID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			resourceInstanceCPU: &schema.Schema{
+			resourceInstanceCPU: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1, 2, 4, 8, 16),
 				Default:      1,
 			},
-			resourceInstanceMemory: &schema.Schema{
+			resourceInstanceMemory: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(1024, 2048, 4096, 6144, 8192, 12288, 16384, 24576, 32768),
 				Default:      1024,
 			},
-			resourceInstanceClass: &schema.Schema{
+			resourceInstanceClass: {
 				Type:         schema.TypeInt,
 				ForceNew:     true,
 				Optional:     true,
 				ValidateFunc: withinArrayInt(0, 1),
 				Default:      0,
 			},
-			resourceInstanceManagedVxnetID: &schema.Schema{
+			resourceInstanceManagedVxnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  BasicNetworkID,
 			},
-			resourceInstancePrivateIP: &schema.Schema{
+			resourceInstancePrivateIP: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			resourceInstanceOsDiskSize: &schema.Schema{
+			resourceInstanceOsDiskSize: {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: withinArrayIntRange(20, 100),
 			},
-			resourceInstanceKeyPairIDs: &schema.Schema{
+			resourceInstanceKeyPairIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			resourceInstanceSecurityGroupId: &schema.Schema{
+			resourceInstanceSecurityGroupId: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			resourceInstanceEipID: &schema.Schema{
+			resourceInstanceEipID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceInstanceVolumeIDs: &schema.Schema{
+			resourceInstanceVolumeIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			resourceInstancePublicIP: &schema.Schema{
+			resourceInstancePublicIP: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			resourceInstanceUserData: &schema.Schema{
+			resourceInstanceUserData: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceQingcloudInstance() *schema.Resource {
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),
-			resourceInstanceLoginPassword: &schema.Schema{
+			resourceInstanceLoginPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				ForceNew:  true,

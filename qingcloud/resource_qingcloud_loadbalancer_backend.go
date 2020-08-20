@@ -20,26 +20,26 @@ func resourceQingcloudLoadBalancerBackend() *schema.Resource {
 		Update: resourceQingcloudLoadBalancerBackendUpdate,
 		Delete: resourceQingcloudLoadBalancerBackendDelete,
 		Schema: map[string]*schema.Schema{
-			resourceName: &schema.Schema{
+			resourceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			resourceLoadBalancerBackendResrourceId: &schema.Schema{
+			resourceLoadBalancerBackendResrourceId: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			resourceLoadBalancerBackendPort: &schema.Schema{
+			resourceLoadBalancerBackendPort: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: withinArrayIntRange(1, 65535),
 			},
-			resourceLoadBalancerBackendListenerId: &schema.Schema{
+			resourceLoadBalancerBackendListenerId: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			resourceLoadBalancerBackendWeight: &schema.Schema{
+			resourceLoadBalancerBackendWeight: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,

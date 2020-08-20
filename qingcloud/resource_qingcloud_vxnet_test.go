@@ -26,7 +26,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfig, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -35,7 +35,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 						"qingcloud_vxnet.foo", "type", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -48,7 +48,7 @@ func TestAccQingcloudVxNet_basic(t *testing.T) {
 						"qingcloud_vxnet.foo", resourceName, "vxnet"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -107,7 +107,7 @@ func TestAccQingcloudVxNet_tag(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigTagTemplate, vxnetTag1Name, vxnetTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -115,7 +115,7 @@ func TestAccQingcloudVxNet_tag(t *testing.T) {
 					testTagNameValue(vxnetTag1Name, vxnetTag2Name),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigTagTwoTemplate, vxnetTag1Name, vxnetTag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -179,7 +179,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVxNetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigVpc, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -187,7 +187,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 					testVpcAttach(),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigVpcTwo, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
@@ -195,7 +195,7 @@ func TestAccQingcloudVxNet_vpc(t *testing.T) {
 					testVpcDetach(),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccVxNetConfigVpcThree, testTag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxNetExists(
