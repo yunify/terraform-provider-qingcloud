@@ -10,6 +10,7 @@ import (
 const (
 	resourceInstanceImageID         = "image_id"
 	resourceInstanceCPU             = "cpu"
+	resourceInstanceHostName        = "hostname"
 	resourceInstanceMemory          = "memory"
 	resourceInstanceClass           = "instance_class"
 	resourceInstanceManagedVxnetID  = "managed_vxnet_id"
@@ -47,6 +48,10 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			resourceInstanceHostName: {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			resourceInstanceCPU: {
 				Type:         schema.TypeInt,
@@ -140,7 +145,7 @@ func resourceQingcloudInstanceCreate(d *schema.ResourceData, meta interface{}) e
 	clt := meta.(*QingCloudClient).instance
 	input := new(qc.RunInstancesInput)
 	input.Count = qc.Int(1)
-	input.Hostname, _ = getNamePointer(d)
+	input.Hostname = getSetStringPointer(d, resourceInstanceHostName)
 	input.InstanceName, _ = getNamePointer(d)
 	input.ImageID = getSetStringPointer(d, resourceInstanceImageID)
 	input.CPU = qc.Int(d.Get(resourceInstanceCPU).(int))
