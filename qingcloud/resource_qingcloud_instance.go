@@ -197,6 +197,10 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeInstances(input)
+		if err == nil && qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
+			return fmt.Errorf("no private ip found for instance %s",
+				*output.InstanceSet[0].InstanceID)
+		}
 		return isServerBusy(err)
 	})
 	if err != nil {
