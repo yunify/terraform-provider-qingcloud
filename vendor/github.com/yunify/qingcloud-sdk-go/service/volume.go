@@ -149,26 +149,6 @@ func (v *CloneVolumesInput) Validate() error {
 		}
 	}
 
-	if v.VolumeType != nil {
-		volumeTypeValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "10", "100", "200"}
-		volumeTypeParameterValue := fmt.Sprint(*v.VolumeType)
-
-		volumeTypeIsValid := false
-		for _, value := range volumeTypeValidValues {
-			if value == volumeTypeParameterValue {
-				volumeTypeIsValid = true
-			}
-		}
-
-		if !volumeTypeIsValid {
-			return errors.ParameterValueNotAllowedError{
-				ParameterName:  "VolumeType",
-				ParameterValue: volumeTypeParameterValue,
-				AllowedValues:  volumeTypeValidValues,
-			}
-		}
-	}
-
 	return nil
 }
 
