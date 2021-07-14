@@ -2,7 +2,6 @@ package qingcloud
 
 import (
 	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -66,10 +65,10 @@ func resourceQingcloudInstance() *schema.Resource {
 				Default:      1024,
 			},
 			resourceInstanceClass: {
-				Type:         schema.TypeInt,
-				ForceNew:     true,
-				Optional:     true,
-				Default:      0,
+				Type:     schema.TypeInt,
+				ForceNew: true,
+				Optional: true,
+				Default:  0,
 			},
 			resourceInstanceManagedVxnetID: {
 				Type:     schema.TypeString,
@@ -197,6 +196,10 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 	var err error
 	simpleRetry(func() error {
 		output, err = clt.DescribeInstances(input)
+		if err == nil && qc.StringValue(output.InstanceSet[0].VxNets[0].PrivateIP) == "" {
+			return fmt.Errorf("no private ip found for instance %s",
+				*output.InstanceSet[0].InstanceID)
+		}
 		return isServerBusy(err)
 	})
 	if err != nil {
