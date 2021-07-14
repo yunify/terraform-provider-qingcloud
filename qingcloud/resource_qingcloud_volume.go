@@ -41,7 +41,6 @@ func resourceQingcloudVolume() *schema.Resource {
 				Optional:     true,
 				Default:      0,
 				ForceNew:     true,
-				ValidateFunc: withinArrayInt(0, 1, 2, 3),
 			},
 			resourceTagIds:   tagIdsSchema(),
 			resourceTagNames: tagNamesSchema(),

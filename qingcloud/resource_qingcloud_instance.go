@@ -69,7 +69,6 @@ func resourceQingcloudInstance() *schema.Resource {
 				Type:         schema.TypeInt,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: withinArrayInt(0, 1, 2, 3, 4, 5, 6, 100, 101, 200, 201, 300, 301),
 				Default:      0,
 			},
 			resourceInstanceManagedVxnetID: {
