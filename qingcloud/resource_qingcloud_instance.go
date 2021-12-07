@@ -2,7 +2,6 @@ package qingcloud
 
 import (
 	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	qc "github.com/yunify/qingcloud-sdk-go/service"
 )
@@ -66,10 +65,10 @@ func resourceQingcloudInstance() *schema.Resource {
 				Default:      1024,
 			},
 			resourceInstanceClass: {
-				Type:         schema.TypeInt,
-				ForceNew:     true,
-				Optional:     true,
-				Default:      0,
+				Type:     schema.TypeInt,
+				ForceNew: true,
+				Optional: true,
+				Default:  0,
 			},
 			resourceInstanceManagedVxnetID: {
 				Type:     schema.TypeString,
@@ -257,6 +256,15 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	if !d.IsNewResource() {
+		isDelete, err := isInstanceDeletedWrapper(d.Id(), meta.(*QingCloudClient).instance)
+		if err != nil {
+			return err
+		}
+		if isDelete {
+			return resourceQingcloudInstanceCreate(d, meta)
+		}
+	}
 	d.Partial(true)
 	if err := waitInstanceLease(d, meta); err != nil {
 		return err
@@ -310,6 +318,13 @@ func resourceQingcloudInstanceDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	clt := meta.(*QingCloudClient).instance
+	if isDelete, err := isInstanceDeletedWrapper(d.Id(), clt); err != nil || isDelete {
+		if err != nil {
+			return err
+		}
+		d.SetId("")
+		return nil
+	}
 	input := new(qc.TerminateInstancesInput)
 	input.Instances = []*string{qc.String(d.Id())}
 	var err error

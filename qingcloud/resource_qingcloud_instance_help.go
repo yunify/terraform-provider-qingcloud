@@ -440,3 +440,27 @@ func isInstanceDeleted(instanceSet []*qc.Instance) bool {
 	}
 	return false
 }
+
+func describeInstances(id string, clt *qc.InstanceService) (*qc.DescribeInstancesOutput, error) {
+	inputDescribe := new(qc.DescribeInstancesInput)
+	inputDescribe.Instances = []*string{qc.String(id)}
+	inputDescribe.Verbose = qc.Int(1)
+	var output *qc.DescribeInstancesOutput
+	var errDescribe error
+	simpleRetry(func() error {
+		output, errDescribe = clt.DescribeInstances(inputDescribe)
+		return isServerBusy(errDescribe)
+	})
+	if errDescribe != nil {
+		return nil, errDescribe
+	}
+	return output, nil
+}
+
+func isInstanceDeletedWrapper(id string, clt *qc.InstanceService) (bool, error) {
+	output, err := describeInstances(id, clt)
+	if err != nil {
+		return false, err
+	}
+	return isInstanceDeleted(output.InstanceSet), nil
+}
