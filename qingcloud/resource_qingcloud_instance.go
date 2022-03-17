@@ -256,15 +256,6 @@ func resourceQingcloudInstanceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceQingcloudInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if !d.IsNewResource() {
-		isDelete, err := isInstanceDeletedWrapper(d.Id(), meta.(*QingCloudClient).instance)
-		if err != nil {
-			return err
-		}
-		if isDelete {
-			return resourceQingcloudInstanceCreate(d, meta)
-		}
-	}
 	d.Partial(true)
 	if err := waitInstanceLease(d, meta); err != nil {
 		return err
