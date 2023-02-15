@@ -670,26 +670,6 @@ func (v *RunInstancesInput) Validate() error {
 		}
 	}
 
-	if v.InstanceClass != nil {
-		instanceClassValidValues := []string{"0", "1", "2", "3", "4", "5", "6", "100", "101", "200", "201", "300", "301"}
-		instanceClassParameterValue := fmt.Sprint(*v.InstanceClass)
-
-		instanceClassIsValid := false
-		for _, value := range instanceClassValidValues {
-			if value == instanceClassParameterValue {
-				instanceClassIsValid = true
-			}
-		}
-
-		if !instanceClassIsValid {
-			return errors.ParameterValueNotAllowedError{
-				ParameterName:  "InstanceClass",
-				ParameterValue: instanceClassParameterValue,
-				AllowedValues:  instanceClassValidValues,
-			}
-		}
-	}
-
 	if v.LoginMode == nil {
 		return errors.ParameterRequiredError{
 			ParameterName: "LoginMode",

@@ -70,6 +70,68 @@ func VolumeTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}
 	return stateConf.WaitForState()
 }
 
+func VolumeAttachTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVolumesInput)
+		input.Volumes = []*string{qc.String(id)}
+		var output *qc.DescribeVolumesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVolumes(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		if len(output.VolumeSet) != 1 {
+			return output, "attaching", nil
+		}
+		volume := output.VolumeSet[0]
+		return volume, qc.StringValue(volume.Status), nil
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "available", "suspended", "deleted", "ceased"},
+		Target:     []string{"in-use"},
+		Refresh:    refreshFunc,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
+func VolumeDetachTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
+	refreshFunc := func() (interface{}, string, error) {
+		input := new(qc.DescribeVolumesInput)
+		input.Volumes = []*string{qc.String(id)}
+		var output *qc.DescribeVolumesOutput
+		var err error
+		simpleRetry(func() error {
+			output, err = clt.DescribeVolumes(input)
+			return isServerBusy(err)
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		if len(output.VolumeSet) != 1 {
+			return output, "detaching", nil
+		}
+		volume := output.VolumeSet[0]
+		return volume, qc.StringValue(volume.Status), nil
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "in-use", "suspended", "deleted", "ceased"},
+		Target:     []string{"available"},
+		Refresh:    refreshFunc,
+		Timeout:    waitJobTimeOutDefault * time.Second,
+		Delay:      waitJobIntervalDefault * time.Second,
+		MinTimeout: waitJobIntervalDefault * time.Second,
+	}
+	return stateConf.WaitForState()
+}
+
 func VolumeDeleteTransitionStateRefresh(clt *qc.VolumeService, id string) (interface{}, error) {
 	refreshFunc := func() (interface{}, string, error) {
 		input := new(qc.DescribeVolumesInput)

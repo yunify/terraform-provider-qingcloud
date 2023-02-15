@@ -1,0 +1,35 @@
+sudo: required
+
+services:
+  - docker
+
+language: go
+go:
+  - 1.13
+
+env:
+  matrix:
+    - GO_VERSION=1.13
+
+cache:
+  directories:
+    - ${HOME}/source
+
+before_install:
+  - pushd ${HOME}/source
+  - if [[ ! -d "./make-4.0" ]]; then
+      wget http://ftp.gnu.org/gnu/make/make-4.0.tar.gz &&
+      tar -vxzf make-4.0.tar.gz &&
+      pushd make-4.0 && ./configure && make && popd;
+    fi
+  - pushd make-4.0 && sudo make install && popd
+  - popd
+  - /usr/local/bin/make --version
+
+install:
+  - go get -u golang.org/x/lint/golint;
+
+script:
+  - /usr/local/bin/make check
+  - /usr/local/bin/make release
+  - /usr/local/bin/make unit-runtime-go-${GO_VERSION}
