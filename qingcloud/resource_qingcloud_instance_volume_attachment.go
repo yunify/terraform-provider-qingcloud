@@ -55,10 +55,10 @@ func resourceQingcloudInstanceVolumeAttachmentCreate(d *schema.ResourceData, met
 	if err != nil {
 		return WrapError(err)
 	}
-	d.SetId(fmt.Sprint(volumeId[0], ":", *input.Instance))
-	if _, err := VolumeTransitionStateRefresh(clt, volumeId[0]); err != nil {
+	if _, err := VolumeAttachTransitionStateRefresh(clt, volumeId[0]); err != nil {
 		return WrapError(err)
 	}
+	d.SetId(volumeId[0] + ":" + *input.Instance)
 	return resourceQingcloudInstanceVolumeAttachmentRead(d, meta)
 }
 
@@ -110,9 +110,9 @@ func resourceQingcloudInstanceVolumeAttachmentDelete(d *schema.ResourceData, met
 	if err != nil {
 		return WrapError(err)
 	}
-	d.SetId("")
-	if _, err := VolumeTransitionStateRefresh(clt, volumeId[0]); err != nil {
+	if _, err := VolumeDetachTransitionStateRefresh(clt, volumeId[0]); err != nil {
 		return WrapError(err)
 	}
+	d.SetId("")
 	return nil
 }

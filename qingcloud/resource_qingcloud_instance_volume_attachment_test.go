@@ -18,8 +18,8 @@ func TestAccQingcloudInstanceVolumeAttachment_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testInstanceVolumeAttachmentConfig),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("qingcloud_instance_volume_attachment.foo", "volume_id", "vos-60xcbw8r"),
-					resource.TestCheckResourceAttr("qingcloud_instance_volume_attachment.foo", "instance_id", "i-o1gm1smr"),
+					resource.TestCheckResourceAttr("qingcloud_instance_volume_attachment.foo", "volume_id", "vos-6byu0d7a"),
+					resource.TestCheckResourceAttr("qingcloud_instance_volume_attachment.foo", "instance_id", "i-tyotg828"),
 				),
 			},
 		},
@@ -28,7 +28,7 @@ func TestAccQingcloudInstanceVolumeAttachment_basic(t *testing.T) {
 
 const testInstanceVolumeAttachmentConfig = `
 resource "qingcloud_instance_volume_attachment" "foo"{
-	volume_id = "vos-60xcbw8r"
-	instance_id = "i-o1gm1smr"
+  volume_id = "vos-6byu0d7a"
+  instance_id = "i-tyotg828"
 }
 `
